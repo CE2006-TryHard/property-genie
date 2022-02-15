@@ -1,10 +1,10 @@
 import './App.scss';
-import SgMap from './components/SgMap/index'
+import MapUI from './components/MapUI'
 
 function App() {
   return (
     <div className="property-web-app">
-      <SgMap></SgMap>
+      <MapUI></MapUI>
     </div>
   );
 }
