@@ -1,4 +1,5 @@
 import React from 'react'
+import "./../../styles/MapUI.scss"
 import {Loader} from "@googlemaps/js-api-loader"
 // import dotIcon from './../images/dotIcon.svg'
 
@@ -31,7 +32,11 @@ export default class MapUI extends React.Component {
     loader.load().then(google => {
       const map = new google.maps.Map(document.querySelector(".map-content"), {
         center: {lat:1.360514, lng: 103.810300},
-        zoom: 11.5
+        zoom: 11.5,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+        zoomControl: false
       })
     })
   }
