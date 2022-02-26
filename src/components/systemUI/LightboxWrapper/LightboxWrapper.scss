@@ -18,18 +18,16 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background-color: red;
-        width: 100%;
+        width: calc(100% - 20px);
         max-width: 500px;
         min-height: 300px;
         border-radius: 20px;
-        padding: 10px;
-        box-sizing: content-box;
 
         button.close-button {
             position: absolute;
             right: 5px;
             top: 5px;
+            z-index: 1;
         }
     }
 }

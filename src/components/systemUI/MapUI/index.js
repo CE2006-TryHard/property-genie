@@ -1,7 +1,6 @@
 import React from 'react'
-import "./../../styles/MapUI.scss"
+import "./MapUI.scss"
 import {Loader} from "@googlemaps/js-api-loader"
-// import dotIcon from './../images/dotIcon.svg'
 
 
 export default class MapUI extends React.Component {
@@ -36,7 +35,15 @@ export default class MapUI extends React.Component {
         mapTypeControl: false,
         fullscreenControl: false,
         streetViewControl: false,
-        zoomControl: false
+        zoomControl: false,
+        draggable: false,
+        disableDoubleClickZoom: true
+      })
+
+      const districtShape = new google.maps.KmlLayer({
+        url: "https://storage.cloud.google.com/tryhard-bucket/districts.kml",
+        map: map
+
       })
     })
   }

@@ -1,4 +1,6 @@
-export default function SidePanelButton(props) {
+import './SidePanelWrapper.scss'
+
+const SidePanelButton = props => {
     const onClick = () => {
         props.onClick(props.value)
     }
@@ -15,5 +17,19 @@ export default function SidePanelButton(props) {
             <animate attributeName="y2" from="21.9" to="13.2" dur="0.5s" />
             </line>
         </svg>
+    )
+  }
+
+export default function SidePanelWrapper (props) {
+    return (
+        <div className={`side-panel-entry ${props.isOpen ? 'open' : ''}`}>
+            <SidePanelButton onClick={props.onToggle}></SidePanelButton>
+            <div className="side-panel-container">
+                <div className="side-panel-content">
+                {props.children}
+                </div>
+                <div className="close-region" onClick={props.onClose}></div>
+            </div>
+          </div>
     )
 }
