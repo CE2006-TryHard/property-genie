@@ -6,17 +6,6 @@ import { userInfoMgr } from '../../systemMgr/GlobalContext';
 // https://stackoverflow.com/questions/48849948/keeping-google-login-persistent-on-reloading-single-page-react-app
 
 export default class LoginUI extends React.Component {
-    onLoginSuccess({profileObj}) {
-        console.log('login success')
-        const newUser = userInfoMgr.setActiveUser(profileObj)
-        this.props.onLoggedIn(newUser)
-        localStorage.setItem("activeUser", JSON.stringify(profileObj))
-    }
-
-    onLoginFail ({profileObj}) {
-
-    }
-
     render () {
         return (
             <div className={`login-container`}>

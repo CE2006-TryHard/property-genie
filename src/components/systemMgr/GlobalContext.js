@@ -1,11 +1,9 @@
-import FilterMgr from './FilterMgr'
 import SidePanelOptMgr from './SidePanelOptMgr'
 import DatabaseMgr from './DatabaseMgr'
-import UserInfoMgr from './UserInfoMgr'
+import FilterMgr from './FilterMgr'
 
-const filterMgr = new FilterMgr()
 const sidePanelOptMgr = new SidePanelOptMgr()
 const dbMgr = new DatabaseMgr()
-const userInfoMgr = new UserInfoMgr()
+const filterMgr = new FilterMgr() // must initialise after dbmanager
 
-export {filterMgr, sidePanelOptMgr, dbMgr, userInfoMgr}
+export {filterMgr, sidePanelOptMgr, dbMgr}

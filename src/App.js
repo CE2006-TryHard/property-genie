@@ -8,9 +8,10 @@ import FilterPanelUI from "./components/systemUI/FilterPanelUI/index"
 import InfoPanelUI from './components/systemUI/InfoPanelUI/index'
 import LoginUI from './components/systemUI/LoginUI/index'
 import { GreetUserMsg } from './components/systemUI/MiscUI'
-import {userInfoMgr, sidePanelOptMgr} from './components/systemMgr/GlobalContext'
+import {sidePanelOptMgr} from './components/systemMgr/GlobalContext'
 import { useGoogleAuth } from './components/systemMgr/GoogleAuth'
 import {useEffect, useState} from 'react'
+import User from './components/entities/User'
 
 // page state
 // HOME         1
@@ -31,16 +32,16 @@ function App() {
 
   useEffect(() => {
     if (googleUser && googleUser.profileObj) {
-      setActiveUser(userInfoMgr.setActiveUser(googleUser.profileObj))
+      const {name, email} = googleUser.profileObj
+      setActiveUser(new User(name, email, true))
+      // setActiveUser(userInfoMgr.setActiveUser(googleUser.profileObj))
       onLightboxClose()
     }
   }, [googleUser])
 
   const onSidePanelOptSelect = (newState) => {
     setPageState(newState)
-    if (newState > 0) {
-      setShowLightbox(true)
-    }
+    if (newState > 0) setShowLightbox(true)
     setSidePanelIn(false)
   }
 
@@ -74,7 +75,6 @@ function App() {
       case 6:
          return (<InfoPanelUI currentProperty={selectedSearch}></InfoPanelUI>)
     }
-
     return ''
   }
 
