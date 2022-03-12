@@ -1,17 +1,32 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app"
-import { getAnalytics } from "firebase/analytics"
+// import { getAnalytics } from "firebase/analytics"
 import {getDatabase, ref, set, onValue, update} from 'firebase/database'
 import Papa from 'papaparse'
+import User from "../entities/User"
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 export default class DatabaseMgr {
   constructor () {
+    // this.activeUser = null
     this.properties = []
     this.initFirebase()
     this.fetchPropertyData()
+  }
+
+  initActiveUser(name, email, onFetchEnd) {
+    const newUser = new User(name, email, true)
+    const db = getDatabase()
+    onValue(ref(db, `account/${newUser.id}`), snapshot => {
+      const {recentSearches, bookmarks, filterOptions} = snapshot.val()
+      newUser.recentSearches = recentSearches || []
+      newUser.bookmarks = bookmarks || []
+      newUser.filterOptions = filterOptions || []
+
+      onFetchEnd(newUser)
+    })
   }
 
   initFirebase () {
@@ -29,32 +44,36 @@ export default class DatabaseMgr {
     }
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig)
-    const analytics = getAnalytics(app)
-    this.firebaseDB = getDatabase(app)
+    // const app = 
+    initializeApp(firebaseConfig)
+    // const analytics = getAnalytics(app)
 
     // test fetch data
-    // this.fetchUserData('wx', userData => {
+    // this.fetchUserData(userData => {
     //   console.log('userData', userData)
     // })
 
     // test update data
-    // this.updateUserData('wx', 'recent', 'house')
+    // this.updateUserData('recent', 'house')
   }
 
-  fetchUserData(userId, onFetchEnd) {
+  fetchAllUserData(userId, onFetchEnd) {
     const db = getDatabase()
     onValue(ref(db, `account/${userId}`), snapshot => {
-      onFetchEnd( snapshot.val())
+      onFetchEnd(snapshot.val())
     })
   }
 
-  updateUserData(userId, key, value) {
+  updateUserData(user, key, value) {
+    if (!user) {
+      console.log("no active user")
+      return
+    }
     const updates = {}
     const db = getDatabase()
-    updates[`account/${userId}/${key}`] = value
+    updates[`account/${user.id}/${key}`] = value
     
-    return update(ref(db), updates)
+    update(ref(db), updates)
   }
 
   fetchFilterData (onFetchEnd) {

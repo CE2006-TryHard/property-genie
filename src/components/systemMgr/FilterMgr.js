@@ -2,16 +2,19 @@ import { dbMgr } from "./GlobalContext"
 
 export default class FilterMgr {
     constructor () {
-        this.filterOptions = []
+        this.filterOptions = {}
         this.fetchFilterOptions()
-
-        // this.fetchUserOptionConfig = 
     }
 
     fetchFilterOptions () {
-        // TODO: fetch filter options from data base
         dbMgr.fetchFilterData(filterOpts => {
-            this.filterOptions = Object.keys(filterOpts).map(key => ({id: key, label: filterOpts[key]}))
+            this.filterOptions = filterOpts
+        })
+    }
+
+    updateFilterByActiveUser (user) {
+        Object.keys(this.filterOptions).forEach(key => {
+            this.filterOptions[key].checked = user.filterOptions[key]
         })
     }
 
@@ -19,11 +22,23 @@ export default class FilterMgr {
         return this.filterOptions
     }
 
-    updateUserFilterOption () {
-        console.log()
+    updateUserFilterOption (newFilterOptions) {
+        this.filterOptions = newFilterOptions
+        const userOpt = {}
+        Object.keys(newFilterOptions).forEach(key => {
+            userOpt[key] = !!newFilterOptions[key].checked
+        })
+        dbMgr.updateUserData('filterOptions', userOpt)
+        // console.log()
     }
 
     resetUserFilterOption () {
-        console.log()
+        const userOpt = {}
+        Object.keys(this.filterOptions).forEach(key => {
+            console.log('check', this.filterOptions)
+            this.filterOptions[key].checked = false
+            userOpt[key] = false
+        })
+        dbMgr.updateUserData('filterOptions', userOpt)
     }
 }

@@ -8,7 +8,7 @@ import FilterPanelUI from "./components/systemUI/FilterPanelUI/index"
 import InfoPanelUI from './components/systemUI/InfoPanelUI/index'
 import LoginUI from './components/systemUI/LoginUI/index'
 import { GreetUserMsg } from './components/systemUI/MiscUI'
-import {sidePanelOptMgr} from './components/systemMgr/GlobalContext'
+import {dbMgr, filterMgr, sidePanelOptMgr, userInfoMgr} from './components/systemMgr/GlobalContext'
 import { useGoogleAuth } from './components/systemMgr/GoogleAuth'
 import {useEffect, useState} from 'react'
 import User from './components/entities/User'
@@ -22,22 +22,37 @@ import User from './components/entities/User'
 // INFORMATION  6
 
 function App() {
-  const {signIn, signOut, googleUser} = useGoogleAuth()
+  const {signIn, signOut, googleUser, isInitialized} = useGoogleAuth()
 
   const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
   const [selectedSearch, setSelectedSearch] = useState(null)
+  const [recentSearches, setRecentSearches] = useState([])
   const [activeUser, setActiveUser] = useState(null)
+  const [activeUserDataReady, setActiveUserDataReady] = useState(false)
   const [sidePanelIn, setSidePanelIn] = useState(false)
 
   useEffect(() => {
     if (googleUser && googleUser.profileObj) {
       const {name, email} = googleUser.profileObj
-      setActiveUser(new User(name, email, true))
-      // setActiveUser(userInfoMgr.setActiveUser(googleUser.profileObj))
+      dbMgr.initActiveUser(name, email, activeUser => {
+        setActiveUser(activeUser)
+        // update recent search
+        let curSearches = activeUser.recentSearches
+        while (recentSearches.length > 0) {
+          curSearches = userInfoMgr.addRecentSearch(curSearches, recentSearches.pop())
+        }
+        setRecentSearches(curSearches)
+        dbMgr.updateUserData(activeUser, 'recentSearches', curSearches)
+
+        // for first load, set data ready to render the rest of UI
+        setActiveUserDataReady(true)
+      })
       onLightboxClose()
+    } else if (isInitialized) {
+      setActiveUserDataReady(true)
     }
-  }, [googleUser])
+  }, [googleUser, isInitialized])
 
   const onSidePanelOptSelect = (newState) => {
     setPageState(newState)
@@ -51,6 +66,11 @@ function App() {
   }
 
   const onSearchChange = newSelection => {
+    let curSearches = recentSearches
+    curSearches = userInfoMgr.addRecentSearch(curSearches, newSelection)
+    setRecentSearches(curSearches)
+    dbMgr.updateUserData(activeUser, 'recentSearches', curSearches)
+
     setSelectedSearch(newSelection)
     setPageState(6)
     setShowLightbox(true)
@@ -73,18 +93,17 @@ function App() {
       case 5:
         return (<FilterPanelUI></FilterPanelUI>)
       case 6:
-         return (<InfoPanelUI currentProperty={selectedSearch}></InfoPanelUI>)
+        const property = dbMgr.getProperties().filter(p => p.name == selectedSearch)[0]
+         return (<InfoPanelUI property={property}></InfoPanelUI>)
     }
     return ''
   }
 
-  
-
-  return (
-    <div className="property-web-app">
+  if (!isInitialized || !activeUserDataReady) return (<div>Loading...</div>)
+  return (<div className="property-web-app">
       <MapUI></MapUI>
       <div className="navbar-container">
-        <SearchBarUI onChange={onSearchChange} selectedSearch={selectedSearch}></SearchBarUI>
+        <SearchBarUI onChange={onSearchChange} selectedSearch={selectedSearch} recentSearches={recentSearches}></SearchBarUI>
         <GreetUserMsg alwaysShow={sidePanelIn} activeUser={activeUser}></GreetUserMsg>
         <SidePanelWrapper
           isOpen={sidePanelIn}
@@ -101,8 +120,7 @@ function App() {
         <LightboxContent></LightboxContent>
       </LightBoxWrapper>
       
-    </div>
-  );
+    </div>);
 }
 
 export default App
