@@ -1,4 +1,4 @@
-import { loginActivityMgr } from "./GlobalContext"
+import { loginActivityMgr } from "./Mgr"
 
 export default class SidePanelOptMgr {
     constructor () {

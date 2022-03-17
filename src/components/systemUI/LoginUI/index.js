@@ -2,7 +2,7 @@ import './LoginUI.scss'
 import React from "react";
 import { GoogleLogInButton } from '../MiscUI'
 import User from './../../entities/User'
-import { userInfoMgr } from '../../systemMgr/GlobalContext';
+import { userInfoMgr } from '../../systemMgr/Mgr';
 // https://stackoverflow.com/questions/48849948/keeping-google-login-persistent-on-reloading-single-page-react-app
 
 export default class LoginUI extends React.Component {

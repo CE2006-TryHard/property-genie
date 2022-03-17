@@ -1,5 +1,5 @@
 import "./FilterPanelUI.scss"
-import {filterMgr} from './../../systemMgr/GlobalContext'
+import {filterMgr} from '../../systemMgr/Mgr'
 import Checkbox from './Checkbox'
 import React from 'react'
 

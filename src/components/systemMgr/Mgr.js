@@ -6,4 +6,5 @@ const sidePanelOptMgr = new SidePanelOptMgr()
 const dbMgr = new DatabaseMgr()
 const filterMgr = new FilterMgr() // must initialise after dbmanager
 
+
 export {filterMgr, sidePanelOptMgr, dbMgr}

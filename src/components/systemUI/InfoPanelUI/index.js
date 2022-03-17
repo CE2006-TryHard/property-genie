@@ -1,6 +1,6 @@
 import "./InfoPanelUI.scss"
 import TabButton from "./TabButton"
-import { dbMgr } from "../../systemMgr/GlobalContext"
+import { dbMgr } from "../../systemMgr/Mgr"
 import React from 'react'
 
 const views = ["General", "Evaluation"]
@@ -17,8 +17,12 @@ export default class InfoPanelUI extends React.Component {
     this.setState({currentView: newView})
   }
 
-  render () {
+  onBookmarkClick () {
+    this.props.onBookmark(this.props.property, !this.props.isBookmarked)
+    // console.log('is book mark?', isBookmarked)
+  }
 
+  render () {
     const {name, address} = this.props.property
 
     const generalView = () => {
@@ -38,10 +42,17 @@ export default class InfoPanelUI extends React.Component {
         </div>
       )
     }
+
+    
+  
     return (<div className="info-panel-container">
       <div className="info-panel-content">
         <TabButton options={views} current={this.state.currentView} onChange={this.onViewChange.bind(this)}></TabButton>
         <div className="info-panel-detail-container">
+          {this.props.enableBookmark ? 
+          <div onClick={this.onBookmarkClick.bind(this)} className={`bookmark-button ${this.props.isBookmarked ? 'checked' : ''}`}></div>
+          : ''}
+          
           {this.state.currentView === 'General' ? generalView() : valueView()}
         </div>
         

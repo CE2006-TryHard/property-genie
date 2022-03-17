@@ -5,13 +5,13 @@ import SearchBarUI from './components/systemUI/SearchBarUI'
 import LightBoxWrapper from './components/systemUI/LightboxWrapper/index'
 import SidePanelWrapper from './components/systemUI/SidePanelWrapper'
 import FilterPanelUI from "./components/systemUI/FilterPanelUI/index"
+import BookmarkUI from './components/systemUI/BookmarkUI/index'
 import InfoPanelUI from './components/systemUI/InfoPanelUI/index'
 import LoginUI from './components/systemUI/LoginUI/index'
 import { GreetUserMsg } from './components/systemUI/MiscUI'
-import {dbMgr, filterMgr, sidePanelOptMgr, userInfoMgr} from './components/systemMgr/GlobalContext'
+import {dbMgr, filterMgr, sidePanelOptMgr} from './components/systemMgr/Mgr'
 import { useGoogleAuth } from './components/systemMgr/GoogleAuth'
 import {useEffect, useState} from 'react'
-import User from './components/entities/User'
 
 // page state
 // HOME         1
@@ -26,24 +26,45 @@ function App() {
 
   const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
+  const [properties, setProperties] = useState([])
   const [selectedSearch, setSelectedSearch] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
+  const [bookmarks, setBookmarks] = useState([])
   const [activeUser, setActiveUser] = useState(null)
   const [activeUserDataReady, setActiveUserDataReady] = useState(false)
   const [sidePanelIn, setSidePanelIn] = useState(false)
 
+  const addRecentSearch = (recentSearch, newSearch) => {
+    recentSearch = recentSearch.filter(rs => rs.name !== newSearch.name)
+    recentSearch.unshift(newSearch)
+    if (recentSearch.length > 10) recentSearch.splice(10 - recentSearch.length)
+    return recentSearch
+  }
+
+  
+
   useEffect(() => {
     if (googleUser && googleUser.profileObj) {
+      // set all properties data
+      const pps = dbMgr.getProperties()
+      setProperties(pps)
+  
+      // fetch user data
       const {name, email} = googleUser.profileObj
       dbMgr.initActiveUser(name, email, activeUser => {
+  
         setActiveUser(activeUser)
         // update recent search
-        let curSearches = activeUser.recentSearches
+        let curSearches = activeUser.recentSearchStr.map(pName => pps.filter(p => p.name === pName)[0])
         while (recentSearches.length > 0) {
-          curSearches = userInfoMgr.addRecentSearch(curSearches, recentSearches.pop())
+          curSearches = addRecentSearch(curSearches, recentSearches.pop())
         }
         setRecentSearches(curSearches)
-        dbMgr.updateUserData(activeUser, 'recentSearches', curSearches)
+        console.log('cur search', curSearches)
+        dbMgr.updateUserData(activeUser, 'recentSearchStr', curSearches.map(s => s.name))
+
+        // update bookmarks
+        setBookmarks(activeUser.bookmarkStr.map(bName => pps.filter(p => p.name === bName)[0]))
 
         // for first load, set data ready to render the rest of UI
         setActiveUserDataReady(true)
@@ -65,15 +86,46 @@ function App() {
     setShowLightbox(false)
   }
 
-  const onSearchChange = newSelection => {
+  const onSearchChange = newSearchedProperty => {
     let curSearches = recentSearches
-    curSearches = userInfoMgr.addRecentSearch(curSearches, newSelection)
+    curSearches = addRecentSearch(curSearches, newSearchedProperty)
     setRecentSearches(curSearches)
-    dbMgr.updateUserData(activeUser, 'recentSearches', curSearches)
+    dbMgr.updateUserData(activeUser, 'recentSearchStr', curSearches.map(s => s.name))
 
-    setSelectedSearch(newSelection)
+    setSelectedSearch(newSearchedProperty)
     setPageState(6)
     setShowLightbox(true)
+  }
+
+  const getBookmarkIndex = property => {
+    let targetIndex = -1
+    bookmarks.every((b, i) => {
+      if (b.name === property.name) {
+        targetIndex = i
+        return false
+      }
+      return true
+    })
+
+    return targetIndex
+  }
+
+  const onBookmark = (property, isBookmarked) => {
+    let curBookmarks = bookmarks
+    const targetIndex = getBookmarkIndex(property)
+
+    if (isBookmarked && targetIndex < 0) {
+      curBookmarks.push(property)
+    } else if (!isBookmarked && targetIndex >= 0) {
+      curBookmarks = [...curBookmarks.slice(0, targetIndex), ...curBookmarks.slice(targetIndex + 1, curBookmarks.length - 1)]
+    }
+    setBookmarks(curBookmarks)
+    console.log(curBookmarks)
+    dbMgr.updateUserData(activeUser, 'bookmarkStr', curBookmarks.map(b => b.name))
+  }
+
+  const isBookmarked = property => {
+    return bookmarks.filter(b => b.name === property.name).length > 0
   }
 
   const onLogOut = () => {
@@ -89,12 +141,11 @@ function App() {
       case 3:
         return (<LoginUI onLogIn={signIn}></LoginUI>)
       case 4:
-        return "bookmark panel"
+        return (<BookmarkUI bookmarks={bookmarks}></BookmarkUI>)
       case 5:
         return (<FilterPanelUI></FilterPanelUI>)
       case 6:
-        const property = dbMgr.getProperties().filter(p => p.name == selectedSearch)[0]
-         return (<InfoPanelUI property={property}></InfoPanelUI>)
+         return (<InfoPanelUI property={selectedSearch} enableBookmark={!!activeUser} isBookmarked={isBookmarked(selectedSearch)} onBookmark={onBookmark}></InfoPanelUI>)
     }
     return ''
   }
@@ -103,7 +154,7 @@ function App() {
   return (<div className="property-web-app">
       <MapUI></MapUI>
       <div className="navbar-container">
-        <SearchBarUI onChange={onSearchChange} selectedSearch={selectedSearch} recentSearches={recentSearches}></SearchBarUI>
+        <SearchBarUI onChange={onSearchChange} selectedSearch={selectedSearch} recentSearches={recentSearches} properties={properties}></SearchBarUI>
         <GreetUserMsg alwaysShow={sidePanelIn} activeUser={activeUser}></GreetUserMsg>
         <SidePanelWrapper
           isOpen={sidePanelIn}

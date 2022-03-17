@@ -1,4 +1,4 @@
-import { dbMgr } from "./GlobalContext"
+import { dbMgr } from "./Mgr"
 
 export default class FilterMgr {
     constructor () {

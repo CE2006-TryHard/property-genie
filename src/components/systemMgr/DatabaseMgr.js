@@ -1,9 +1,10 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app"
 // import { getAnalytics } from "firebase/analytics"
-import {getDatabase, ref, set, onValue, update} from 'firebase/database'
+import {getDatabase, ref, onValue, update} from 'firebase/database'
 import Papa from 'papaparse'
 import User from "../entities/User"
+import Property from '../entities/Property'
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -20,9 +21,9 @@ export default class DatabaseMgr {
     const newUser = new User(name, email, true)
     const db = getDatabase()
     onValue(ref(db, `account/${newUser.id}`), snapshot => {
-      const {recentSearches, bookmarks, filterOptions} = snapshot.val()
-      newUser.recentSearches = recentSearches || []
-      newUser.bookmarks = bookmarks || []
+      const {recentSearchStr, bookmarkStr, filterOptions} = snapshot.val()
+      newUser.recentSearchStr = recentSearchStr || []
+      newUser.bookmarkStr = bookmarkStr || []
       newUser.filterOptions = filterOptions || []
 
       onFetchEnd(newUser)
@@ -90,15 +91,14 @@ export default class DatabaseMgr {
       .then(res => res.text())
       .then(raw => Papa.parse(raw, {header: true}))
       .then(parsedRaw => {
-        this.properties = parsedRaw.data
+        parsedRaw.data
           .filter(d => d['valid postal'] > 0)
-          .map(d => {
-          d['description'] = 'Lorem Ipsum asd asd asd asd.'
-          d['distToMrt'] = 1
-          d['distToSchool'] = 2
-          return d
-        })
-        
+          .forEach(d => {
+            d['description'] = 'Lorem Ipsum asd asd asd asd.'
+            d['distToMrt'] = 1
+            d['distToSchool'] = 2
+            this.properties.push(new Property(d))
+          })
         console.log(this.properties)
       })
   }
