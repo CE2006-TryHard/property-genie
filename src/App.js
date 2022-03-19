@@ -29,6 +29,11 @@ function App() {
   const [properties, setProperties] = useState([])
   const [selectedSearch, setSelectedSearch] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
+  const [filterOptions, setFilterOptions] = useState({
+    enbloc: {label: 'Enbloc', checked: false},
+    distToMRT: {label: 'Distance to MRT', checked: false},
+    distToSchool: {label: 'Distance to School', checked: false}
+  })
   const [bookmarks, setBookmarks] = useState([])
   const [activeUser, setActiveUser] = useState(null)
   const [activeUserDataReady, setActiveUserDataReady] = useState(false)
@@ -46,7 +51,7 @@ function App() {
   useEffect(() => {
     if (googleUser && googleUser.profileObj) {
       // set all properties data
-      const pps = dbMgr.getProperties()
+      let pps = dbMgr.getProperties()
       setProperties(pps)
   
       // fetch user data
@@ -55,7 +60,7 @@ function App() {
   
         setActiveUser(activeUser)
         // update recent search
-        let curSearches = activeUser.recentSearchStr.map(pName => pps.filter(p => p.name === pName)[0])
+        let curSearches = activeUser.recentSearchStr.map(pName => pps.filter(p => p.name === pName)[0]).filter(p => p)
         while (recentSearches.length > 0) {
           curSearches = addRecentSearch(curSearches, recentSearches.pop())
         }
@@ -125,6 +130,7 @@ function App() {
   }
 
   const isBookmarked = property => {
+    if (!property) return false
     return bookmarks.filter(b => b.name === property.name).length > 0
   }
 
@@ -136,6 +142,10 @@ function App() {
     setSidePanelIn(false)
   }
 
+  const onFilterChange = () => {
+
+  }
+
   const LightboxContent = () => {
     switch (pageState) {
       case 3:
@@ -143,7 +153,7 @@ function App() {
       case 4:
         return (<BookmarkUI bookmarks={bookmarks}></BookmarkUI>)
       case 5:
-        return (<FilterPanelUI></FilterPanelUI>)
+        return (<FilterPanelUI filterOptions={filterOptions} onFilterChange={onFilterChange}></FilterPanelUI>)
       case 6:
          return (<InfoPanelUI property={selectedSearch} enableBookmark={!!activeUser} isBookmarked={isBookmarked(selectedSearch)} onBookmark={onBookmark}></InfoPanelUI>)
     }
@@ -152,7 +162,7 @@ function App() {
 
   if (!isInitialized || !activeUserDataReady) return (<div>Loading...</div>)
   return (<div className="property-web-app">
-      <MapUI></MapUI>
+      <MapUI properties={properties} ></MapUI>
       <div className="navbar-container">
         <SearchBarUI onChange={onSearchChange} selectedSearch={selectedSearch} recentSearches={recentSearches} properties={properties}></SearchBarUI>
         <GreetUserMsg alwaysShow={sidePanelIn} activeUser={activeUser}></GreetUserMsg>

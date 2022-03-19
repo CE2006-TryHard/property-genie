@@ -6,8 +6,8 @@ export default class User {
         this.isGoogleAccount = isGoogleAccount
         this.password = ''
         this.isVerified = false
-        this.bookmarks = []
-        this.recentSearches = []
+        this.bookmarkStr = []
+        this.recentSearchStr = []
         this.filterOptions = []
     }
 

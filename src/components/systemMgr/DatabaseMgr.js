@@ -1,20 +1,19 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app"
-// import { getAnalytics } from "firebase/analytics"
+import { getAnalytics } from "firebase/analytics"
 import {getDatabase, ref, onValue, update} from 'firebase/database'
 import Papa from 'papaparse'
 import User from "../entities/User"
 import Property from '../entities/Property'
-
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import District from "../entities/District"
 
 export default class DatabaseMgr {
   constructor () {
     // this.activeUser = null
     this.properties = []
-    this.initFirebase()
+    this.districts = {}
     this.fetchPropertyData()
+    this.initFirebase()
+    
   }
 
   initActiveUser(name, email, onFetchEnd) {
@@ -45,8 +44,8 @@ export default class DatabaseMgr {
     }
 
     // Initialize Firebase
-    // const app = 
-    initializeApp(firebaseConfig)
+    const app = initializeApp(firebaseConfig)
+    getAnalytics(app)
     // const analytics = getAnalytics(app)
 
     // test fetch data
@@ -77,12 +76,12 @@ export default class DatabaseMgr {
     update(ref(db), updates)
   }
 
-  fetchFilterData (onFetchEnd) {
-    const db = getDatabase()
-    onValue(ref(db, `filterOptions`), snapshot => {
-      onFetchEnd(snapshot.val())
-    })
-  }
+  // fetchFilterData (onFetchEnd) {
+  //   const db = getDatabase()
+  //   onValue(ref(db, `filterOptions`), snapshot => {
+  //     onFetchEnd(snapshot.val())
+  //   })
+  // }
 
 
   fetchPropertyData () {
@@ -92,12 +91,18 @@ export default class DatabaseMgr {
       .then(raw => Papa.parse(raw, {header: true}))
       .then(parsedRaw => {
         parsedRaw.data
-          .filter(d => d['valid postal'] > 0)
+          .filter(d => d['valid postal'] > 0 && d['enbloc'] !== 'null' && d['district'] !== '')
           .forEach(d => {
             d['description'] = 'Lorem Ipsum asd asd asd asd.'
             d['distToMrt'] = 1
             d['distToSchool'] = 2
-            this.properties.push(new Property(d))
+            const p = new Property(d)
+            this.properties.push(p)
+
+            const districtID = parseInt(d['district'])
+            if (!this.districts[districtID]) this.districts[districtID] = new District(districtID)
+            this.districts[districtID].properties.push(p)
+
           })
         console.log(this.properties)
       })
@@ -105,6 +110,10 @@ export default class DatabaseMgr {
 
   getProperties () {
     return this.properties
+  }
+
+  getDistricts () {
+    return this.districts
   }
 
 }

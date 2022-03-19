@@ -7,35 +7,39 @@ export default class FilterPanelUI extends React.Component {
     constructor (props) {
         super(props)
         this.state = {
-            optionObjTemp: filterMgr.getFilterOptions(),
-            optionObj: filterMgr.getFilterOptions()
+            filterOptTemp: this.props.filterOptions
+            // optionObj: filterMgr.getFilterOptions()
         }
     }
 
     onChange(key, value) {
-        const obj = this.state.optionObjTemp
+        const obj = this.state.filterOptTemp
         obj[key].checked = value
-        this.setState({...this.state, optionObjTemp: obj})
+        this.setState({...this.state, filterOptTemp: obj})
         
         console.log('on change', key, value)
     }
 
     onSubmit () {
-        this.setState({...this.state, optionObj: this.state.optionObjTemp})
-        filterMgr.updateUserFilterOption(this.state.optionObj)
+        this.props.onFilterChange(this.state.filterOptTemp)
+        // this.setState({...this.state, optionObj: this.state.optionObjTemp})
+        // filterMgr.updateUserFilterOption(this.state.optionObj)
     }
 
     onReset () {
-        filterMgr.resetUserFilterOption()
-        this.setState({
-            optionObjTemp: filterMgr.getFilterOptions(),
-            optionObj: filterMgr.getFilterOptions()
+        // filterMgr.resetUserFilterOption()
+        const newFilterOptTemp = this.state.filterOptTemp
+        Object.keys(this.state.filterOptTemp).forEach(key => {
+            newFilterOptTemp[key].checked = false
         })
+        this.setState({...this.state, optionObjTemp: newFilterOptTemp})
+
+        this.props.onFilterChange(newFilterOptTemp)
     }
 
     render () {
         return (<div className="filter-panel-container">
-            <Checkbox options={this.state.optionObjTemp} onChange={this.onChange.bind(this)}></Checkbox>
+            <Checkbox options={this.state.filterOptTemp} onChange={this.onChange.bind(this)}></Checkbox>
             <button onClick={this.onSubmit.bind(this)}>Submit</button>
             <button onClick={this.onReset.bind(this)}>Reset</button>
         </div>)

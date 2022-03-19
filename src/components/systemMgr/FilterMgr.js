@@ -3,14 +3,14 @@ import { dbMgr } from "./Mgr"
 export default class FilterMgr {
     constructor () {
         this.filterOptions = {}
-        this.fetchFilterOptions()
+        // this.fetchFilterOptions()
     }
 
-    fetchFilterOptions () {
-        dbMgr.fetchFilterData(filterOpts => {
-            this.filterOptions = filterOpts
-        })
-    }
+    // fetchFilterOptions () {
+    //     dbMgr.fetchFilterData(filterOpts => {
+    //         this.filterOptions = filterOpts
+    //     })
+    // }
 
     updateFilterByActiveUser (user) {
         Object.keys(this.filterOptions).forEach(key => {

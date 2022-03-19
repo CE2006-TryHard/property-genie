@@ -4,11 +4,16 @@ import {Loader} from "@googlemaps/js-api-loader"
 
 
 export default class MapUI extends React.Component {
-  state = {
-    showingInfoWindow: false,
-    activeMarker: {},
-    selectedPlace: {}
+  constructor(props) {
+    super(props)
+
+    this.map = null
   }
+  // state = {
+  //   showingInfoWindow: false,
+  //   activeMarker: {},
+  //   selectedPlace: {}
+  // }
 
   render() {
     const mapStyles = {
@@ -29,9 +34,9 @@ export default class MapUI extends React.Component {
     })
 
     loader.load().then(google => {
-      const map = new google.maps.Map(document.querySelector(".map-content"), {
-        center: {lat:1.360514, lng: 103.810300},
-        zoom: 11.5,
+      this.map = new google.maps.Map(document.querySelector(".map-content"), {
+        center: {lat:1.360514, lng: 103.840300},
+        zoom: 11,
         mapTypeControl: false,
         fullscreenControl: false,
         streetViewControl: false,
@@ -40,27 +45,25 @@ export default class MapUI extends React.Component {
         disableDoubleClickZoom: true
       })
 
-      const districtShape = new google.maps.KmlLayer({
-        url: "https://storage.cloud.google.com/tryhard-bucket/districts.kml",
-        map: map
+      this.map.data.loadGeoJson('data/districts_simplify.geojson')
+      console.log(this.map.data)
+      this.map.data.setStyle(feature => {
+        const color = feature.getProperty('Name') === 'SEMBAWANG' ? 'red' : 'green'
+        return {
+          fillColor: color,
+          strokeWeight: 1,
+          strokeColor: '#FFFFFF',
+          fillOpacity: 0.7
+        }
+      })
 
+      this.map.data.addListener('mouseover', e => {
+        console.log(e.feature.getProperty('Name'))
       })
     })
   }
 
-  onMarkerClick = (props, marker, e) =>
-    this.setState({
-      selectedPlace: props,
-      activeMarker: marker,
-      showingInfoWindow: true
-    })
-
-  onClose = props => {
-    if (this.state.showingInfoWindow) {
-      this.setState({
-        showingInfoWindow: false,
-        activeMarker: null
-      })
-    }
+  componentDidUpdate(prevProps) {
+    console.log('check prop update map')
   }
 }
