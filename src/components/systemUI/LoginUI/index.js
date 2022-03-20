@@ -6,6 +6,7 @@ import { userInfoMgr } from '../../systemMgr/Mgr';
 // https://stackoverflow.com/questions/48849948/keeping-google-login-persistent-on-reloading-single-page-react-app
 
 export default class LoginUI extends React.Component {
+    
     render () {
         return (
             <div className={`login-container`}>
@@ -16,11 +17,13 @@ export default class LoginUI extends React.Component {
                     <div className="input-password">
                     <span>Password: </span><input type="text" />
                     </div>
-                    <button>SignUp/Login</button>
+                    <div>Forgot/Wish to update password?<span>Update password</span></div>
+                    <button>Login</button>
                 </div>
                 <div className="google-login-container">
                     Or <button onClick={this.props.onLogIn}>Login with Google</button>
                 </div>
+                {"Does not have an account?"}<span className="register-button">Register</span>
             </div>
         )
     }

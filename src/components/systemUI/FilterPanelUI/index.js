@@ -13,7 +13,7 @@ export default class FilterPanelUI extends React.Component {
     }
 
     onChange(key, value) {
-        const obj = this.state.filterOptTemp
+        const obj = {...this.state.filterOptTemp} // make sure it can trigger rerender during onSubmit
         obj[key].checked = value
         this.setState({...this.state, filterOptTemp: obj})
         
@@ -22,8 +22,6 @@ export default class FilterPanelUI extends React.Component {
 
     onSubmit () {
         this.props.onFilterChange(this.state.filterOptTemp)
-        // this.setState({...this.state, optionObj: this.state.optionObjTemp})
-        // filterMgr.updateUserFilterOption(this.state.optionObj)
     }
 
     onReset () {

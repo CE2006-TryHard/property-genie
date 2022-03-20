@@ -20,14 +20,16 @@ import {useEffect, useState} from 'react'
 // BOOKMARK     4
 // FILTER       5
 // INFORMATION  6
-
+// LOGOUT       7
 function App() {
   const {signIn, signOut, googleUser, isInitialized} = useGoogleAuth()
 
   const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
+  const [warningMsg, setWarningMsg] = useState(null)
   const [properties, setProperties] = useState([])
   const [selectedSearch, setSelectedSearch] = useState(null)
+  const [selectedDistrict, setSelectedDistrict] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
   const [filterOptions, setFilterOptions] = useState({
     enbloc: {label: 'Enbloc', checked: false},
@@ -81,14 +83,24 @@ function App() {
   }, [googleUser, isInitialized])
 
   const onSidePanelOptSelect = (newState) => {
-    setPageState(newState)
-    if (newState > 0) setShowLightbox(true)
-    setSidePanelIn(false)
+    if (newState === 4 && !activeUser) { // bookmark state
+      setWarningMsg("Please login to access the bookmark feature.")
+    } else if (newState === 7) { // logout state
+      onLogOut()
+    } else {
+      setPageState(newState)
+      if (newState > 0) setShowLightbox(true)
+      setSidePanelIn(false)
+    }
   }
 
   const onLightboxClose = () => {
     setPageState(0)
     setShowLightbox(false)
+  }
+
+  const onWarningMsgClose = () => {
+    setWarningMsg(null)
   }
 
   const onSearchChange = newSearchedProperty => {
@@ -142,8 +154,18 @@ function App() {
     setSidePanelIn(false)
   }
 
-  const onFilterChange = () => {
+  const onFilterChange = newFilterOptions => {
+    console.log('what')
+    setFilterOptions(newFilterOptions) 
+  }
 
+  const onDistrictChange = newDistrict => {
+    setSelectedDistrict(newDistrict)
+  }
+
+  const onResetView = () => {
+    setSelectedSearch(null)
+    setSelectedDistrict(null)
   }
 
   const LightboxContent = () => {
@@ -162,8 +184,9 @@ function App() {
 
   if (!isInitialized || !activeUserDataReady) return (<div>Loading...</div>)
   return (<div className="property-web-app">
-      <MapUI properties={properties} ></MapUI>
+      <MapUI properties={properties} curDistrict={selectedDistrict} filterOptions={filterOptions} onPropertySelect={onSearchChange} onDistrictSelect={onDistrictChange}></MapUI>
       <div className="navbar-container">
+        <img className="web-app-logo" src={require('./images/pglogo.png')} onClick={onResetView}/>
         <SearchBarUI onChange={onSearchChange} selectedSearch={selectedSearch} recentSearches={recentSearches} properties={properties}></SearchBarUI>
         <GreetUserMsg alwaysShow={sidePanelIn} activeUser={activeUser}></GreetUserMsg>
         <SidePanelWrapper
@@ -174,13 +197,18 @@ function App() {
               <div className="side-panel-option" key={i}
               onClick={() => onSidePanelOptSelect(opt.state)}>{opt.label}</div>)
           }
-          {activeUser ? <button onClick={onLogOut}>Logout with Google</button> : ''}
         </SidePanelWrapper>
       </div>
       <LightBoxWrapper isOpen={showLightBox} onClose={onLightboxClose}>
         <LightboxContent></LightboxContent>
       </LightBoxWrapper>
       
+      <LightBoxWrapper isOpen={!!warningMsg} onClose={onWarningMsgClose} hideCloseButton={true}>
+        <div className="warning-msg-container">
+          {warningMsg}
+          <button onClick={onWarningMsgClose}>Back</button>
+        </div>
+      </LightBoxWrapper>
     </div>);
 }
 

@@ -9,6 +9,14 @@
     height: 50px;
     background: linear-gradient(to bottom, #333333 0%, rgba(#333333, 0) 100%);
 
+    .web-app-logo {
+      position: absolute;
+      top: 10px;
+      left: 300px;
+      width: 100px;
+      height: 40px;
+      cursor: pointer;
+    }
     .search-bar-container {
       position: absolute;
         right: 0;
@@ -103,5 +111,18 @@
     }
   } // side-panel-entry
 
+  .warning-msg-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: red;
+    padding: 10px;
 
+    button {
+      display: block;
+      margin: 0 auto;
+      margin-top: 10px;
+    }
+  }
 } // property-web-app

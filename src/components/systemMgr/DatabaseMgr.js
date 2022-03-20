@@ -4,7 +4,7 @@ import {getDatabase, ref, onValue, update} from 'firebase/database'
 import Papa from 'papaparse'
 import User from "../entities/User"
 import Property from '../entities/Property'
-import District from "../entities/District"
+import District, {DISTRICT_NAME} from "../entities/District"
 
 export default class DatabaseMgr {
   constructor () {
@@ -93,6 +93,8 @@ export default class DatabaseMgr {
         parsedRaw.data
           .filter(d => d['valid postal'] > 0 && d['enbloc'] !== 'null' && d['district'] !== '')
           .forEach(d => {
+            d['lat'] = parseFloat(d['lat'])
+            d['lng'] = parseFloat(d['lng'])
             d['description'] = 'Lorem Ipsum asd asd asd asd.'
             d['distToMrt'] = 1
             d['distToSchool'] = 2
@@ -100,8 +102,9 @@ export default class DatabaseMgr {
             this.properties.push(p)
 
             const districtID = parseInt(d['district'])
-            if (!this.districts[districtID]) this.districts[districtID] = new District(districtID)
-            this.districts[districtID].properties.push(p)
+            let districtName = DISTRICT_NAME[districtID].name
+            if (!this.districts[districtName]) this.districts[districtName] = new District(districtName)
+            this.districts[districtName].properties.push(p)
 
           })
         console.log(this.properties)
