@@ -69,8 +69,10 @@ export default class InfoPanelUI extends React.Component {
       <div className="info-panel-content">
         <TabButton options={views} current={this.state.currentView} onChange={this.onViewChange.bind(this)}></TabButton>
         <div className="info-panel-detail-container">
-          {this.props.enableBookmark ? 
-          <div onClick={this.onBookmarkClick.bind(this)} className={`bookmark-button ${this.props.isBookmarked ? 'checked' : ''}`}></div>
+          {this.props.enableBookmark && this.state.currentView === 'General' ? 
+          <div className="bookmark-button-wrapper" onClick={this.onBookmarkClick.bind(this)}>
+             <div className={`bookmark-button ${this.props.isBookmarked ? 'checked' : ''}`}></div>
+          </div>
           : ''}
           
           {this.state.currentView === 'General' ? generalView() : valueView()}

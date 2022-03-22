@@ -15,8 +15,8 @@ export default class DatabaseMgr {
     
   }
 
-  initActiveUser(name, email, onFetchEnd) {
-    const newUser = new User(name, email, true)
+  initActiveUser(name, email, isGoogleUser, onFetchEnd) {
+    const newUser = new User(name, email, isGoogleUser)
     const db = getDatabase()
     onValue(ref(db, `account/${newUser.id}`), snapshot => {
       const {recentSearchStr, bookmarkStr, filterOptions} = snapshot.val()
@@ -25,6 +25,7 @@ export default class DatabaseMgr {
       // newUser.filterOptions = filterOptions || []
 
       onFetchEnd(newUser)
+      console.log('magic!')
     })
   }
 
@@ -56,12 +57,12 @@ export default class DatabaseMgr {
     // this.updateUserData('recent', 'house')
   }
 
-  fetchAllUserData(userId, onFetchEnd) {
-    const db = getDatabase()
-    onValue(ref(db, `account/${userId}`), snapshot => {
-      onFetchEnd(snapshot.val())
-    })
-  }
+  // fetchAllUserData(userId, onFetchEnd) {
+  //   const db = getDatabase()
+  //   onValue(ref(db, `account/${userId}`), snapshot => {
+  //     onFetchEnd(snapshot.val())
+  //   })
+  // }
 
   updateUserData(user, key, value) {
     if (!user) {

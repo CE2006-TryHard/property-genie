@@ -37,6 +37,81 @@ const DISTRICT_MAP_CONFIG = {
   'YUHUA': {center: [1.3411559906872688, 103.7388138023272], zoom: 15}
 }
 
+const MAP_STYLES = [
+  {
+    "featureType": "administrative.locality",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.province",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.man_made",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.natural.terrain",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.attraction",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.business",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.government",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.place_of_worship",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "road.arterial",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  }
+]
+
 const componentToHex = c => {
   var hex = c.toString(16);
   return hex.length == 1 ? "0" + hex : hex;
@@ -47,8 +122,11 @@ const rgbToHex = (r, g, b) => {
 }
 
 const MAP_CENTER = {lat:1.360514, lng: 103.840300}
-const MAP_ZOOM = 11
-
+const MAP_ZOOM = 11.5
+const MAP_BOUND_RESTRICTION = {
+  latLngBounds: {north: 1.56081, south: 1.1201,east: 104.21781,west: 103.46456},
+  strictBounds: false
+}
 const ICON_CONFIG = {
   path: "M0,5a5,5 0 1,0 10,0a5,5 0 1,0 -10,0",
   fillColor: "grey",
@@ -95,8 +173,8 @@ export default class MapUI extends React.Component {
       top: bubbleY + 20
     }
 
-    const showInfo = currentHoverProperty || (currentHoverDistrict && currentHoverDistrict !== currentZoomInDistrict)
-
+    // const showInfo = currentHoverProperty || (currentHoverDistrict && currentHoverDistrict !== currentZoomInDistrict)
+    const showInfo = currentHoverProperty || currentHoverDistrict
     return (
       <div className="map-container">
         {showInfo ?
@@ -207,12 +285,16 @@ export default class MapUI extends React.Component {
       this.map = new google.maps.Map(document.querySelector(".map-content"), {
         center: MAP_CENTER,
         zoom: MAP_ZOOM,
+        maxZoom: 16,
+        minZoom: MAP_ZOOM,
+        restriction: MAP_BOUND_RESTRICTION,
         mapTypeControl: false,
         fullscreenControl: false,
         streetViewControl: false,
-        zoomControl: false,
-        draggable: false,
-        disableDoubleClickZoom: true
+        // zoomControl: false,
+        // draggable: false,
+        disableDoubleClickZoom: true,
+        styles: MAP_STYLES
       })
 
       const districts = dbMgr.getDistricts()
@@ -251,8 +333,13 @@ export default class MapUI extends React.Component {
           }
         })
       })
+      // this.map.addListener('click', e => {
+      //   const {lat, lng} = e.latLng.toJSON()
+      //   console.log(lat, lng)
+      // })
 
       this.map.data.addListener('click', e => {
+        
         const district = districts[e.feature.getProperty('Name')]
         this.props.onDistrictSelect(district)
       })
@@ -271,7 +358,8 @@ export default class MapUI extends React.Component {
             strokeColor: isTargetDistrict ? '#333333' : '#FFFFFF',
             strokeWeight: isTargetDistrict? 2 : 1,
             fillColor: this.getDistrictColorHex(tDistrict),
-            fillOpacity: isTargetDistrict ? 0 : 0.7
+            fillOpacity: isTargetDistrict ? 0 : 0.7,
+            zIndex: isTargetDistrict ? 1 : 0
           }
         })
       })
@@ -279,7 +367,7 @@ export default class MapUI extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    const {filterOptions, curDistrict} = prevProps
+    const {filterOptions, curDistrict, triggerReset} = prevProps
     const districts = dbMgr.getDistricts()
 
     if (filterOptions !== this.props.filterOptions) {
@@ -314,15 +402,27 @@ export default class MapUI extends React.Component {
             zIndex: isTargetDistrict ? 1 : 0
           }
         })
-  
+        
+        // this.map.draggable = !!this.props.curDistrict
+        // this.map.zoomControl = !!this.props.curDistrict
         if (!this.props.curDistrict) {
+          this.map.setOptions({minZoom: MAP_ZOOM})
           this.map.setCenter(MAP_CENTER)
           this.map.setZoom(MAP_ZOOM)
+          // this.map.restriction = null
         } else {
           const {center, zoom} = DISTRICT_MAP_CONFIG[district.name]
           this.map.setCenter({lat: center[0], lng: center[1]})
           this.map.setZoom(zoom)
+          this.map.setOptions({minZoom: 12})
+          // this.map.restriction = MAP_BOUND_RESTRICTION
         }
+    }
+
+    if (triggerReset !== this.props.triggerReset) {
+        this.map.setOptions({minZoom: MAP_ZOOM})
+          this.map.setCenter(MAP_CENTER)
+          this.map.setZoom(MAP_ZOOM)
     }
   }
 

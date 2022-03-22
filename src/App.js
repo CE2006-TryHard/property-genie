@@ -24,7 +24,7 @@ import {useEffect, useState} from 'react'
 // ACCOUNT INFO 8
 function App() {
   const {signIn, signOut, googleUser, isInitialized} = useGoogleAuth()
-
+  const [isSignedOut, setIsSignedOut] = useState(false)
   const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
   const [warningMsg, setWarningMsg] = useState(null)
@@ -41,6 +41,7 @@ function App() {
   const [activeUser, setActiveUser] = useState(null)
   const [activeUserDataReady, setActiveUserDataReady] = useState(false)
   const [sidePanelIn, setSidePanelIn] = useState(false)
+  const [mapTriggerReset, setMapTriggerReset] = useState(false)
 
   const addRecentSearch = (recentSearch, newSearch) => {
     recentSearch = recentSearch.filter(rs => rs.name !== newSearch.name)
@@ -53,39 +54,65 @@ function App() {
 
   useEffect(() => {
     if (googleUser && googleUser.profileObj) {
-      // set all properties data
-      let pps = dbMgr.getProperties()
-      setProperties(pps)
-  
       // fetch user data
       const {name, email} = googleUser.profileObj
-      dbMgr.initActiveUser(name, email, activeUser => {
-  
+      dbMgr.initActiveUser(name, email, true, activeUser => {
         setActiveUser(activeUser)
-        // update recent search
-        let curSearches = activeUser.recentSearchStr.map(pName => pps.filter(p => p.name === pName)[0]).filter(p => p)
-        while (recentSearches.length > 0) {
-          curSearches = addRecentSearch(curSearches, recentSearches.pop())
-        }
-        setRecentSearches(curSearches)
-        console.log('cur search', curSearches)
-        dbMgr.updateUserData(activeUser, 'recentSearchStr', curSearches.map(s => s.name))
-
-        // update bookmarks
-        setBookmarks(activeUser.bookmarkStr.map(bName => pps.filter(p => p.name === bName)[0]))
-
-        // for first load, set data ready to render the rest of UI
-        setActiveUserDataReady(true)
+        setIsSignedOut(false)
       })
       onLightboxClose()
-    } else if (isInitialized) {
-      // set all properties data
-      let pps = dbMgr.getProperties()
-      setProperties(pps)
-      setActiveUserDataReady(true)
+    } else if (isInitialized && !isSignedOut) {
+      // no active google account login session
+      // check if local storage contain manual email login record
+      const localUser = localStorage.getItem('activeUser')
+      if (localUser) {
+        console.log('found local user')
+        const {name, email} = localUser
+        dbMgr.initActiveUser(name, email, false, activeUser => {
+          setActiveUser(activeUser)
+          setIsSignedOut(false)
+        })
+      } else {
+        // logged out state
+        setActiveUserDataReady(true)
+      }
+      // const activeUser
     }
   }, [googleUser, isInitialized])
 
+  useEffect(() => {
+    let pps = dbMgr.getProperties()
+    setProperties(pps)
+    console.log('active user', activeUser)
+    if (activeUser) {
+      // update recent search
+      let curSearches = activeUser.recentSearchStr.map(pName => pps.filter(p => p.name === pName)[0]).filter(p => p)
+      while (recentSearches.length > 0) {
+        curSearches = addRecentSearch(curSearches, recentSearches.pop())
+      }
+      setRecentSearches(curSearches)
+      // console.log('cur search', curSearches)
+      dbMgr.updateUserData(activeUser, 'recentSearchStr', curSearches.map(s => s.name))
+
+      // update bookmarks
+      setBookmarks(activeUser.bookmarkStr.map(bName => pps.filter(p => p.name === bName)[0]))
+
+      // for first load, set data ready to render the rest of UI
+      setActiveUserDataReady(true)
+    }
+  }, [activeUser])
+
+  useEffect(() => {
+    console.log('google user')
+  }, [googleUser])
+    
+  useEffect(() => {
+    console.log('is initialised')
+  }, [isInitialized])
+
+  // useEffect(() => {
+  //   console.log('is signed in')
+  // }, [isSignedIn])
   const onSidePanelOptSelect = (newState) => {
     if (newState === 4 && !activeUser) { // bookmark state
       setWarningMsg("Please login to access the bookmark feature.")
@@ -93,8 +120,8 @@ function App() {
       onLogOut()
     } else {
       setPageState(newState)
-      if (newState > 0) setShowLightbox(true)
       setSidePanelIn(false)
+      if (newState > 0) setShowLightbox(true)
     }
   }
 
@@ -104,10 +131,6 @@ function App() {
     }
     setPageState(0)
     setShowLightbox(false)
-  }
-
-  const onWarningMsgClose = () => {
-    setWarningMsg(null)
   }
 
   const onSearchChange = newSearchedProperty => {
@@ -135,30 +158,41 @@ function App() {
   }
 
   const onBookmark = (property, isBookmarked) => {
-    let curBookmarks = bookmarks
+    // do not do curBookmarks = bookmarks as any changes toward curBookmarks leads to wrong mutation of bookmarks
+    // wrong mutation like directly changing bookmarks, which is wrong since bookmarks is based on hook
+    // instead, shallow copy here would fix the issue
+    let curBookmarks = [...bookmarks] 
     const targetIndex = getBookmarkIndex(property)
-
+    
     if (isBookmarked && targetIndex < 0) {
-      curBookmarks.push(property)
+      curBookmarks.unshift(property)
     } else if (!isBookmarked && targetIndex >= 0) {
-      curBookmarks = [...curBookmarks.slice(0, targetIndex), ...curBookmarks.slice(targetIndex + 1, curBookmarks.length - 1)]
+      curBookmarks = [...curBookmarks.slice(0, targetIndex), ...curBookmarks.slice(targetIndex + 1, curBookmarks.length)]
     }
     setBookmarks(curBookmarks)
-    console.log(curBookmarks)
     dbMgr.updateUserData(activeUser, 'bookmarkStr', curBookmarks.map(b => b.name))
   }
-
+  
+  const removeAllBookmarks = () => {
+    setBookmarks([])
+    dbMgr.updateUserData(activeUser, 'bookmarkStr', [])
+  }
   const isBookmarked = property => {
     if (!property) return false
-    return bookmarks.filter(b => b.name === property.name).length > 0
+    return bookmarks.filter(b => b === property).length > 0
   }
 
   const onLogOut = () => {
-    signOut()
-    setActiveUser(null)
-    // localStorage.clear()
-    onLightboxClose()
-    setSidePanelIn(false)
+    setPageState(7)
+    setTimeout(() => {
+      signOut()
+      setActiveUser(null)
+      localStorage.removeItem('activeUser')
+      setSidePanelIn(false)
+      setPageState(0)
+      setIsSignedOut(true)
+    }, 1000)
+    
   }
 
   const onFilterChange = newFilterOptions => {
@@ -172,6 +206,7 @@ function App() {
   const onResetView = () => {
     setSelectedSearch(null)
     setSelectedDistrict(null)
+    setMapTriggerReset(!mapTriggerReset)
   }
 
   const LightboxContent = () => {
@@ -179,18 +214,18 @@ function App() {
       case 3:
         return (<LoginUI onLogIn={signIn}></LoginUI>)
       case 4:
-        return (<BookmarkUI bookmarks={bookmarks}></BookmarkUI>)
+        return (<BookmarkUI bookmarks={bookmarks} onBookmarkRemove={onBookmark} onBookmarkRemoveAll={removeAllBookmarks}></BookmarkUI>)
       case 5:
         return (<FilterPanelUI filterOptions={filterOptions} onFilterChange={onFilterChange}></FilterPanelUI>)
       case 6:
          return (<InfoPanelUI property={selectedSearch} enableBookmark={!!activeUser} isBookmarked={isBookmarked(selectedSearch)} onBookmark={onBookmark}></InfoPanelUI>)
-    }
+        }
     return ''
   }
 
   if (!isInitialized || !activeUserDataReady) return (<div>Loading...</div>)
   return (<div className="property-web-app">
-      <MapUI properties={properties} curDistrict={selectedDistrict} filterOptions={filterOptions} onPropertySelect={onSearchChange} onDistrictSelect={onDistrictChange}></MapUI>
+      <MapUI properties={properties} curDistrict={selectedDistrict} filterOptions={filterOptions} onPropertySelect={onSearchChange} onDistrictSelect={onDistrictChange} triggerReset={mapTriggerReset}></MapUI>
       <div className="navbar-container">
         <img className="web-app-logo" src={require('./images/pglogo.png')} onClick={onResetView}/>
         <SearchBarUI onChange={onSearchChange} selectedSearch={selectedSearch} recentSearches={recentSearches} properties={properties}></SearchBarUI>
@@ -208,13 +243,24 @@ function App() {
       <LightBoxWrapper isOpen={showLightBox} onClose={onLightboxClose}>
         <LightboxContent></LightboxContent>
       </LightBoxWrapper>
+        
+      {/* Warning message for bookmark access when not login */}
+      {!!warningMsg ?
+        <LightBoxWrapper isOpen={!!warningMsg} hideCloseButton={true}>
+          <div className="warning-msg-container">
+            {warningMsg}
+            <button onClick={() => setWarningMsg(null)}>Back</button>
+          </div>
+        </LightBoxWrapper>
+      : ""}
       
-      <LightBoxWrapper isOpen={!!warningMsg} onClose={onWarningMsgClose} hideCloseButton={true}>
-        <div className="warning-msg-container">
-          {warningMsg}
-          <button onClick={onWarningMsgClose}>Back</button>
-        </div>
-      </LightBoxWrapper>
+
+      {/* Log out in progress message */}
+      {pageState === 7 ?
+        <LightBoxWrapper isOpen={pageState === 7} hideCloseButton={true}>
+          <div className="logout-container">Log out...</div>
+        </LightBoxWrapper>
+      : ""}
     </div>);
 }
 

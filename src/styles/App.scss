@@ -125,4 +125,25 @@
       margin-top: 10px;
     }
   }
+
+  .logout-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #FFFFFF;
+    padding: 10px;
+    pointer-events: none;
+  }
 } // property-web-app
+
+// MISC styles
+.text-button {
+  cursor: pointer;
+  color: darkblue;
+  text-decoration: underline dotted darkblue;
+  
+  &:hover {
+      text-decoration: underline solid darkblue;
+  }
+}

@@ -34,7 +34,7 @@ export default class LoginUI extends React.Component {
                     <div className="google-login-container">
                         Or <button onClick={this.props.onLogIn}>Login with Google</button>
                         <div>
-                        {"Does not have an account?"}<span className="inline-button">Register</span>
+                        {"Does not have an account?"}<span className="register-button text-button">Register</span>
                         </div>
                     </div>
                 </div>
