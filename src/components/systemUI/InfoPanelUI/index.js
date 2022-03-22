@@ -23,14 +23,32 @@ export default class InfoPanelUI extends React.Component {
   }
 
   render () {
-    const {name, address} = this.props.property
+    const {name, address, school, mrt, avgMrtDist, avgSchoolDist, enblocRank} = this.props.property
+    const schoolStr = Object.keys(school).reduce((acc, schoolName,i) => {
+      acc += schoolName
+      if (i < Object.keys(school).length - 1) acc += ', '
+      return acc
+    }, "")
 
+    const mrtStr = Object.keys(mrt).reduce((acc, mrtName, i) => {
+      acc += mrtName
+      if (i < Object.keys(mrt).length - 1) acc += ', '
+      return acc
+    }, "")
     const generalView = () => {
       return (
         <div className="info-panel-detail-content general">
-          <img src=""/>
-          <p>{name}</p>
-          <p>{address}</p>
+          <div className="profile-image-container">
+            <img src=""/>
+          </div>
+          <div className="right">
+            <h3>{name}</h3>
+            <p className="address">{address}</p>
+            <p className="school"><b>School(s) nearby:</b><br/>{schoolStr}</p>
+            <p className="mrt"><b>Nearest MRTs:</b><br/>{mrtStr}</p>
+            <p className="enbloc"><b>En Bloc value:</b><br/>{enblocRank}</p>
+            <p></p>
+          </div>
         </div>
       )
     }
@@ -38,7 +56,9 @@ export default class InfoPanelUI extends React.Component {
     const valueView = () => {
       return (
         <div className="info-panel-detail-content value">
-          value
+          <p>En Bloc: {enblocRank}</p>
+          <p>Average distance to MRT: {avgMrtDist}km</p>
+          <p>Average distance to School: {avgSchoolDist}km</p>
         </div>
       )
     }

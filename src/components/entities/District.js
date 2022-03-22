@@ -36,9 +36,13 @@ export default class District {
     constructor (name) {
         this.name = name
         this.properties = []
+        this.avgPropertiesCount = 0
     }
 
-    getDistrictValue() {
-        return 1
+    getDistrictValue(filterOpts) {
+        return this.properties.reduce((acc, p) => {
+            return acc + p.getPropertyValue(filterOpts)
+        }, 0) * this.properties.length / this.avgPropertiesCount
+        // return 1
     }
 }

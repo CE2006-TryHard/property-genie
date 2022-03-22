@@ -8,7 +8,6 @@ import District, {DISTRICT_NAME} from "../entities/District"
 
 export default class DatabaseMgr {
   constructor () {
-    // this.activeUser = null
     this.properties = []
     this.districts = {}
     this.fetchPropertyData()
@@ -23,7 +22,7 @@ export default class DatabaseMgr {
       const {recentSearchStr, bookmarkStr, filterOptions} = snapshot.val()
       newUser.recentSearchStr = recentSearchStr || []
       newUser.bookmarkStr = bookmarkStr || []
-      newUser.filterOptions = filterOptions || []
+      // newUser.filterOptions = filterOptions || []
 
       onFetchEnd(newUser)
     })
@@ -96,23 +95,57 @@ export default class DatabaseMgr {
             d['lat'] = parseFloat(d['lat'])
             d['lng'] = parseFloat(d['lng'])
             d['description'] = 'Lorem Ipsum asd asd asd asd.'
-            d['distToMrt'] = 1
-            d['distToSchool'] = 2
+  
+            const distToMrts = d['distToMrt'].split(',').map(distStr => parseFloat(distStr))
+            const mrtObj = d['mrt'].split(',').reduce((acc, mrtName, i) => {
+              acc[mrtName] = distToMrts[i]
+              return acc
+            }, {})
+            d['mrt'] = mrtObj
+            d['avgMrtDist'] = (Object.keys(mrtObj).reduce((acc, mrtName) => {
+              acc += mrtObj[mrtName]
+              return acc
+            }, 0) / distToMrts.length).toFixed(3)
+
+            const distToSchools = d['distToSchool'].split(',').map(distStr => parseFloat(distStr))
+            const schoolObj = d['school'].split(',').reduce((acc, schoolName, i) => {
+              acc[schoolName] = distToSchools[i]
+              return acc
+            }, {})
+            d['school'] = schoolObj
+            d['avgSchoolDist'] = (Object.keys(schoolObj).reduce((acc, schoolName) => {
+              acc += schoolObj[schoolName]
+              return acc
+            }, 0) / distToSchools.length).toFixed(3)
+            
             const p = new Property(d)
             this.properties.push(p)
-
             const districtID = parseInt(d['district'])
             let districtName = DISTRICT_NAME[districtID].name
             if (!this.districts[districtName]) this.districts[districtName] = new District(districtName)
+            p.district = this.districts[districtName]
             this.districts[districtName].properties.push(p)
 
           })
-        console.log(this.properties)
+
+          // some of the district does not have any properties in database
+          Object.keys(DISTRICT_NAME).forEach(dID => {
+            const dName = DISTRICT_NAME[dID].name
+            if (!this.districts[dName]) {
+              this.districts[dName] = new District(dName)
+            }
+            this.districts[dName].avgPropertiesCount = this.properties.length / 31
+          })
+        console.log(this.districts)
       })
   }
 
   getProperties () {
     return this.properties
+  }
+
+  getPropertiesByName(name) {
+    return this.properties.filter(p => p.name === name)[0]
   }
 
   getDistricts () {

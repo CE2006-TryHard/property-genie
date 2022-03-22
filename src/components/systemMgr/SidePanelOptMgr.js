@@ -6,6 +6,9 @@ export default class SidePanelOptMgr {
             loginsignup: {
                 label: 'Login / Register', hide: false, state: 3
             },
+            accountinfo: {
+                label: 'Account', hide: false, state: 8,
+            },
             bookmark: {
                 label: 'Bookmarks', hide: false, enable: false, state: 4
             },
@@ -22,7 +25,8 @@ export default class SidePanelOptMgr {
     getOptionItems (activeUser) {
         this.optionItems['loginsignup'].hide = !!activeUser
         this.optionItems['logout'].hide = !activeUser
-        // this.optionItems['bookmark'].hide = !activeUser
+        this.optionItems['accountinfo'].hide = !activeUser
+
         return Object.keys(this.optionItems)
             .filter(optKey => !this.optionItems[optKey].hide)
             .map(optKey => this.optionItems[optKey])

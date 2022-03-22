@@ -31,16 +31,41 @@ const DISTRICT_MAP_CONFIG = {
   'SEMBAWANG': {center: [1.4564780395997028,103.8102249351397], zoom: 13.3},
   'SENGKANG': {center: [1.3926397475690528, 103.89674226912408], zoom: 14},
   'TAMPINES': {center: [1.3610631740552916, 103.93931429060845], zoom: 13.4},
-  'TANJONG PAGAR': {center: [1.2939272740258816, 103.82622377756721], zoom: 13.5},
+  'TANJONG PAGAR': {center: [1.2939272740258816, 103.82622377756721], zoom: 13},
   'WEST COAST': {center: [1.281433478590405, 103.70448152693658], zoom: 12},
   'YIO CHU KANG': {center: [1.382343084833783, 103.84043733748345], zoom: 14},
   'YUHUA': {center: [1.3411559906872688, 103.7388138023272], zoom: 15}
 }
 
+const componentToHex = c => {
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
+
+const rgbToHex = (r, g, b) => {
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
 const MAP_CENTER = {lat:1.360514, lng: 103.840300}
 const MAP_ZOOM = 11
 
+const ICON_CONFIG = {
+  path: "M0,5a5,5 0 1,0 10,0a5,5 0 1,0 -10,0",
+  fillColor: "grey",
+  fillOpacity: 0.6,
+  strokeWeight: 1,
+  strokeColor: '#555555',
+  rotation: 0,
+  scale: 1.5
+}
+
+const DISTRICT_POLYGON_CONFIG = {
+  cursor: 'default',
+  strokeWeight: 1,
+  strokeColor: '#FFFFFF',
+}
 let googleRef = null
+
 export default class MapUI extends React.Component {
   constructor(props) {
     super(props)
@@ -50,6 +75,7 @@ export default class MapUI extends React.Component {
       bubblePos: [0,0],
       currentHoverDistrict: null,
       currentZoomInDistrict: null,
+      currentHoverProperty: null
       // isZoom: false
     }
     this.markers = {}
@@ -61,7 +87,7 @@ export default class MapUI extends React.Component {
       height: '100%'
     }
 
-    const {currentHoverDistrict, currentZoomInDistrict} = this.state
+    const {currentHoverDistrict, currentZoomInDistrict, currentHoverProperty} = this.state
 
     const [bubbleX, bubbleY] = this.state.bubblePos
     const bubbleStyle = {
@@ -69,11 +95,19 @@ export default class MapUI extends React.Component {
       top: bubbleY + 20
     }
 
+    const showInfo = currentHoverProperty || (currentHoverDistrict && currentHoverDistrict !== currentZoomInDistrict)
+
     return (
       <div className="map-container">
-        {(currentHoverDistrict && currentHoverDistrict !== currentZoomInDistrict) ?
+        {showInfo ?
         <div className="info-bubble" style={bubbleStyle}>
-          {currentHoverDistrict.name}
+          {currentHoverProperty ?
+          <div>
+            {currentHoverProperty.name}
+          </div>
+          : <div>{currentHoverDistrict.name}</div>
+          }
+          
         </div>
          : ""}
         <span>{this.props.filterOptions.enbloc.checked ? 'ha' : ''}</span>
@@ -94,24 +128,73 @@ export default class MapUI extends React.Component {
 
     if (!this.markers[district.name]) this.markers[district.name] = {}
     district.properties.forEach(p => {
+      // initialise marker if had not done so
       if (!this.markers[district.name][p.name]) {
         this.markers[district.name][p.name] = new googleRef.maps.Marker({
           position: {lat: p.lat, lng: p.lng},
+          icon: ICON_CONFIG,
           map: this.map,
-          title: p.name
+          // title: p.name,
+          editable: false
         })
 
         googleRef.maps.event.addListener(this.markers[district.name][p.name], 'click', () => {
           this.props.onPropertySelect(p)
+        })
+
+        googleRef.maps.event.addListener(this.markers[district.name][p.name], 'mouseover', () => {
+          this.setState({...this.state, currentHoverProperty: p})
+        })
+
+        googleRef.maps.event.addListener(this.markers[district.name][p.name], 'mouseout', () => {
+          this.setState({...this.state, currentHoverProperty: null})
         })
       }
     })
 
     Object.keys(this.markers).forEach(dName => {
       Object.keys(this.markers[dName]).forEach(pName => {
+        const newIconConfig = {
+          ...ICON_CONFIG,
+          fillColor: this.getPropertyColorHex(dbMgr.getPropertiesByName(pName))
+        }
+        this.markers[dName][pName].setIcon(newIconConfig)
         this.markers[dName][pName].setVisible(dName === district.name)
       })
     })
+  }
+
+  getDistrictColorHex(district) {
+    const colorFrom = [181, 181, 181]
+    const colorTo = [0, 181, 122]
+    if (!district.properties.length) return '#333333'
+    const districts = dbMgr.getDistricts()
+    const avgDistrictVal = Object.keys(districts).reduce((acc, dName) => {
+      return acc + districts[dName].getDistrictValue(this.props.filterOptions)
+    }, 0) / 31
+
+    if (avgDistrictVal === 0) return '#666666'
+
+    let ratio = district.getDistrictValue(this.props.filterOptions) / avgDistrictVal
+    ratio = Math.min(1, ratio)
+    const r = colorFrom[0] - Math.round(ratio * colorFrom[0])
+    const g = colorFrom[1]
+    const b = colorFrom[2] - Math.round(ratio * (colorFrom[2]-colorTo[2]))
+    return rgbToHex(r,g,b)
+  }
+
+  getPropertyColorHex(property) {
+    const maxPropertyVal = Math.max(...property.district.properties.map(p => p.getPropertyValue(this.props.filterOptions)))
+    const colorFrom = [255, 223, 122]
+    const colorTo = [0, 223, 122]
+
+    let ratio = property.getPropertyValue(this.props.filterOptions) / maxPropertyVal
+    ratio = Math.min(1, ratio)
+
+    const r = colorFrom[0] - Math.round(ratio * (colorFrom[0] - colorTo[0]))
+    const g = colorFrom[1] + Math.round(ratio * (colorTo[1] - colorFrom[1]))
+    const b = colorFrom[2] - Math.round(ratio * (colorFrom[2]-colorTo[2]))
+    return rgbToHex(r,g,b)
   }
 
   componentDidMount() {
@@ -132,55 +215,103 @@ export default class MapUI extends React.Component {
         disableDoubleClickZoom: true
       })
 
+      const districts = dbMgr.getDistricts()
+
       this.map.data.loadGeoJson('data/districts_simplify.geojson')
+
       this.map.data.setStyle(feature => {
-        const color = feature.getProperty('Name') === 'SEMBAWANG' ? 'red' : 'green'
         return {
-          cursor: 'default',
-          fillColor: color,
-          strokeWeight: 1,
-          strokeColor: '#FFFFFF',
+          ...DISTRICT_POLYGON_CONFIG,
+          fillColor: this.getDistrictColorHex(districts[feature.getProperty('Name')]),
           fillOpacity: 0.7
         }
       })
 
       this.map.data.addListener('mousemove', e => {
-        const {clientX, clientY, screenX, screenY} = e.domEvent
-        const district = dbMgr.getDistricts()[e.feature.getProperty('Name')]
-        this.setState({...this.state, bubblePos: [clientX, clientY], currentHoverDistrict: district})
+        const {clientX, clientY} = e.domEvent
+        this.setState({...this.state, bubblePos: [clientX, clientY]})
+      })
+
+      this.map.data.addListener('mouseover', e => {
+        const district = districts[e.feature.getProperty('Name')]
+        this.setState({...this.state, currentHoverDistrict: district})
+        
+        // if (district === this.state.currentZoomInDistrict) return
+
+        this.map.data.setStyle(f => {
+          const tDistrict = districts[f.getProperty('Name')]
+          const isTargetDistrict = this.state.currentZoomInDistrict && this.state.currentZoomInDistrict === tDistrict
+          return {
+            ...DISTRICT_POLYGON_CONFIG,
+            fillColor: this.getDistrictColorHex(tDistrict),
+            strokeWeight: isTargetDistrict? 2 : 1,
+            strokeColor: isTargetDistrict || tDistrict === district ? '#333333' : '#FFFFFF',
+            fillOpacity: isTargetDistrict ? 0 : 0.7,
+            zIndex: isTargetDistrict || tDistrict === district ? 1 : 0
+          }
+        })
       })
 
       this.map.data.addListener('click', e => {
-        const district = dbMgr.getDistricts()[e.feature.getProperty('Name')]
+        const district = districts[e.feature.getProperty('Name')]
         this.props.onDistrictSelect(district)
       })
 
       this.map.data.addListener('mouseout', e => {
         this.setState({...this.state, currentHoverDistrict: null})
+        
+        if (districts[e.feature.getProperty('Name')] === this.state.currentZoomInDistrict) return
+
+        this.map.data.setStyle(f => {
+          const tDistrict = districts[f.getProperty('Name')]
+          const isTargetDistrict = this.state.currentZoomInDistrict && this.state.currentZoomInDistrict === tDistrict
+
+          return {
+            ...DISTRICT_POLYGON_CONFIG,
+            strokeColor: isTargetDistrict ? '#333333' : '#FFFFFF',
+            strokeWeight: isTargetDistrict? 2 : 1,
+            fillColor: this.getDistrictColorHex(tDistrict),
+            fillOpacity: isTargetDistrict ? 0 : 0.7
+          }
+        })
       })
     })
   }
 
   componentDidUpdate(prevProps) {
     const {filterOptions, curDistrict} = prevProps
+    const districts = dbMgr.getDistricts()
+
     if (filterOptions !== this.props.filterOptions) {
-      console.log("filter option props update")
+      const district = this.props.curDistrict
+      const districts = dbMgr.getDistricts()
+      this.displayPropertiesInDistrict(this.props.curDistrict)
+  
+      this.map.data.setStyle(feature => {
+        const isTargetDistrict = district && feature.getProperty('Name') === district.name
+        return {
+          ...DISTRICT_POLYGON_CONFIG,
+          strokeWeight: isTargetDistrict? 2 : 1,
+          fillColor: this.getDistrictColorHex(districts[feature.getProperty('Name')]),
+          fillOpacity: isTargetDistrict ? 0 : 0.7
+        }
+      })
     }
 
     if (curDistrict !== this.props.curDistrict) {
-      // console.log('update select district', this.props.curDistrict)
         const district = this.props.curDistrict
         this.setState({...this.state, currentZoomInDistrict: district})
         this.displayPropertiesInDistrict(district)
+
         this.map.data.setStyle(feature => {
           const isTargetDistrict = district && feature.getProperty('Name') === district.name
           return {
-            // ...this.map.data.getStyle(),
-            cursor: 'default',
-            fillColor: 'green',
-            strokeWeight: 1,
-            strokeColor: '#FFFFFF',
-            fillOpacity: isTargetDistrict ? 0 : 0.7
+            ...DISTRICT_POLYGON_CONFIG,
+            strokeColor: isTargetDistrict ? '#333333' : '#FFFFFF',
+            strokeWeight: isTargetDistrict? 2 : 1,
+            fillColor: this.getDistrictColorHex(districts[feature.getProperty('Name')]),
+            fillOpacity: isTargetDistrict ? 0 : 0.7,
+            zIndex: isTargetDistrict ? 1 : 0
           }
         })
   

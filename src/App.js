@@ -9,7 +9,7 @@ import BookmarkUI from './components/systemUI/BookmarkUI/index'
 import InfoPanelUI from './components/systemUI/InfoPanelUI/index'
 import LoginUI from './components/systemUI/LoginUI/index'
 import { GreetUserMsg } from './components/systemUI/MiscUI'
-import {dbMgr, filterMgr, sidePanelOptMgr} from './components/systemMgr/Mgr'
+import {dbMgr, sidePanelOptMgr} from './components/systemMgr/Mgr'
 import { useGoogleAuth } from './components/systemMgr/GoogleAuth'
 import {useEffect, useState} from 'react'
 
@@ -21,6 +21,7 @@ import {useEffect, useState} from 'react'
 // FILTER       5
 // INFORMATION  6
 // LOGOUT       7
+// ACCOUNT INFO 8
 function App() {
   const {signIn, signOut, googleUser, isInitialized} = useGoogleAuth()
 
@@ -32,8 +33,8 @@ function App() {
   const [selectedDistrict, setSelectedDistrict] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
   const [filterOptions, setFilterOptions] = useState({
-    enbloc: {label: 'Enbloc', checked: false},
-    distToMRT: {label: 'Distance to MRT', checked: false},
+    enbloc: {label: 'Enbloc', checked: true},
+    distToMrt: {label: 'Distance to MRT', checked: false},
     distToSchool: {label: 'Distance to School', checked: false}
   })
   const [bookmarks, setBookmarks] = useState([])
@@ -78,6 +79,9 @@ function App() {
       })
       onLightboxClose()
     } else if (isInitialized) {
+      // set all properties data
+      let pps = dbMgr.getProperties()
+      setProperties(pps)
       setActiveUserDataReady(true)
     }
   }, [googleUser, isInitialized])
@@ -95,6 +99,9 @@ function App() {
   }
 
   const onLightboxClose = () => {
+    if (pageState === 6) {
+      setSelectedSearch(null)
+    }
     setPageState(0)
     setShowLightbox(false)
   }
@@ -155,7 +162,6 @@ function App() {
   }
 
   const onFilterChange = newFilterOptions => {
-    console.log('what')
     setFilterOptions(newFilterOptions) 
   }
 

@@ -2,11 +2,15 @@
     padding: 10px;
     background-color: #B9D0E6;
 
-    .conventional-login-container {
+    .inline-button {
+        cursor: pointer;
+        color: darkblue;
+        padding-left: 2px;
+    }
+    .login-content {
         margin-bottom: 20px;
         p:first-of-type {
             margin: 0;
         }
     }
-    
 }
