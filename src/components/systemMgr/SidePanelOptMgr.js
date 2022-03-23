@@ -26,6 +26,7 @@ export default class SidePanelOptMgr {
         this.optionItems['loginsignup'].hide = !!activeUser
         this.optionItems['logout'].hide = !activeUser
         this.optionItems['accountinfo'].hide = !activeUser
+        this.optionItems['bookmark'].hide = !activeUser
 
         return Object.keys(this.optionItems)
             .filter(optKey => !this.optionItems[optKey].hide)

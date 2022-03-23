@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app"
 import { getAnalytics } from "firebase/analytics"
-import {getDatabase, ref, onValue, update} from 'firebase/database'
+import {getDatabase, ref, child, onValue, update, get} from 'firebase/database'
 import Papa from 'papaparse'
 import User from "../entities/User"
 import Property from '../entities/Property'
@@ -15,17 +15,45 @@ export default class DatabaseMgr {
     
   }
 
-  initActiveUser(name, email, isGoogleUser, onFetchEnd) {
-    const newUser = new User(name, email, isGoogleUser)
-    const db = getDatabase()
-    onValue(ref(db, `account/${newUser.id}`), snapshot => {
-      const {recentSearchStr, bookmarkStr, filterOptions} = snapshot.val()
-      newUser.recentSearchStr = recentSearchStr || []
-      newUser.bookmarkStr = bookmarkStr || []
-      // newUser.filterOptions = filterOptions || []
+  initActiveUser(name, email, onFetchEnd) {
+    const newUser = new User(name, email)
+    const dbRef = ref(getDatabase())
+    get(child(dbRef, `account/${newUser.id}`)).then(snapshot => {
+      if (snapshot.exists()) {
+        const {recentSearchStr, bookmarkStr, isVerified, registerViaGoogle} = snapshot.val()
+        newUser.isVerified = isVerified
+        newUser.registerViaGoogle = registerViaGoogle || false
+        newUser.recentSearchStr = recentSearchStr || []
+        newUser.bookmarkStr = bookmarkStr || []
 
-      onFetchEnd(newUser)
-      console.log('magic!')
+        onFetchEnd(newUser)
+      } else {
+        console.log('no data available')
+      }
+    })
+    // onValue(ref(db, ), snapshot => {
+    //   const {recentSearchStr, bookmarkStr, isVerified, registerViaGoogle} = snapshot.val()
+    //   newUser.isVerified = isVerified
+    //   newUser.registerViaGoogle = registerViaGoogle || false
+    //   newUser.recentSearchStr = recentSearchStr || []
+    //   newUser.bookmarkStr = bookmarkStr || []
+    //   // newUser.filterOptions = filterOptions || []
+
+    //   onFetchEnd(newUser)
+    //   console.log('magic!')
+    // })
+  }
+
+  getUserData(email, onFetchEnd) {
+    const id = email.split('.')[0]
+    const dbRef = ref(getDatabase())
+    get(child(dbRef, `account/${id}`)).then(snapshot => {
+      if (snapshot.exists()) {
+        onFetchEnd(snapshot.val())
+      } else {
+        onFetchEnd(false)
+        console.log('no user data record')
+      }
     })
   }
 

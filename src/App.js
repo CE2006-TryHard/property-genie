@@ -25,6 +25,7 @@ import {useEffect, useState} from 'react'
 function App() {
   const {signIn, signOut, googleUser, isInitialized} = useGoogleAuth()
   const [isSignedOut, setIsSignedOut] = useState(false)
+  const [isRegistering, setIsRegistering] = useState(false)
   const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
   const [warningMsg, setWarningMsg] = useState(null)
@@ -56,7 +57,17 @@ function App() {
     if (googleUser && googleUser.profileObj) {
       // fetch user data
       const {name, email} = googleUser.profileObj
-      dbMgr.initActiveUser(name, email, true, activeUser => {
+      dbMgr.initActiveUser(name, email, activeUser => {
+        if (isRegistering) { // active user obtain via google register
+          if (activeUser.registerViaGoogle) {
+            console.log('account already register. auto login in via google')
+          } else {
+            dbMgr.updateUserData(activeUser, 'registerViaGoogle', true)
+            dbMgr.updateUserData(activeUser, 'isVerified', true)
+            console.log('on finish register via google')
+          }
+          
+        }
         setActiveUser(activeUser)
         setIsSignedOut(false)
       })
@@ -68,7 +79,7 @@ function App() {
       if (localUser) {
         console.log('found local user')
         const {name, email} = localUser
-        dbMgr.initActiveUser(name, email, false, activeUser => {
+        dbMgr.initActiveUser(name, email, activeUser => {
           setActiveUser(activeUser)
           setIsSignedOut(false)
         })
@@ -83,7 +94,7 @@ function App() {
   useEffect(() => {
     let pps = dbMgr.getProperties()
     setProperties(pps)
-    console.log('active user', activeUser)
+    // console.log('active user', activeUser)
     if (activeUser) {
       // update recent search
       let curSearches = activeUser.recentSearchStr.map(pName => pps.filter(p => p.name === pName)[0]).filter(p => p)
@@ -114,9 +125,10 @@ function App() {
   //   console.log('is signed in')
   // }, [isSignedIn])
   const onSidePanelOptSelect = (newState) => {
-    if (newState === 4 && !activeUser) { // bookmark state
-      setWarningMsg("Please login to access the bookmark feature.")
-    } else if (newState === 7) { // logout state
+    // if (newState === 4 && !activeUser) { // bookmark state
+    //   setWarningMsg("Please login to access the bookmark feature.")
+    // } else 
+    if (newState === 7) { // logout state
       onLogOut()
     } else {
       setPageState(newState)
@@ -126,8 +138,10 @@ function App() {
   }
 
   const onLightboxClose = () => {
-    if (pageState === 6) {
+    if (pageState === 6) { // information panel
       setSelectedSearch(null)
+    } else if (pageState === 3) {
+      setIsRegistering(false)
     }
     setPageState(0)
     setShowLightbox(false)
@@ -160,7 +174,7 @@ function App() {
   const onBookmark = (property, isBookmarked) => {
     // do not do curBookmarks = bookmarks as any changes toward curBookmarks leads to wrong mutation of bookmarks
     // wrong mutation like directly changing bookmarks, which is wrong since bookmarks is based on hook
-    // instead, shallow copy here would fix the issue
+    // instead, deep copy(array) here would fix the issue
     let curBookmarks = [...bookmarks] 
     const targetIndex = getBookmarkIndex(property)
     
@@ -209,10 +223,23 @@ function App() {
     setMapTriggerReset(!mapTriggerReset)
   }
 
+  const onRegisterChange = newIsRegistering => {
+    setIsRegistering(newIsRegistering)
+  }
+
+  const onRegisterManual = userInfo => {
+    console.log('on register manual', userInfo)
+  }
+
   const LightboxContent = () => {
     switch (pageState) {
       case 3:
-        return (<LoginUI onLogIn={signIn}></LoginUI>)
+        return (<LoginUI 
+          onLogInGoogle={signIn}
+          activeUser={activeUser}
+          isRegistering={isRegistering}
+          onRegisterChange={onRegisterChange}
+          onRegisterManual={onRegisterManual}></LoginUI>)
       case 4:
         return (<BookmarkUI bookmarks={bookmarks} onBookmarkRemove={onBookmark} onBookmarkRemoveAll={removeAllBookmarks}></BookmarkUI>)
       case 5:
