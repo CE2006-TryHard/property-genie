@@ -3,25 +3,34 @@
 
   .navbar-container {
     position: fixed;
+    z-index: 3;
     top: 0;
     left: 0;
     width: 100%;
     height: 50px;
-    background: linear-gradient(to bottom, #333333 0%, rgba(#333333, 0) 100%);
+    background-color: #333333;
+    // background: linear-gradient(to bottom, #333333 0%, rgba(#333333, 0) 100%);
 
     .web-app-logo {
       position: absolute;
-      top: 10px;
-      left: 300px;
-      width: 100px;
-      height: 40px;
+      z-index: 2;
+      top: 8px;
+      left: 45px;
+      width: 30px;
+      height: 30px;
       cursor: pointer;
+      transition: transform 0.3s;
+
+      &:hover {
+        transform: scale(1.05);
+      }
     }
     .search-bar-container {
       position: absolute;
+      z-index: 2;
         right: 0;
         top: 0;
-        padding: 10px 10px 5px 50px;
+        padding: 8px 10px 0 50px;
         box-sizing: border-box;
         width: 100%;
         max-width: 500px;   
@@ -30,9 +39,9 @@
 
   .user-greet-msg {
     position: absolute;
-    z-index: 1;
-    top: 15px;
-    left: 60px;
+    z-index: 2;
+    top: 14px;
+    left: 85px;
     color: #FFFFFF;
     opacity: 0;
 
@@ -59,17 +68,21 @@
 
     .side-panel-toggle-button {
       position: fixed;
-      width: 36px;
-      height: 36px;
-      top: 10px;
-      left: 10px;
-      z-index: 1;
+      width: 34px;
+      height: 34px;
+      top: 8px;
+      left: 5px;
+      z-index: 2;
       cursor: pointer;
+      transition: transform 0.3s;
+      &:hover {
+        transform: scale(1.05);
+      }
     }
   
     .side-panel-container {
       position: fixed;
-      z-index: 0;
+      z-index: 1;
       top: 0;
       left: 0;
       width: 100%;

@@ -1,17 +1,12 @@
 import './styles/App.scss'
-import MapUI from './components/systemUI/MapUI/index'
-// import SidePanelUI from './components/systemUI/SidePanelUI/index'
-import SearchBarUI from './components/systemUI/SearchBarUI'
-import LightBoxWrapper from './components/systemUI/LightboxWrapper/index'
-import SidePanelWrapper from './components/systemUI/SidePanelWrapper'
-import FilterPanelUI from "./components/systemUI/FilterPanelUI/index"
-import BookmarkUI from './components/systemUI/BookmarkUI/index'
-import InfoPanelUI from './components/systemUI/InfoPanelUI/index'
-import LoginUI from './components/systemUI/LoginUI/index'
-import { GreetUserMsg } from './components/systemUI/MiscUI'
-import {dbMgr, sidePanelOptMgr} from './components/systemMgr/Mgr'
-import { useGoogleAuth } from './components/systemMgr/GoogleAuth'
+
+import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, MapUI, SearchBarUI, SidePanelWrapper} from './components/boundaries/index'
+import { GreetUserMsg, HomeLogo } from './components/boundaries/MiscUI'
+import {dbMgr, sidePanelOptMgr} from './components/controls/Mgr'
+
+import { useGoogleAuth } from './components/controls/GoogleAuth'
 import {useEffect, useState} from 'react'
+import SearchItem from './components/entities/SearchItem'
 
 // page state
 // HOME         1
@@ -28,10 +23,10 @@ function App() {
   const [isRegistering, setIsRegistering] = useState(false)
   const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
-  const [warningMsg, setWarningMsg] = useState(null)
   const [properties, setProperties] = useState([])
-  const [selectedSearch, setSelectedSearch] = useState(null)
-  const [selectedDistrict, setSelectedDistrict] = useState(null)
+  const [curSearch, setCurSearch] = useState(null)
+  const [selectedProperty, setSelectedProperty] = useState(null)
+  const [selectedConstituency, setSelectedConstituency] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
   const [filterOptions, setFilterOptions] = useState({
     enbloc: {label: 'Enbloc', checked: true},
@@ -86,6 +81,7 @@ function App() {
       } else {
         // logged out state
         setActiveUserDataReady(true)
+       
       }
       // const activeUser
     }
@@ -93,17 +89,25 @@ function App() {
 
   useEffect(() => {
     let pps = dbMgr.getProperties()
+    let ccs = dbMgr.getConstituencies()
     setProperties(pps)
-    // console.log('active user', activeUser)
+    
     if (activeUser) {
       // update recent search
-      let curSearches = activeUser.recentSearchStr.map(pName => pps.filter(p => p.name === pName)[0]).filter(p => p)
+      let tempSearches = activeUser.recentSearchStr
+        .map(({type, name}) => {
+          const searchObj = type === 'c' ? ccs[name] : pps.filter(p => p.name === name)[0]
+          // console.log(type, searchObj)
+          return new SearchItem(type, searchObj)
+        })
+        
+        // .map(pName => pps.filter(p => p.name === pName)[0]).filter(p => p)
       while (recentSearches.length > 0) {
-        curSearches = addRecentSearch(curSearches, recentSearches.pop())
+        tempSearches = addRecentSearch(tempSearches, recentSearches.pop())
       }
-      setRecentSearches(curSearches)
-      // console.log('cur search', curSearches)
-      dbMgr.updateUserData(activeUser, 'recentSearchStr', curSearches.map(s => s.name))
+      setRecentSearches(tempSearches)
+      // console.log(tempSearches)
+      dbMgr.updateUserData(activeUser, 'recentSearchStr', tempSearches.map(s => ({type: s.type, name: s.name})))
 
       // update bookmarks
       setBookmarks(activeUser.bookmarkStr.map(bName => pps.filter(p => p.name === bName)[0]))
@@ -124,38 +128,55 @@ function App() {
   // useEffect(() => {
   //   console.log('is signed in')
   // }, [isSignedIn])
-  const onSidePanelOptSelect = (newState) => {
-    // if (newState === 4 && !activeUser) { // bookmark state
-    //   setWarningMsg("Please login to access the bookmark feature.")
-    // } else 
-    if (newState === 7) { // logout state
+  const onSidePanelOptSelect = (newPageState) => {
+    if (newPageState === 7) { // logout state
       onLogOut()
     } else {
-      setPageState(newState)
+      setPageState(newPageState)
       setSidePanelIn(false)
-      if (newState > 0) setShowLightbox(true)
+      if (newPageState > 0) setShowLightbox(true)
     }
   }
 
   const onLightboxClose = () => {
-    if (pageState === 6) { // information panel
-      setSelectedSearch(null)
-    } else if (pageState === 3) {
+    if (pageState === 3) {
       setIsRegistering(false)
     }
     setPageState(0)
     setShowLightbox(false)
   }
 
-  const onSearchChange = newSearchedProperty => {
-    let curSearches = recentSearches
-    curSearches = addRecentSearch(curSearches, newSearchedProperty)
-    setRecentSearches(curSearches)
-    dbMgr.updateUserData(activeUser, 'recentSearchStr', curSearches.map(s => s.name))
+  const onConstituencySelectMap = newConstituency => {
+    setSelectedProperty(null)
+    setSelectedConstituency(newConstituency)
+    setPageState(0)
+  }
 
-    setSelectedSearch(newSearchedProperty)
+  const onPropertySelectMap = newProperty => {
+    setSelectedProperty(newProperty)
     setPageState(6)
-    setShowLightbox(true)
+  }
+
+  const onSearchChange = newSearch => {
+    let tempSearches = [...recentSearches]
+    tempSearches = addRecentSearch(tempSearches, newSearch)
+    setRecentSearches(tempSearches)
+    setCurSearch(newSearch)
+    tempSearches = tempSearches.map(cs => {
+      return {type: cs.type, name: cs.name}
+    })
+
+    dbMgr.updateUserData(activeUser, 'recentSearchStr', tempSearches)
+    
+    if (newSearch.type === 'c') {
+      onConstituencySelectMap(newSearch.value)
+    } else if (newSearch.type === 'p') {
+      onPropertySelectMap(newSearch.value)
+    }
+
+    setShowLightbox(false)
+    setSidePanelIn(false)
+    
   }
 
   const getBookmarkIndex = property => {
@@ -213,13 +234,12 @@ function App() {
     setFilterOptions(newFilterOptions) 
   }
 
-  const onDistrictChange = newDistrict => {
-    setSelectedDistrict(newDistrict)
-  }
-
   const onResetView = () => {
-    setSelectedSearch(null)
-    setSelectedDistrict(null)
+    setSelectedProperty(null)
+    setPageState(0)
+    setShowLightbox(false)
+    setSelectedConstituency(null)
+    setSidePanelIn(false)
     setMapTriggerReset(!mapTriggerReset)
   }
 
@@ -241,21 +261,34 @@ function App() {
           onRegisterChange={onRegisterChange}
           onRegisterManual={onRegisterManual}></LoginUI>)
       case 4:
-        return (<BookmarkUI bookmarks={bookmarks} onBookmarkRemove={onBookmark} onBookmarkRemoveAll={removeAllBookmarks}></BookmarkUI>)
+        return (<BookmarkUI
+            bookmarks={bookmarks}
+            filterOptions={filterOptions}
+            onBookmarkRemove={onBookmark}
+            onBookmarkRemoveAll={removeAllBookmarks}></BookmarkUI>)
       case 5:
         return (<FilterPanelUI filterOptions={filterOptions} onFilterChange={onFilterChange}></FilterPanelUI>)
-      case 6:
-         return (<InfoPanelUI property={selectedSearch} enableBookmark={!!activeUser} isBookmarked={isBookmarked(selectedSearch)} onBookmark={onBookmark}></InfoPanelUI>)
         }
     return ''
   }
 
   if (!isInitialized || !activeUserDataReady) return (<div>Loading...</div>)
   return (<div className="property-web-app">
-      <MapUI properties={properties} curDistrict={selectedDistrict} filterOptions={filterOptions} onPropertySelect={onSearchChange} onDistrictSelect={onDistrictChange} triggerReset={mapTriggerReset}></MapUI>
+      <MapUI
+        properties={properties}
+        curConstituency={selectedConstituency}
+        filterOptions={filterOptions}
+        onPropertySelect={onPropertySelectMap}
+        onConstituencySelect={onConstituencySelectMap}
+        triggerReset={mapTriggerReset}></MapUI>
       <div className="navbar-container">
-        <img className="web-app-logo" src={require('./images/pglogo.png')} onClick={onResetView}/>
-        <SearchBarUI onChange={onSearchChange} selectedSearch={selectedSearch} recentSearches={recentSearches} properties={properties}></SearchBarUI>
+        <HomeLogo title="home" className="web-app-logo" fill='#FFFFFF' opacity={0.5} onClick={onResetView}></HomeLogo>
+        <SearchBarUI
+          onChange={onSearchChange}
+          selectedSearch={curSearch}
+          recentSearches={recentSearches}
+          properties={properties}
+          ></SearchBarUI>
         <GreetUserMsg alwaysShow={sidePanelIn} activeUser={activeUser}></GreetUserMsg>
         <SidePanelWrapper
           isOpen={sidePanelIn}
@@ -267,20 +300,21 @@ function App() {
           }
         </SidePanelWrapper>
       </div>
+
+      {selectedProperty ? 
+        <LightBoxWrapper isOpen={true} onClose={() => setSelectedProperty(null)}>
+          <InfoPanelUI
+            filterOptions={filterOptions}
+            property={selectedProperty}
+            enableBookmark={!!activeUser}
+            isBookmarked={isBookmarked(selectedProperty)}
+            onBookmark={onBookmark}></InfoPanelUI>
+        </LightBoxWrapper>
+      : ''}
+
       <LightBoxWrapper isOpen={showLightBox} onClose={onLightboxClose}>
         <LightboxContent></LightboxContent>
       </LightBoxWrapper>
-        
-      {/* Warning message for bookmark access when not login */}
-      {!!warningMsg ?
-        <LightBoxWrapper isOpen={!!warningMsg} hideCloseButton={true}>
-          <div className="warning-msg-container">
-            {warningMsg}
-            <button onClick={() => setWarningMsg(null)}>Back</button>
-          </div>
-        </LightBoxWrapper>
-      : ""}
-      
 
       {/* Log out in progress message */}
       {pageState === 7 ?

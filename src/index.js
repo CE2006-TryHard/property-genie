@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import {GoogleAuthProvider} from './components/systemMgr/GoogleAuth'
+import {GoogleAuthProvider} from './components/controls/GoogleAuth'
 
 ReactDOM.render(
   <React.StrictMode>

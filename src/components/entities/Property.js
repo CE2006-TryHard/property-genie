@@ -1,34 +1,40 @@
-const enblocRank = {
-    '<20%': 0.05,
-    '20%-39%': 0.25,
-    '40%-59%': 0.5,
-    '60%-79%': 0.75,
-    '>80%': 1
-}
-
-const QUALIFY_DIST = 0.5
+import {ENBLOC} from './../CONFIG'
 
 export default class Property {
     constructor (props) {
-        const {name, address,description, price_range, lat, lng, enbloc, mrt, school, avgMrtDist, avgSchoolDist, district} = props
+        const {placeID, name, address, mrts, schools, lat, lng, enblocID, avgMrtDist, avgSchoolDist, constituency} = props
+        this.placeID = placeID
         this.name = name
-        this.label = name
         this.address = address
-        this.description = description
-        this.price_range = price_range
         this.lat = lat
         this.lng = lng
-        this.mrt = mrt
-        this.school = school
-        this.enblocRank = enbloc
+        this.mrts = mrts
+        this.schools = schools
+        this.enblocStr = ENBLOC[enblocID].label
         this.avgMrtDist = avgMrtDist
         this.avgSchoolDist = avgSchoolDist
-        this.district = district
+        this.constituency = constituency
+        this.reviews = null
         this.valueProps = {
-            enbloc: enblocRank[enbloc] * 0.4,
-            distToMrt: ((avgMrtDist / QUALIFY_DIST) > 1 ? 1 : (avgMrtDist / QUALIFY_DIST)) * 0.35,
-            distToSchool: ((avgSchoolDist / QUALIFY_DIST) > 1 ? 1 : (avgSchoolDist / QUALIFY_DIST)) * 0.25
+            enbloc: ENBLOC[enblocID+""].val * 0.4,
+            distToMrt: this.getDistValue(avgMrtDist) * 0.35,
+            distToSchool: this.getDistValue(avgSchoolDist) * 0.25
         }
+    }
+
+    setReviews(val) {
+        this.reviews = val
+    }
+
+    getDistValue (val) {
+        // distance beyond 1km => 1
+        // distance below => use it as it is
+        if (val >= 0 && val < 0.2) return 1
+        if (val >= 0.2 && val < 0.4) return 0.75
+        if (val >= 0.4 && val < 0.6) return 0.5
+        if (val >= 0.6 && val < 0.8) return 0.25
+        // if (val >= 0.8 && val <= 1) return 0
+        return 0
     }
 
     getPropertyValue (filterOpts) {
@@ -36,10 +42,9 @@ export default class Property {
         Object.keys(filterOpts)
             .filter(key => filterOpts[key].checked)
             .forEach(key => {
-                // console.log('key',key)
                 value += this.valueProps[key]
             })
-            // console.log('prop value', value)
+        
         return value
     }
 }
