@@ -1,7 +1,7 @@
 import './styles/App.scss'
 
-import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, MapUI, SearchBarUI, SidePanelWrapper} from './components/boundaries/index'
-import { GreetUserMsg, HomeLogo } from './components/boundaries/MiscUI'
+import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, MapUI, SearchBarUI} from './components/boundaries/index'
+import { GreetUserMsg, HomeLogo, SidePanelWrapper } from './components/boundaries/MiscUI'
 import {dbMgr, sidePanelOptMgr} from './components/controls/Mgr'
 
 import { useGoogleAuth } from './components/controls/GoogleAuth'
@@ -18,7 +18,7 @@ import SearchItem from './components/entities/SearchItem'
 // LOGOUT       7
 // ACCOUNT INFO 8
 function App() {
-  const {signIn, signOut, googleUser, isInitialized} = useGoogleAuth()
+  const {signIn: googleSignIn, signOut, googleUser, isInitialized} = useGoogleAuth()
   const [isSignedOut, setIsSignedOut] = useState(false)
   const [isRegistering, setIsRegistering] = useState(false)
   const [pageState, setPageState] = useState(0)
@@ -39,15 +39,6 @@ function App() {
   const [sidePanelIn, setSidePanelIn] = useState(false)
   const [mapTriggerReset, setMapTriggerReset] = useState(false)
 
-  const addRecentSearch = (recentSearch, newSearch) => {
-    recentSearch = recentSearch.filter(rs => rs.name !== newSearch.name)
-    recentSearch.unshift(newSearch)
-    if (recentSearch.length > 10) recentSearch.splice(10 - recentSearch.length)
-    return recentSearch
-  }
-
-  
-
   useEffect(() => {
     if (googleUser && googleUser.profileObj) {
       // fetch user data
@@ -57,8 +48,8 @@ function App() {
           if (activeUser.registerViaGoogle) {
             console.log('account already register. auto login in via google')
           } else {
-            dbMgr.updateUserData(activeUser, 'registerViaGoogle', true)
-            dbMgr.updateUserData(activeUser, 'isVerified', true)
+            dbMgr.updateUserDataDB(activeUser, 'registerViaGoogle', true)
+            dbMgr.updateUserDataDB(activeUser, 'isVerified', true)
             console.log('on finish register via google')
           }
           
@@ -107,7 +98,7 @@ function App() {
       }
       setRecentSearches(tempSearches)
       // console.log(tempSearches)
-      dbMgr.updateUserData(activeUser, 'recentSearchStr', tempSearches.map(s => ({type: s.type, name: s.name})))
+      dbMgr.updateUserDataDB(activeUser, 'recentSearchStr', tempSearches.map(s => ({type: s.type, name: s.name})))
 
       // update bookmarks
       setBookmarks(activeUser.bookmarkStr.map(bName => pps.filter(p => p.name === bName)[0]))
@@ -128,6 +119,14 @@ function App() {
   // useEffect(() => {
   //   console.log('is signed in')
   // }, [isSignedIn])
+
+  const addRecentSearch = (recentSearch, newSearch) => {
+    recentSearch = recentSearch.filter(rs => rs.name !== newSearch.name)
+    recentSearch.unshift(newSearch)
+    if (recentSearch.length > 10) recentSearch.splice(10 - recentSearch.length)
+    return recentSearch
+  }
+
   const onSidePanelOptSelect = (newPageState) => {
     if (newPageState === 7) { // logout state
       onLogOut()
@@ -166,7 +165,7 @@ function App() {
       return {type: cs.type, name: cs.name}
     })
 
-    dbMgr.updateUserData(activeUser, 'recentSearchStr', tempSearches)
+    dbMgr.updateUserDataDB(activeUser, 'recentSearchStr', tempSearches)
     
     if (newSearch.type === 'c') {
       onConstituencySelectMap(newSearch.value)
@@ -205,12 +204,12 @@ function App() {
       curBookmarks = [...curBookmarks.slice(0, targetIndex), ...curBookmarks.slice(targetIndex + 1, curBookmarks.length)]
     }
     setBookmarks(curBookmarks)
-    dbMgr.updateUserData(activeUser, 'bookmarkStr', curBookmarks.map(b => b.name))
+    dbMgr.updateUserDataDB(activeUser, 'bookmarkStr', curBookmarks.map(b => b.name))
   }
   
   const removeAllBookmarks = () => {
     setBookmarks([])
-    dbMgr.updateUserData(activeUser, 'bookmarkStr', [])
+    dbMgr.updateUserDataDB(activeUser, 'bookmarkStr', [])
   }
   const isBookmarked = property => {
     if (!property) return false
@@ -255,7 +254,7 @@ function App() {
     switch (pageState) {
       case 3:
         return (<LoginUI 
-          onLogInGoogle={signIn}
+          onLogInGoogle={googleSignIn}
           activeUser={activeUser}
           isRegistering={isRegistering}
           onRegisterChange={onRegisterChange}
@@ -284,7 +283,7 @@ function App() {
       <div className="navbar-container">
         <HomeLogo title="home" className="web-app-logo" fill='#FFFFFF' opacity={0.5} onClick={onResetView}></HomeLogo>
         <SearchBarUI
-          onChange={onSearchChange}
+          onSearchChange={onSearchChange}
           selectedSearch={curSearch}
           recentSearches={recentSearches}
           properties={properties}

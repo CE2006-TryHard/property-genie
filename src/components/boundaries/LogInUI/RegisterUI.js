@@ -1,44 +1,47 @@
 import {useState } from "react"
-import { dbMgr } from "../../controls/Mgr"
+import { userAuthMgr } from "../../controls/Mgr"
 const RegisterUI = props => {
     const [pw, setPW] = useState('')
     const [confirmPW, setConfirmPW] = useState('')
     const [email, setEmail] = useState('')
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
-    const [emailWarning, setEmailWarning] = useState('')
-    const [pwWarning, setPWWarning] = useState('')
-    const [nameWarning, setNameWarning] = useState('')
+    const [emailWarningMsg, setEmailWarningMsg] = useState('')
+    const [pwWarningMsg, setPWWarningMsg] = useState('')
+    const [nameWarningMsg, setNameWarningMsg] = useState('')
 
+    const {checkIsEmptyString, checkIsValidEmailFormat, validateAccountAvailability} = userAuthMgr
     const verifyEmail = () => {
-        const isEmpty = email.trim() === ''
-        const invalidEmail = !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)
-        if (isEmpty) setEmailWarning('Please enter your email.')
-        else if (invalidEmail) setEmailWarning('You have enter an invalid email address!')
+        const isEmpty = checkIsEmptyString(email)
+        const invalidEmail = !checkIsValidEmailFormat(email)
+        if (isEmpty) setEmailWarningMsg('Please enter your email.')
+        else if (invalidEmail) setEmailWarningMsg('You have enter an invalid email address!')
         return !isEmpty && !invalidEmail
     }
     const verifyPW = () => {
-        if (pw !== confirmPW) setPWWarning('Passwords do not match! Please reenter password.')
-        else if (pw === '' || confirmPW === '') setPWWarning('Please enter your password!')
+        if (pw !== confirmPW) setPWWarningMsg('Passwords do not match! Please reenter password.')
+        else if (pw === '' || confirmPW === '') setPWWarningMsg('Please enter your password!')
 
         return (pw === confirmPW && pw !== '')
     }
 
     const verifyName = () => {
-        if (firstName.trim() === '') setNameWarning('Please enter your first name!')
-        else if(lastName.trim() === '') setNameWarning('Please enter your last name!')
-        return (firstName.trim() !== '' && lastName.trim() !== '')
+        const isEmptyFirstName = checkIsEmptyString(firstName)
+        const isEmptyLastName = checkIsEmptyString(lastName)
+        if (isEmptyFirstName) setNameWarningMsg('Please enter your first name!')
+        else if(isEmptyLastName) setNameWarningMsg('Please enter your last name!')
+        return (!isEmptyFirstName && !isEmptyLastName)
     }
 
     const onRegisterManual = () => {
         if (verifyEmail()) {
-            setEmailWarning('')
-            dbMgr.getUserData(email, userData => {
-                if (userData) {
-                    setEmailWarning('Email already exists! Please enter a different email.')
+            setEmailWarningMsg('')
+            validateAccountAvailability(email, userExist => {
+                if (userExist) {
+                    setEmailWarningMsg('Email already exists! Please enter a different email.')
                     return
                 }
-    
+
                 if (verifyPW() && verifyName()) {
                     props.onRegisterManual({
                         name: firstName + ' ' + lastName,
@@ -49,7 +52,6 @@ const RegisterUI = props => {
                     verifyPW()
                     verifyName()
                 }
-                
             })
         } else {
             verifyPW()
@@ -58,38 +60,42 @@ const RegisterUI = props => {
         
     }
 
+    const onRegisterGoogle = () => {
+        props.onRegisterGoogle()
+    }
+
     const onEmailChange = e => {
         setEmail(e.target.value)
-        setEmailWarning('')
+        setEmailWarningMsg('')
     }
 
     const onFirstNameCange = e => {
         setFirstName(e.target.value)
-        setNameWarning('')
+        setNameWarningMsg('')
     }
 
     const onLastNameChange = e => {
         setLastName(e.target.value)
-        setNameWarning('')
+        setNameWarningMsg('')
     }
 
     const onPWChange = e => {
         setPW(e.target.value)
-        setPWWarning('')
+        setPWWarningMsg('')
     }
 
     const onConfirmPWChange = e => {
         setConfirmPW(e.target.value)
-        setPWWarning('')
+        setPWWarningMsg('')
     }
 
     return (<div className="register-content">
-            <button className="register-via-google-button" onClick={props.onRegisterGoogle}>Register via Google</button>
+            <button className="register-via-google-button" onClick={onRegisterGoogle}>Register via Google</button>
             <div>Or</div>
             <div className="input-field input-email">
                 <span>Email: </span><input type="text" value={email} onChange={onEmailChange}/>
-                <p className="warning">{emailWarning}</p>
-                {email.trim() !== '' && emailWarning === '' ? <p className="approve">Email format is valid.</p> : ''}
+                <p className="warning">{emailWarningMsg}</p>
+                {!checkIsEmptyString(email) && emailWarningMsg === '' ? <p className="approve">Email format is valid.</p> : ''}
             </div>
             <div className="input-field input-name">
                 <div className="sub-input-field">
@@ -98,7 +104,7 @@ const RegisterUI = props => {
                 <div className="sub-input-field">
                 <span>Last name:</span><input type="text" value={lastName} onChange={onLastNameChange}/>
                 </div>
-                <p className="warning">{nameWarning}</p>
+                <p className="warning">{nameWarningMsg}</p>
             </div>
             <div className="input-field input-password">
                 <div className="sub-input-field">
@@ -107,7 +113,7 @@ const RegisterUI = props => {
                 <div className="sub-input-field">
                     <span>Confirm Password: </span><input type="text" value={confirmPW} onChange={onConfirmPWChange}/>
                 </div>
-                <p className="warning">{pwWarning}</p>
+                <p className="warning">{pwWarningMsg}</p>
             </div>
             <button onClick={onRegisterManual}>Register</button>
             <button onClick={props.onBack}>Back</button>

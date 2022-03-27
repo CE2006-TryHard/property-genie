@@ -4,21 +4,13 @@ import {Loader} from "@googlemaps/js-api-loader"
 import { dbMgr } from '../../controls/Mgr'
 import { CONSTITUENCY_MAP_CONFIG, MAP_STYLES } from './MAP_CONFIG'
 
-const componentToHex = c => {
-  var hex = c.toString(16);
-  return hex.length === 1 ? "0" + hex : hex;
-}
-
-const rgbToHex = (r, g, b) => {
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-}
-
 const MAP_CENTER = {lat:1.360514, lng: 103.840300}
 const MAP_ZOOM = 11.5
 const MAP_BOUND_RESTRICTION = {
   latLngBounds: {north: 1.56081, south: 1.1201,east: 104.21781,west: 103.46456},
   strictBounds: false
 }
+
 const ICON_CONFIG = {
   path: "M0,5a5,5 0 1,0 10,0a5,5 0 1,0 -10,0",
   fillColor: "red",
@@ -38,16 +30,24 @@ const CONSTITUENCY_POLYGON_CONFIG = {
 let googleRef = null
 let mapRef = null
 let gService = null
-export {mapRef, googleRef, gService}
+export {gService}
 
 const markers = {}
+
 const MapUI = props => {
     const {filterOptions, curConstituency, triggerReset, onPropertySelect, onConstituencySelect} = props
     const [overlayPos, setOverlayPos] = useState({left: 0, top: 0})
-    const [curHoverConstituency, setCurHoverConstituency] = useState(null)
-    const [curZoomInConstituency, setCurZoomInConstituency] = useState(null)
-    const [currentHoverProperty, setCurrentHoverProperty] = useState(null)
-  
+    const [curHoverC, setCurHoverC] = useState(null)
+    const [curHoverP, setCurHoverP] = useState(null)
+    
+    const rgbToHex = (r, g, b) => {
+      const componentToHex = c => {
+        var hex = c.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+      }
+      return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    }
+
     const getConstituencyColorHex = c => {
         const colorFrom = [181, 181, 181]
         const colorTo = [0, 181, 122]
@@ -115,11 +115,11 @@ const MapUI = props => {
           })
   
           googleRef.maps.event.addListener(markers[c.name][p.name], 'mouseover', () => {
-            setCurrentHoverProperty(p)
+            setCurHoverP(p)
           })
   
           googleRef.maps.event.addListener(markers[c.name][p.name], 'mouseout', () => {
-            setCurrentHoverProperty(null)
+            setCurHoverP(null)
           })
         }
       })
@@ -134,6 +134,41 @@ const MapUI = props => {
           markers[dName][pName].setVisible(dName === c.name)
         })
       })
+    }
+
+    const updateMouseOverPolygonEvent = () => {
+      const constituencies = dbMgr.getConstituencies()
+      mapRef.data.addListener('mouseover', e => {
+        const c = constituencies[e.feature.getProperty('Name')]
+        setCurHoverC(c)
+
+        mapRef.data.setStyle(f => {
+          const tConstituency = constituencies[f.getProperty('Name')]
+          const isTargetConstituency = curConstituency && curConstituency === tConstituency
+          return {
+            ...CONSTITUENCY_POLYGON_CONFIG,
+            fillColor: getConstituencyColorHex(tConstituency),
+            strokeWeight: isTargetConstituency? 2 : 1,
+            strokeColor: isTargetConstituency || tConstituency === c ? '#333333' : '#FFFFFF',
+            fillOpacity: isTargetConstituency ? 0 : 0.7,
+            zIndex: isTargetConstituency || tConstituency === c ? 1 : 0
+          }
+        })
+      })
+    }
+
+    const setMapZoom = (c, mapRef) => {
+      if (c) {
+        const {center, zoom} = CONSTITUENCY_MAP_CONFIG[c.name]
+        mapRef.setCenter({lat: center[0], lng: center[1]})
+        mapRef.setZoom(zoom)
+        mapRef.setOptions({minZoom: 12})
+      } else {
+        mapRef.setOptions({minZoom: MAP_ZOOM})
+        mapRef.setCenter(MAP_CENTER)
+        mapRef.setZoom(MAP_ZOOM)
+      }
+      
     }
 
     useEffect(() => { // componentDidMount
@@ -174,24 +209,7 @@ const MapUI = props => {
           const {clientX, clientY} = e.domEvent
           setOverlayPos({left: clientX + 10, top: clientY + 10})
         })
-  
-        mapRef.data.addListener('mouseover', e => {
-          const c = constituencies[e.feature.getProperty('Name')]
-          setCurHoverConstituency(c)
 
-          mapRef.data.setStyle(f => {
-            const tConstituency = constituencies[f.getProperty('Name')]
-            const isTargetConstituency = curZoomInConstituency && curZoomInConstituency === tConstituency
-            return {
-              ...CONSTITUENCY_POLYGON_CONFIG,
-              fillColor: getConstituencyColorHex(tConstituency),
-              strokeWeight: isTargetConstituency? 2 : 1,
-              strokeColor: isTargetConstituency || tConstituency === c ? '#333333' : '#FFFFFF',
-              fillOpacity: isTargetConstituency ? 0 : 0.7,
-              zIndex: isTargetConstituency || tConstituency === c ? 1 : 0
-            }
-          })
-        })
         // mapRef.addListener('click', e => {
         //   const {lat, lng} = e.latLng.toJSON()
         //   console.log(lat, lng)
@@ -203,26 +221,34 @@ const MapUI = props => {
         })
   
         mapRef.data.addListener('mouseout', e => {
-          setCurHoverConstituency(null)
-          
-          if (constituencies[e.feature.getProperty('Name')] === curZoomInConstituency) return
-  
-          mapRef.data.setStyle(f => {
-            const tConstituency = constituencies[f.getProperty('Name')]
-            const isTargetConstituency = curZoomInConstituency && curZoomInConstituency === tConstituency
-  
-            return {
-              ...CONSTITUENCY_POLYGON_CONFIG,
-              strokeColor: isTargetConstituency ? '#333333' : '#FFFFFF',
-              strokeWeight: isTargetConstituency? 2 : 1,
-              fillColor: getConstituencyColorHex(tConstituency),
-              fillOpacity: isTargetConstituency ? 0 : 0.7,
-              zIndex: isTargetConstituency ? 1 : 0
-            }
-          })
+          setCurHoverC(null)
         })
+
+        updateMouseOverPolygonEvent()
       })
     }, [])
+
+    useEffect(() => {
+      if (!mapRef) return
+      const constituencies = dbMgr.getConstituencies()
+      updateMarkerAppearance(curConstituency)
+      updateMouseOverPolygonEvent()
+  
+      mapRef.data.setStyle(f => {
+        const isTargetConstituency = curConstituency && f.getProperty('Name') === curConstituency.name
+        return {
+          ...CONSTITUENCY_POLYGON_CONFIG,
+          strokeColor: isTargetConstituency ? '#333333' : '#FFFFFF',
+          strokeWeight: isTargetConstituency? 2 : 1,
+          fillColor: getConstituencyColorHex(constituencies[f.getProperty('Name')]),
+          fillOpacity: isTargetConstituency ? 0 : 0.7,
+          zIndex: isTargetConstituency ? 1 : 0
+        }
+      })
+
+      setMapZoom(curConstituency, mapRef)
+
+    }, [curConstituency])
 
     useEffect(() => {
       if (!mapRef) return
@@ -242,50 +268,19 @@ const MapUI = props => {
   
     useEffect(() => {
       if (!mapRef) return
-      const constituencies = dbMgr.getConstituencies()
-      setCurZoomInConstituency(curConstituency)
-      updateMarkerAppearance(curConstituency)
-  
-      mapRef.data.setStyle(feature => {
-        const isTargetConstituency = curConstituency && feature.getProperty('Name') === curConstituency.name
-        return {
-          ...CONSTITUENCY_POLYGON_CONFIG,
-          strokeColor: isTargetConstituency ? '#333333' : '#FFFFFF',
-          strokeWeight: isTargetConstituency? 2 : 1,
-          fillColor: getConstituencyColorHex(constituencies[feature.getProperty('Name')]),
-          fillOpacity: isTargetConstituency ? 0 : 0.7,
-          zIndex: isTargetConstituency ? 1 : 0
-        }
-      })
-      
-      if (!curConstituency) {
-        mapRef.setOptions({minZoom: MAP_ZOOM})
-        mapRef.setCenter(MAP_CENTER)
-        mapRef.setZoom(MAP_ZOOM)
-      } else {
-        const {center, zoom} = CONSTITUENCY_MAP_CONFIG[curConstituency.name]
-        mapRef.setCenter({lat: center[0], lng: center[1]})
-        mapRef.setZoom(zoom)
-        mapRef.setOptions({minZoom: 12})
-      }
-    }, [curConstituency])
-  
-    useEffect(() => {
-      if (!mapRef) return
-        mapRef.setOptions({minZoom: MAP_ZOOM})
-        mapRef.setCenter(MAP_CENTER)
-        mapRef.setZoom(MAP_ZOOM)
+        setMapZoom(null, mapRef)
     }, [triggerReset])
-  
+    
+    
     return (
       <div className="map-container">
-        {(currentHoverProperty || curHoverConstituency) ?
+        {(curHoverP || curHoverC) ?
         <div className="info-bubble" style={overlayPos}>
-          {currentHoverProperty ?
+          {curHoverP ?
           <div>
-            {currentHoverProperty.name}
+            {curHoverP.name}
           </div>
-          : <div>{curHoverConstituency.name}</div>
+          : <div>{curHoverC.name}</div>
           }
           
         </div>

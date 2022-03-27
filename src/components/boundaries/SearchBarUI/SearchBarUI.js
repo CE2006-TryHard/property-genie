@@ -6,11 +6,11 @@ import { HomeLogo, SgLogo } from '../MiscUI'
 import "./SearchBarUI.scss"
 
 const SearchBarUI = props => {
-  const {properties, selectedSearch, recentSearches, onChange} = props
+  const {properties, selectedSearch, recentSearches, onSearchChange} = props
   const [isMinLength, setIsMinLength] = useState(false)
 
-  const onSearchChange = newSearch => {
-    onChange(newSearch)
+  const onChange = newSearch => {
+    onSearchChange(newSearch)
   }
 
     const onInputChange = input => {
@@ -44,7 +44,7 @@ const SearchBarUI = props => {
         <div className="search-bar-content">
         <Select components={{Option: CustomOption}}
           value={selectedSearch}
-          onChange={onSearchChange}
+          onChange={onChange}
           onInputChange={onInputChange}
           options={getSearchOptions()}
           theme={theme => ({

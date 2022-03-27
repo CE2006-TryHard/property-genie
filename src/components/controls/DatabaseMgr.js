@@ -45,7 +45,7 @@ export default class DatabaseMgr {
     // })
   }
 
-  getUserData(email, onFetchEnd) {
+  getUserDataDB(email, onFetchEnd) {
     const id = email.split('.')[0]
     const dbRef = ref(getDatabase())
     get(child(dbRef, `account/${id}`)).then(snapshot => {
@@ -96,7 +96,7 @@ export default class DatabaseMgr {
     // })
 
     // test update data
-    // this.updateUserData('recent', 'house')
+    // this.updateUserDataDB('recent', 'house')
   }
 
   // fetchAllUserData(userId, onFetchEnd) {
@@ -106,7 +106,7 @@ export default class DatabaseMgr {
   //   })
   // }
 
-  updateUserData(user, key, value) {
+  updateUserDataDB(user, key, value) {
     if (!user) {
       console.log("no active user")
       return

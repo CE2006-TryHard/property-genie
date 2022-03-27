@@ -1,7 +1,9 @@
 import './LoginUI.scss'
-import React from "react";
+import React, { useState } from "react";
 import RegisterUI from './RegisterUI'
 import { useGoogleAuth } from '../../controls/GoogleAuth'
+import { userAuthMgr } from '../../controls/Mgr'
+
 // https://stackoverflow.com/questions/48849948/keeping-google-login-persistent-on-reloading-single-page-react-app
 
 // loginState
@@ -9,27 +11,33 @@ import { useGoogleAuth } from '../../controls/GoogleAuth'
 // update password view 1
 // register view 2
 const LogInUI = props => {
-    const {signIn} = useGoogleAuth()
-    const onRegisterGoogle = () => {
-        this.props.onLogInGoogle()
-    }
-
-    const onRegisterManual = userInfo => {
-        props.onRegisterManual(userInfo)
-    }
+    const {signIn: googleSignIn} = useGoogleAuth()
+    const {onRegisterChange, isRegistering} = props
+    const [email, setEmail] = useState('')
+    const [pw, setPW] = useState('')
+    const [loginErrorMsg, setLoginErrorMsg] = useState('')
 
     const onLogInGoogle = () => {
-        signIn()
+        googleSignIn()
     }
 
     const onLogInManual = () => {
 
     }
 
-    const {onRegisterChange, isRegistering} = props
+    const onRegisterGoogle = () => {
+
+    }
+
+    const onRegisterManual = () => {
+
+    }
     return (
         <div className="login-container">
-            {isRegistering ? <RegisterUI onRegisterManual={onRegisterManual} onRegisterGoogle={onRegisterGoogle} onBack={() => onRegisterChange(false)}></RegisterUI>
+            {isRegistering ? <RegisterUI
+                onRegisterGoogle={onRegisterGoogle}
+                onRegisterManual={onRegisterManual}
+                onBack={() => onRegisterChange(false)}></RegisterUI>
             : 
             <div className="login-main-content">
                <button onClick={onLogInGoogle}>Login with Google</button>
