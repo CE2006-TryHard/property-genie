@@ -46,7 +46,7 @@ const LogInUI = props => {
      * @memberof LogInUI
      */
     const onRegisterGoogle = () => {
-
+        googleSignIn()
     }
 
     /**

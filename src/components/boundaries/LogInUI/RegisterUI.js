@@ -158,7 +158,7 @@ const RegisterUI = props => {
             <div className="input-field input-email">
                 <span>Email: </span><input type="text" value={email} onChange={onEmailChange}/>
                 <p className="warning">{emailWarningMsg}</p>
-                {!checkIsEmptyString(email) && emailWarningMsg === '' ? <p className="approve">Email format is valid.</p> : ''}
+                {!checkIsEmptyString(email) && checkIsValidEmailFormat(email) ? <p className="approve">Email format is valid.</p> : ''}
             </div>
             <div className="input-field input-name">
                 <div className="sub-input-field">
