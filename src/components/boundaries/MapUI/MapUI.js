@@ -34,12 +34,27 @@ export {gService}
 
 const markers = {}
 
+/**
+ * @namespace MapUI
+ * @description boundary module
+ * @property {Object} overlayPos
+ * @property {Constituency} curHoverC
+ * @property {Property} curHoverP
+ */
 const MapUI = props => {
     const {filterOptions, curConstituency, triggerReset, onPropertySelect, onConstituencySelect} = props
     const [overlayPos, setOverlayPos] = useState({left: 0, top: 0})
     const [curHoverC, setCurHoverC] = useState(null)
     const [curHoverP, setCurHoverP] = useState(null)
     
+    /**
+     * @memberof MapUI
+     * @typedef {function} rgbToHex convert rgb value to hex string
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     * @return {String} hex color code in string
+     */
     const rgbToHex = (r, g, b) => {
       const componentToHex = c => {
         var hex = c.toString(16);
@@ -48,6 +63,12 @@ const MapUI = props => {
       return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
     }
 
+    /**
+     * @memberof MapUI
+     * @typedef {function} getConstituencyColorHex convert constituency value into color form
+     * @param {Constituency} c constituency
+     * @return {String} hex color code in string
+     */
     const getConstituencyColorHex = c => {
         const colorFrom = [181, 181, 181]
         const colorTo = [0, 181, 122]
@@ -69,7 +90,13 @@ const MapUI = props => {
         
         return rgbToHex(r,g,b)
       }
-    
+      
+    /**
+     * @memberof MapUI
+     * @typedef {function} getPropertyColorHex convert property value into color form
+     * @param {Property} property
+     * @return {String} hex color code in string
+     */
       const getPropertyColorHex = property => {
         const maxPropertyVal = Math.max(...property.constituency.properties.map(p => p.getPropertyValue(filterOptions)))
         const colorFrom = [255, 223, 122]
@@ -89,6 +116,11 @@ const MapUI = props => {
         return rgbToHex(r,g,b)
     }
 
+    /**
+     * @memberof MapUI
+     * @typedef {function} updateMarkerAppearance update map display based on current selected constituency
+     * @param {Constituency} c
+     */
     const updateMarkerAppearance = c => {
       if (!c) {
         Object.keys(markers).forEach(dName => {
@@ -136,6 +168,10 @@ const MapUI = props => {
       })
     }
 
+    /**
+     * @memberof MapUI
+     * @typedef {function} updateMouseOverPolygonEvent update mouse over event listener of polygon object
+     */
     const updateMouseOverPolygonEvent = () => {
       const constituencies = dbMgr.getConstituencies()
       mapRef.data.addListener('mouseover', e => {
@@ -157,6 +193,13 @@ const MapUI = props => {
       })
     }
 
+    /**
+     * @memberof MapUI
+     * @typedef {function} setMapZoom set map zoom level
+     * @param {Constituency} c
+     * @param {Object} mapRef reference to Google Map object
+     * @return {String} hex color code in string
+     */
     const setMapZoom = (c, mapRef) => {
       if (c) {
         const {center, zoom} = CONSTITUENCY_MAP_CONFIG[c.name]
@@ -171,6 +214,12 @@ const MapUI = props => {
       
     }
 
+    /**
+     * @memberof MapUI
+     * @typedef {function} useEffect1 load Google API and setup the map when component is firstly mounted
+     * @param {function} callback
+     * @param {Array} watchList []
+     */
     useEffect(() => { // componentDidMount
       const loader = new Loader({
         apiKey: 'AIzaSyAvXrCz1aaHL0MH8a6qQFW9zfwS8FP_mks',
@@ -228,6 +277,12 @@ const MapUI = props => {
       })
     }, [])
 
+    /**
+     * @memberof MapUI
+     * @typedef {function} useEffect2 update map display when current selected constituency changed
+     * @param {function} callback
+     * @param {Array} watchList [curConstituency]
+     */
     useEffect(() => {
       if (!mapRef) return
       const constituencies = dbMgr.getConstituencies()
@@ -250,6 +305,12 @@ const MapUI = props => {
 
     }, [curConstituency])
 
+    /**
+     * @memberof MapUI
+     * @typedef {function} useEffect3 update map display when filterOptions changed
+     * @param {function} callback
+     * @param {Array} watchList [filterOptions]
+     */
     useEffect(() => {
       if (!mapRef) return
       const constituencies = dbMgr.getConstituencies()
@@ -265,7 +326,13 @@ const MapUI = props => {
       })
   
     }, [filterOptions])
-  
+    
+    /**
+     * @memberof MapUI
+     * @typedef {function} useEffect4 reset map display when triggerReset changed
+     * @param {function} callback
+     * @param {Array} watchList [triggerReset]
+     */
     useEffect(() => {
       if (!mapRef) return
         setMapZoom(null, mapRef)

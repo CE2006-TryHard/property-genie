@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/boundaries/MiscUI.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/boundaries/MiscUI.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import {ReactComponent as HomeLogo} from './../../images/home.svg'
+import {ReactComponent as SgLogo} from './../../images/sg.svg'
+
+/**
+ * Functional Component displays greet user message after user logged in.
+ * @param {Object} props
+ */
+const GreetUserMsg = props => {
+  if (props.activeUser) {
+    return (
+      &lt;div className={`user-greet-msg ${props.alwaysShow ? 'show' : ''}`}>
+        Welcome, {props.activeUser.name}
+      &lt;/div>
+    )
+  }
+  return ''
+}
+
+/**
+ * Tab Button component
+ * @param {Object} props
+ */
+const TabButton = props => {
+  const onChange = (newOpt) => {
+      props.onChange(newOpt)
+  }
+  return (&lt;div className="tab-button-container">
+      {props.options.map((opt, i) => 
+          (&lt;div key={i}
+              className={`tab-item ${props.current === opt ? 'current' : ''}`}
+              onClick={() => onChange(opt)}
+              >{opt}&lt;/div>))}
+  &lt;/div>)
+}
+
+/**
+ * Checkbox component
+ * @param {Object} props
+ */
+const CheckBox = props => {
+  const onChange = (optKey) => {
+      props.onChange(optKey, !props.options[optKey].checked)
+  }
+
+  return (&lt;div className="checkbox-container">
+      {Object.keys(props.options).map((optKey, i) => (&lt;div key={i}>
+          &lt;input type="checkbox" id={optKey} value={optKey} checked={!!props.options[optKey].checked} onChange={() => onChange(optKey)}>&lt;/input>
+          &lt;label htmlFor={optKey}>{props.options[optKey].label}&lt;/label>&lt;br>&lt;/br>
+      &lt;/div>))
+      }
+  &lt;/div>)
+}
+
+/**
+ * Side panel wrapper component
+ * @param {Object} props
+ */
+const SidePanelWrapper = props => {
+  const {isOpen, onToggle, onClose, children} = props
+
+  return (
+      &lt;div className={`side-panel-entry ${isOpen ? 'open' : ''}`}>
+          &lt;svg onClick={onToggle} className="side-panel-toggle-button" version="1.1" viewBox="0 0 35 35" enableBackground="new 0 0 35 35">
+              &lt;circle fill="#FFFFFF" opacity="0.5" cx="18.2" cy="17.6" r="15.5">&lt;/circle>
+              &lt;line stroke="#333333" x1="10.5" y1="13.2" x2="26.1" y2="13.2" strokeWidth="1.7" strokeMiterlimit="10" fill="none">
+                  &lt;animate attributeName="y2" from="13.2" to="21.9" dur="0.5s" />
+              &lt;/line>
+              &lt;line stroke="#333333" x1="10.5" y1="17.6" x2="26.1" y2="17.6" opacity="1" strokeWidth="1.7" strokeMiterlimit="10" fill="none">
+                  &lt;animate attributeName="x2" from="26.1" to="10.5" dur="0.5s" />
+              &lt;/line>
+              &lt;line stroke="#333333" x1="10.5" y1="21.9" x2="26.1" y2="21.9" strokeWidth="1.7" strokeMiterlimit="10" fill="none">
+              &lt;animate attributeName="y2" from="21.9" to="13.2" dur="0.5s" />
+              &lt;/line>
+          &lt;/svg>
+          &lt;div className="side-panel-container">
+              &lt;div className="side-panel-content">
+              {children}
+              &lt;/div>
+              &lt;div className="close-region" onClick={onClose}>&lt;/div>
+          &lt;/div>
+        &lt;/div>
+  )
+}
+
+export {GreetUserMsg, HomeLogo, SgLogo, TabButton, CheckBox, SidePanelWrapper}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 21:33:56 GMT+0800 (Singapore Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

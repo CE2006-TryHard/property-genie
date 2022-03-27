@@ -1,21 +1,30 @@
 import { initializeApp } from "firebase/app"
 import { getAnalytics } from "firebase/analytics"
-import {getDatabase, ref, child, onValue, update, get} from 'firebase/database'
+import {getDatabase, ref, child, update, get} from 'firebase/database'
 import Papa from 'papaparse'
-import User from "../entities/User"
-import Property from '../entities/Property'
-import Constituency, {CONSTITUENCY_NAME} from "../entities/Constituency"
-import {ENBLOC, STATIONS, LINES, SCHOOLS} from '../CONFIG'
+// import Constituency from '../entities/Constituency'
+import {Constituency, Property, User} from '../entities/index'
+import {STATIONS, SCHOOLS, CONSTITUENCY_NAME} from '../CONFIG'
 
-export default class DatabaseMgr {
+/**
+ * A control class manage the flow of data between the application and database
+ */
+class DatabaseMgr {
   constructor () {
+    /** @public */
     this.properties = []
+    /** @public */
     this.constituencies = {}
+
     this.fetchPropertyData()
     this.initFirebase()
     
   }
-
+  /**
+   * @param  {String} name
+   * @param  {String} email
+   * @param  {function} onFetchEnd
+   */
   initActiveUser(name, email, onFetchEnd) {
     const newUser = new User(name, email)
     const dbRef = ref(getDatabase())
@@ -38,13 +47,16 @@ export default class DatabaseMgr {
     //   newUser.registerViaGoogle = registerViaGoogle || false
     //   newUser.recentSearchStr = recentSearchStr || []
     //   newUser.bookmarkStr = bookmarkStr || []
-    //   // newUser.filterOptions = filterOptions || []
-
     //   onFetchEnd(newUser)
     //   console.log('magic!')
     // })
   }
 
+  /**
+   * 
+   * @param {String} email 
+   * @param {function} onFetchEnd 
+   */
   getUserDataDB(email, onFetchEnd) {
     const id = email.split('.')[0]
     const dbRef = ref(getDatabase())
@@ -58,7 +70,11 @@ export default class DatabaseMgr {
     })
   }
   
-
+  /**
+   * 
+   * @param {String} key 
+   * @param {function} onFetchEnd
+   */
   fetchDataDB(key, onFetchEnd) {
     const dbRef = ref(getDatabase())
     return get(child(dbRef, key)).then(snapshot => {
@@ -71,6 +87,9 @@ export default class DatabaseMgr {
     })
   }
   
+  /**
+   * initialise firebase connection
+   */
   initFirebase () {
     // Your web app's Firebase configuration
     // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -106,6 +125,13 @@ export default class DatabaseMgr {
   //   })
   // }
 
+  /**
+   * 
+   * @param {User} user 
+   * @param {String} key 
+   * @param {any} value
+   * @description update user data to firebase
+   */
   updateUserDataDB(user, key, value) {
     if (!user) {
       console.log("no active user")
@@ -125,9 +151,10 @@ export default class DatabaseMgr {
   //   })
   // }
 
-
+  /**
+   * fetch all properties data from local csv
+   */
   fetchPropertyData () {
-    // fetch all property data at once
     fetch('data/data-all.csv')
       .then(res => res.text())
       .then(raw => Papa.parse(raw, {header: true}))
@@ -169,16 +196,31 @@ export default class DatabaseMgr {
       })
   }
 
+  /**
+   * 
+   * @returns {Property[]}
+   */
   getProperties () {
     return this.properties
   }
 
+  /**
+   * 
+   * @param {String} name 
+   * @returns {Property}
+   */
   getPropertyByName(name) {
     return this.properties.filter(p => p.name === name)[0]
   }
 
+  /**
+   * 
+   * @returns {Object}
+   */
   getConstituencies () {
     return this.constituencies
   }
 
 }
+
+export default DatabaseMgr

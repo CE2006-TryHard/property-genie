@@ -1,5 +1,18 @@
 import {useState } from "react"
 import { userAuthMgr } from "../../controls/Mgr"
+
+/**
+ * @namespace RegisterUI
+ * @description boundary module
+ * @property {String} pw
+ * @property {String} confirmPW
+ * @property {String} email
+ * @property {String} firstName
+ * @property {String} lastName
+ * @property {String} emailWarningMsg
+ * @property {String} pwWarningMsg
+ * @property {String} nameWarningMsg
+ */
 const RegisterUI = props => {
     const [pw, setPW] = useState('')
     const [confirmPW, setConfirmPW] = useState('')
@@ -11,6 +24,12 @@ const RegisterUI = props => {
     const [nameWarningMsg, setNameWarningMsg] = useState('')
 
     const {checkIsEmptyString, checkIsValidEmailFormat, validateAccountAvailability} = userAuthMgr
+
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} verifyEmail
+     * @return {Boolean}
+     */
     const verifyEmail = () => {
         const isEmpty = checkIsEmptyString(email)
         const invalidEmail = !checkIsValidEmailFormat(email)
@@ -18,6 +37,12 @@ const RegisterUI = props => {
         else if (invalidEmail) setEmailWarningMsg('You have enter an invalid email address!')
         return !isEmpty && !invalidEmail
     }
+
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} verifyPW
+     * @return {Boolean}
+     */
     const verifyPW = () => {
         if (pw !== confirmPW) setPWWarningMsg('Passwords do not match! Please reenter password.')
         else if (pw === '' || confirmPW === '') setPWWarningMsg('Please enter your password!')
@@ -25,6 +50,11 @@ const RegisterUI = props => {
         return (pw === confirmPW && pw !== '')
     }
 
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} verifyName
+     * @return {Boolean}
+     */
     const verifyName = () => {
         const isEmptyFirstName = checkIsEmptyString(firstName)
         const isEmptyLastName = checkIsEmptyString(lastName)
@@ -33,6 +63,10 @@ const RegisterUI = props => {
         return (!isEmptyFirstName && !isEmptyLastName)
     }
 
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} onRegisterManual
+     */
     const onRegisterManual = () => {
         if (verifyEmail()) {
             setEmailWarningMsg('')
@@ -60,30 +94,59 @@ const RegisterUI = props => {
         
     }
 
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} onRegisterGoogle
+     */
     const onRegisterGoogle = () => {
         props.onRegisterGoogle()
     }
 
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} onEmailChange
+     * @param {Event} e
+     */
     const onEmailChange = e => {
         setEmail(e.target.value)
         setEmailWarningMsg('')
     }
 
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} onFirstNameCange
+     * @param {Event} e
+     */
     const onFirstNameCange = e => {
         setFirstName(e.target.value)
         setNameWarningMsg('')
     }
 
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} onLastNameChange
+     * @param {Event} e
+     */
     const onLastNameChange = e => {
         setLastName(e.target.value)
         setNameWarningMsg('')
     }
 
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} onPWChange
+     * @param {Event} e
+     */
     const onPWChange = e => {
         setPW(e.target.value)
         setPWWarningMsg('')
     }
 
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} onConfirmPWChange
+     * @param {Event} e
+     */
     const onConfirmPWChange = e => {
         setConfirmPW(e.target.value)
         setPWWarningMsg('')

@@ -10,6 +10,14 @@ import { userAuthMgr } from '../../controls/Mgr'
 // login view 0
 // update password view 1
 // register view 2
+
+/**
+ * @namespace LogInUI
+ * @description boundary module
+ * @property {String} email
+ * @property {String} pw
+ * @property {String} loginErrorMsg
+ */
 const LogInUI = props => {
     const {signIn: googleSignIn} = useGoogleAuth()
     const {onRegisterChange, isRegistering} = props
@@ -17,21 +25,38 @@ const LogInUI = props => {
     const [pw, setPW] = useState('')
     const [loginErrorMsg, setLoginErrorMsg] = useState('')
 
+    /**
+     * @typedef {function} onLogInGoogle
+     * @memberof LogInUI
+     */
     const onLogInGoogle = () => {
         googleSignIn()
     }
 
+    /**
+     * @typedef {function} onLogInManual
+     * @memberof LogInUI
+     */
     const onLogInManual = () => {
 
     }
 
+    /**
+     * @typedef {function} onRegisterGoogle
+     * @memberof LogInUI
+     */
     const onRegisterGoogle = () => {
 
     }
 
+    /**
+     * @typedef {function} onRegisterManual
+     * @memberof LogInUI
+     */
     const onRegisterManual = () => {
 
     }
+
     return (
         <div className="login-container">
             {isRegistering ? <RegisterUI

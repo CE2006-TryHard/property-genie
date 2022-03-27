@@ -1,6 +1,10 @@
 import {ReactComponent as HomeLogo} from './../../images/home.svg'
 import {ReactComponent as SgLogo} from './../../images/sg.svg'
 
+/**
+ * Functional Component displays greet user message after user logged in.
+ * @param {Object} props
+ */
 const GreetUserMsg = props => {
   if (props.activeUser) {
     return (
@@ -12,6 +16,10 @@ const GreetUserMsg = props => {
   return ''
 }
 
+/**
+ * Tab Button component
+ * @param {Object} props
+ */
 const TabButton = props => {
   const onChange = (newOpt) => {
       props.onChange(newOpt)
@@ -25,6 +33,10 @@ const TabButton = props => {
   </div>)
 }
 
+/**
+ * Checkbox component
+ * @param {Object} props
+ */
 const CheckBox = props => {
   const onChange = (optKey) => {
       props.onChange(optKey, !props.options[optKey].checked)
@@ -39,6 +51,10 @@ const CheckBox = props => {
   </div>)
 }
 
+/**
+ * Side panel wrapper component
+ * @param {Object} props
+ */
 const SidePanelWrapper = props => {
   const {isOpen, onToggle, onClose, children} = props
 

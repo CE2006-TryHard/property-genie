@@ -1,5 +1,9 @@
-export default class SidePanelOptMgr {
+/**
+ * A control class manages filter option format
+ */
+class SidePanelOptMgr {
     constructor () {
+        /** @public */
         this.optionItems = {
             loginsignup: {
                 label: 'Login / Register', hide: false, state: 3
@@ -20,6 +24,12 @@ export default class SidePanelOptMgr {
     
     }
 
+    /**
+     * 
+     * @param {User} activeUser 
+     * @returns {Object[]}
+     * @description return a list of option items
+     */
     getOptionItems (activeUser) {
         this.optionItems['loginsignup'].hide = !!activeUser
         this.optionItems['logout'].hide = !activeUser
@@ -31,3 +41,5 @@ export default class SidePanelOptMgr {
             .map(optKey => this.optionItems[optKey])
     }
 }
+
+export default SidePanelOptMgr

@@ -6,7 +6,7 @@ import {dbMgr, sidePanelOptMgr} from './components/controls/Mgr'
 
 import { useGoogleAuth } from './components/controls/GoogleAuth'
 import {useEffect, useState} from 'react'
-import SearchItem from './components/entities/SearchItem'
+import {SearchItem} from './components/entities/index'
 
 // page state
 // HOME         1
@@ -17,8 +17,28 @@ import SearchItem from './components/entities/SearchItem'
 // INFORMATION  6
 // LOGOUT       7
 // ACCOUNT INFO 8
-function App() {
+/**
+ * @namespace App
+ * @description control module
+ * @property {Boolean} isSignedOut value records user signed out activity
+ * @property {Boolean} isRegistering value records user registration activity
+ * @property {integer} pageState state of the current page.
+ * @property {Boolean} showLightBox value to show the lightbox
+ * @property {Property[]} properties list of all properties
+ * @property {SearchItem} curSearch current search item
+ * @property {Property} selectedProperty selected property
+ * @property {Constituency} selectedConstituency selected constituency
+ * @property {SearchItem[]} recentSearches a list of user's recent searches
+ * @property {object} filterOptions filter options
+ * @property {Property[]} bookmarks list of properties as user's bookmark
+ * @property {User} activeUser current logged in user instance.
+ * @property {Boolean} sidePanelIn value to show/hide side panel
+ * @property {Boolean} mapTriggerReset value to trigger a map display
+ * @returns {FunctionalComponent}
+ */
+ function App() {
   const {signIn: googleSignIn, signOut, googleUser, isInitialized} = useGoogleAuth()
+
   const [isSignedOut, setIsSignedOut] = useState(false)
   const [isRegistering, setIsRegistering] = useState(false)
   const [pageState, setPageState] = useState(0)
@@ -39,6 +59,13 @@ function App() {
   const [sidePanelIn, setSidePanelIn] = useState(false)
   const [mapTriggerReset, setMapTriggerReset] = useState(false)
 
+
+  /**
+   * @memberof App
+ * @typedef {function} useEffect1 fetch google auth session from previous login.
+ * @param {function} callback Anonymous function invoked when value of states from watchlist is updated.
+ * @param {Array} watchList [googleUser, isInitialized]
+ */
   useEffect(() => {
     if (googleUser && googleUser.profileObj) {
       // fetch user data
@@ -78,6 +105,12 @@ function App() {
     }
   }, [googleUser, isInitialized])
 
+/**
+ * @memberof App
+ * @typedef {function} useEffect2 fetch user datas(recent searches, bookmarks) when user login.
+ * @param {function} callback Anonymous function invoked when value of states from watchlist is updated.
+ * @param {Array} watchList [activeUser]
+ */
   useEffect(() => {
     let pps = dbMgr.getProperties()
     let ccs = dbMgr.getConstituencies()
@@ -108,10 +141,16 @@ function App() {
     }
   }, [activeUser])
 
+  /**
+   * Testing purpose only
+   */
   useEffect(() => {
     console.log('google user')
   }, [googleUser])
-    
+  
+  /**
+   *  Testing purpose only
+   */
   useEffect(() => {
     console.log('is initialised')
   }, [isInitialized])
@@ -120,6 +159,12 @@ function App() {
   //   console.log('is signed in')
   // }, [isSignedIn])
 
+/**
+ * @memberof App
+ * @typedef {function} addRecentSearch append new search item onto user's searched item list.
+ * @param {SearchItem[]} recentSearch A list of user recent searched items.
+ * @param {SearchItem} newSearch User latest search item.
+ */
   const addRecentSearch = (recentSearch, newSearch) => {
     recentSearch = recentSearch.filter(rs => rs.name !== newSearch.name)
     recentSearch.unshift(newSearch)
@@ -127,6 +172,11 @@ function App() {
     return recentSearch
   }
 
+/**
+ * @memberof App
+ * @typedef {function} onSidePanelOptSelect called when user click on one of the option on the side panel menu. Update page state.
+ * @param {integer} newPageState new page state index.
+ */
   const onSidePanelOptSelect = (newPageState) => {
     if (newPageState === 7) { // logout state
       onLogOut()
@@ -137,6 +187,10 @@ function App() {
     }
   }
 
+/**
+ * @memberof App
+ * @typedef {function} onLightboxClose called when user clicks on lightbox's close button/area.
+ */
   const onLightboxClose = () => {
     if (pageState === 3) {
       setIsRegistering(false)
@@ -145,17 +199,32 @@ function App() {
     setShowLightbox(false)
   }
 
+/**
+ * @memberof App
+ * @typedef {function} onConstituencySelectMap called when MapUI invokes a change in current selected constituency on the map.
+ * @param {Constituency} newConstituency latest selected constituency
+ */
   const onConstituencySelectMap = newConstituency => {
     setSelectedProperty(null)
     setSelectedConstituency(newConstituency)
     setPageState(0)
   }
 
+/**
+ * @memberof App
+ * @typedef {function} onPropertySelectMap called when MapUI invokes a change in current selected property on the map.
+ * @param {Property} newProperty latest selected constituency
+ */
   const onPropertySelectMap = newProperty => {
     setSelectedProperty(newProperty)
     setPageState(6)
   }
 
+/**
+ * @memberof App
+ * @typedef {function} onSearchChange called when SearchUI invokes a change in current selected SearchItem.
+ * @param {SearchItem} newSearch latest searched item
+ */
   const onSearchChange = newSearch => {
     let tempSearches = [...recentSearches]
     tempSearches = addRecentSearch(tempSearches, newSearch)
@@ -178,6 +247,12 @@ function App() {
     
   }
 
+/**
+ * @memberof App
+ * @typedef {function} getBookmarkIndex retrieve a bookmark's index within  the bookmark list.
+ * @param {Property} property property to be checked within the bookmark list.
+ * @returns {integer}
+ */
   const getBookmarkIndex = property => {
     let targetIndex = -1
     bookmarks.every((b, i) => {
@@ -191,6 +266,12 @@ function App() {
     return targetIndex
   }
 
+  /**
+ * @memberof App
+ * @typedef {function} onBookmark called when user bookmarks a property/revert the bookmarking action.
+ * @param {Property} property property to be checked within the bookmark list.
+ * @param {Boolean} isBookmarked whether the property is bookmarked or not.
+ */
   const onBookmark = (property, isBookmarked) => {
     // do not do curBookmarks = bookmarks as any changes toward curBookmarks leads to wrong mutation of bookmarks
     // wrong mutation like directly changing bookmarks, which is wrong since bookmarks is based on hook
@@ -207,15 +288,30 @@ function App() {
     dbMgr.updateUserDataDB(activeUser, 'bookmarkStr', curBookmarks.map(b => b.name))
   }
   
+  /**
+   * @memberof App
+   * @typedef {function} removeAllBookmarks remove all user's bookmarks.
+   */
   const removeAllBookmarks = () => {
     setBookmarks([])
     dbMgr.updateUserDataDB(activeUser, 'bookmarkStr', [])
   }
+
+  /**
+ * @memberof App
+ * @typedef {function} isBookmarked check if a property had been bookmarked.
+ * @param {Property} property property to be checked
+ * @returns {Boolean}
+ */
   const isBookmarked = property => {
     if (!property) return false
     return bookmarks.filter(b => b === property).length > 0
   }
 
+  /**
+ * @memberof App
+ * @typedef {function} onLogOut called when user clicks on log out button.
+ */
   const onLogOut = () => {
     setPageState(7)
     setTimeout(() => {
@@ -229,10 +325,19 @@ function App() {
     
   }
 
+  /**
+ * @memberof App
+ * @typedef {function} onFilterChange invoked when user changes filter combination on the filter panel.
+ * @param {object} newFilterOptions new filter combination
+ */
   const onFilterChange = newFilterOptions => {
     setFilterOptions(newFilterOptions) 
   }
 
+  /**
+ * @memberof App
+ * @typedef {function} onResetView invoked when user clicks the home button to reset the view.
+ */
   const onResetView = () => {
     setSelectedProperty(null)
     setPageState(0)
@@ -242,14 +347,28 @@ function App() {
     setMapTriggerReset(!mapTriggerReset)
   }
 
+/**
+ * @memberof App
+ * @typedef {function} onRegisterChange called when page changes between registerUI and not registerUI
+ * @param {Boolean} newIsRegistering set isRegistering value.
+ */
   const onRegisterChange = newIsRegistering => {
     setIsRegistering(newIsRegistering)
   }
 
+  /**
+ * @memberof App
+ * @typedef {function} onRegisterManual called when user submit registration request via manual mode.
+ * @param {object} userInfo user information required for registration
+ */
   const onRegisterManual = userInfo => {
     console.log('on register manual', userInfo)
   }
 
+/**
+ * @memberof App
+ * @typedef {FunctionalComponent} LightboxContent a functional component rendering lightbox content based on current page state.
+ */
   const LightboxContent = () => {
     switch (pageState) {
       case 3:
@@ -272,6 +391,7 @@ function App() {
   }
 
   if (!isInitialized || !activeUserDataReady) return (<div>Loading...</div>)
+
   return (<div className="property-web-app">
       <MapUI
         properties={properties}
