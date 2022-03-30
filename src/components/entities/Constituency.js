@@ -25,6 +25,19 @@ class Constituency {
         }, 0) * this.properties.length / this.avgPropertiesCount
         // return 1
     }
+
+    /**
+     * 
+     * @returns return filtered list of properties belong to this constituency
+     */
+    getFilteredProperties(filterOpts) {
+        // return this.properties
+        const {enbloc: {threshold: enblocT}, distToMrt: {threshold: mrtT}, distToSchool: {threshold: schoolT}} = filterOpts
+        return this.properties.filter(p => {
+            const {enbloc, distToMrt, distToSchool} = p.valueProps
+            return enbloc >= enblocT && distToMrt >= mrtT && distToSchool >= schoolT
+        })
+    }
 }
 
 export default Constituency

@@ -71,7 +71,7 @@ const InfoPanelUI = props => {
           <p className="address">{address}</p>
           <div className="profile-image-content">
           {enableBookmark && currentView === 'General' ? 
-              <div title="Bookmark the property" className="bookmark-button-wrapper" onClick={onBookmarkClick}>
+              <div title={isBookmarked ? "Unbookmark the property" : "Bookmark the property"} className="bookmark-button-wrapper" onClick={onBookmarkClick}>
               <div className={`bookmark-button ${isBookmarked ? 'checked' : ''}`}></div>
               </div>
               : ''}

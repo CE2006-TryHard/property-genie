@@ -9,7 +9,7 @@ import InfoPanelUI from "../InfoPanelUI/InfoPanelUI"
  * @property {Property} viewedProperty value to toggle the email text field
  */
 const BookmarkUI = props => {
-    const { bookmarks, filterOptions, onBookmarkRemove, onBookmarkRemoveAll } = props
+    const { bookmarks, filterOptions, onPropertySelect, onBookmarkRemove, onBookmarkRemoveAll } = props
     const [bookmarksToBeRemoved, setBookmarksToBeRemoved] = useState([])
     const [viewedProperty, setViewProperty] = useState(null)
 
@@ -19,7 +19,8 @@ const BookmarkUI = props => {
     * @param {Property} property property to be viewed
     */
     const onViewPropertyDetail = property => {
-        setViewProperty(property)
+        // setViewProperty(property)
+        onPropertySelect(property)
     }
 
     /**

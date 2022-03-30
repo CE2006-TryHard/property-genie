@@ -32,9 +32,9 @@ class Property {
         this.reviews = null
         /** @public */
         this.valueProps = {
-            enbloc: ENBLOC[enblocID+""].val * 0.4,
-            distToMrt: this.getDistValue(avgMrtDist) * 0.35,
-            distToSchool: this.getDistValue(avgSchoolDist) * 0.25
+            enbloc: ENBLOC[enblocID+""].val,
+            distToMrt: this.getDistValue(avgMrtDist),
+            distToSchool: this.getDistValue(avgSchoolDist)
         }
     }
     /**
@@ -64,14 +64,30 @@ class Property {
      * @returns {number}
      */
     getPropertyValue (filterOpts) {
+        const {enbloc, distToMrt, distToSchool} = this.valueProps
         let value = 0
-        Object.keys(filterOpts)
-            .filter(key => filterOpts[key].checked)
-            .forEach(key => {
-                value += this.valueProps[key]
-            })
-        
-        return value
+        // all three are checked
+        if (filterOpts['enbloc'].checked && filterOpts['distToMrt'].checked && filterOpts['distToSchool'].checked) {
+            return enbloc * 0.4 + distToMrt * 0.35 + distToSchool * 0.25
+        }
+        // if only enbloc and distToMrt are checked
+        if (filterOpts['enbloc'].checked && filterOpts['distToMrt'].checked && !filterOpts['distToSchool'].checked) {
+            return enbloc * 0.55 + distToMrt * 0.45
+        }
+        // if only enbloc and distToSchool are checked
+        if (filterOpts['enbloc'].checked && !filterOpts['distToMrt'].checked && filterOpts['distToSchool'].checked) {
+            return enbloc * 0.6 + distToSchool * 0.4
+        }
+        // if only distToMrt and distToSchool are checked
+        if (!filterOpts['enbloc'].checked && filterOpts['distToMrt'].checked && filterOpts['distToSchool'].checked) {
+            return distToMrt * 0.6 + distToSchool * 0.4
+        }
+
+        // remaining case is only one of them are checked or all are unchecked
+        const checkedOption = Object.keys(filterOpts)
+        .filter(key => filterOpts[key].checked)
+        .map(key => this.valueProps[key])[0]
+        return checkedOption || 0
     }
 }
 

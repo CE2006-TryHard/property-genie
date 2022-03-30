@@ -1,5 +1,6 @@
 import {ReactComponent as HomeLogo} from './../../images/home.svg'
 import {ReactComponent as SgLogo} from './../../images/sg.svg'
+import { useState } from 'react'
 
 /**
  * Functional Component displays greet user message after user logged in.
@@ -82,4 +83,20 @@ const SidePanelWrapper = props => {
   )
 }
 
-export {GreetUserMsg, HomeLogo, SgLogo, TabButton, CheckBox, SidePanelWrapper}
+/**
+ * Slider Component
+ * @param {Object} props 
+ */
+const Slider = props => {
+  const {title, min, max, step, initialVal, onAfterChange} = props
+  const [val, setVal] = useState(initialVal)
+  return (<div className="slider">
+          <span className="slider-title">{title}</span>
+          <input type='range' min={min} max={max} step={step} value={val}
+          onChange={e => setVal(e.target.value)}
+          onMouseUp={() => onAfterChange(val)}
+          onTouchEnd={() => onAfterChange(val)}/>
+      </div>)
+}
+
+export {GreetUserMsg, HomeLogo, SgLogo, TabButton, CheckBox, SidePanelWrapper, Slider}

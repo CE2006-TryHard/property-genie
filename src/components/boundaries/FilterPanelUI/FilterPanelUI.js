@@ -1,5 +1,5 @@
 import "./FilterPanelUI.scss"
-import { CheckBox } from "../MiscUI"
+import { CheckBox, Slider } from "../MiscUI"
 
 /**
  * @namespace FilterPanelUI
@@ -10,14 +10,25 @@ const FilterPanelUI = props => {
 
     /**
     * @memberof FilterPanelUI
-    * @typedef {function} onChange called when user checks/unchecks a filter checkbox.
+    * @typedef {function} onCheckboxChange called when user checks/unchecks a filter checkbox.
     * @param {String} key Filter option ID
-    * @param {Boolean} value filter option checked value
+    * @param {Boolean} value filter option "checked" value
     */
-    const onChange = (key, value) => {
+    const onCheckboxChange = (key, value) => {
         const newfilterOptions = JSON.parse(JSON.stringify(filterOptions))
         newfilterOptions[key].checked = value
         onFilterChange(newfilterOptions)
+    }
+
+    /**
+     * @typedef {function} onSubmitSliderChange called when user finish changing slider value.
+     * @param {String} key Filter option ID 
+     * @param {Number} value filter option "threshold" value 
+     */
+    const onSubmitSliderChange = (key, value) => {
+        let newFilterOptions = JSON.parse(JSON.stringify(filterOptions))
+        newFilterOptions[key].threshold = value
+        onFilterChange(newFilterOptions)
     }
 
     /**
@@ -25,16 +36,25 @@ const FilterPanelUI = props => {
     * @typedef {function} onReset called when user reset(uncheck) all filter checkbox.
     */
     const onReset = () => {
-        const newfilterOptions = JSON.parse(JSON.stringify(filterOptions))
-        Object.keys(newfilterOptions).forEach(key => {
-            newfilterOptions[key].checked = false
+        const newFilterOptions = JSON.parse(JSON.stringify(filterOptions))
+        Object.keys(newFilterOptions).forEach(key => {
+            newFilterOptions[key].checked = false
+            newFilterOptions[key].threshold = 0
         })
-
-        onFilterChange(newfilterOptions)
+        onFilterChange(newFilterOptions)
     }
 
     return (<div className="filter-panel-container">
-        <CheckBox options={filterOptions} onChange={onChange}></CheckBox>
+        <h5>Only display properties that meet below values</h5>
+        {Object.keys(filterOptions).map((fOptKey, i) => (
+            <Slider key={i} title={filterOptions[fOptKey].label} min={0} max={1} step={0.1} 
+            initialVal={filterOptions[fOptKey].threshold}
+            onAfterChange={val => onSubmitSliderChange(fOptKey, val)}></Slider>
+        ))}
+        
+        <h5>What to be considered when calculating the value of property</h5>
+        <CheckBox options={filterOptions} onChange={onCheckboxChange}></CheckBox>
+
         <button onClick={onReset}>Reset</button>
     </div>)
     

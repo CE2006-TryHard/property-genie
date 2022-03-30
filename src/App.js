@@ -49,9 +49,9 @@ import {SearchItem} from './components/entities/index'
   const [selectedConstituency, setSelectedConstituency] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
   const [filterOptions, setFilterOptions] = useState({
-    enbloc: {label: 'Enbloc', checked: true},
-    distToMrt: {label: 'Distance to MRT', checked: false},
-    distToSchool: {label: 'Distance to School', checked: false}
+    enbloc: {label: 'Enbloc', checked: true, threshold: 0},
+    distToMrt: {label: 'Distance to MRT', checked: false, threshold: 0},
+    distToSchool: {label: 'Distance to School', checked: false, threshold: 0}
   })
   const [bookmarks, setBookmarks] = useState([])
   const [activeUser, setActiveUser] = useState(null)
@@ -212,12 +212,13 @@ import {SearchItem} from './components/entities/index'
 
 /**
  * @memberof App
- * @typedef {function} onPropertySelectMap called when MapUI invokes a change in current selected property on the map.
+ * @typedef {function} onPropertySelect called when MapUI or BookmarkUI invokes a change in current selected property on the map.
  * @param {Property} newProperty latest selected constituency
  */
-  const onPropertySelectMap = newProperty => {
+  const onPropertySelect = newProperty => {
     setSelectedProperty(newProperty)
     setPageState(6)
+    onLightboxClose()
   }
 
 /**
@@ -239,7 +240,7 @@ import {SearchItem} from './components/entities/index'
     if (newSearch.type === 'c') {
       onConstituencySelectMap(newSearch.value)
     } else if (newSearch.type === 'p') {
-      onPropertySelectMap(newSearch.value)
+      onPropertySelect(newSearch.value)
     }
 
     setShowLightbox(false)
@@ -331,7 +332,7 @@ import {SearchItem} from './components/entities/index'
  * @param {object} newFilterOptions new filter combination
  */
   const onFilterChange = newFilterOptions => {
-    setFilterOptions(newFilterOptions) 
+    setFilterOptions(newFilterOptions)
   }
 
   /**
@@ -382,6 +383,7 @@ import {SearchItem} from './components/entities/index'
         return (<BookmarkUI
             bookmarks={bookmarks}
             filterOptions={filterOptions}
+            onPropertySelect={onPropertySelect}
             onBookmarkRemove={onBookmark}
             onBookmarkRemoveAll={removeAllBookmarks}></BookmarkUI>)
       case 5:
@@ -397,7 +399,7 @@ import {SearchItem} from './components/entities/index'
         properties={properties}
         curConstituency={selectedConstituency}
         filterOptions={filterOptions}
-        onPropertySelect={onPropertySelectMap}
+        onPropertySelect={onPropertySelect}
         onConstituencySelect={onConstituencySelectMap}
         triggerReset={mapTriggerReset}></MapUI>
       <div className="navbar-container">

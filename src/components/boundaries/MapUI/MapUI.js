@@ -156,15 +156,29 @@ const MapUI = props => {
         }
       })
   
+      // Object.keys(markers).forEach(dName => {
+      //   Object.keys(markers[dName]).forEach(pName => {
+      //     const newIconConfig = {
+      //       ...ICON_CONFIG,
+      //       fillColor: getPropertyColorHex(dbMgr.getPropertyByName(pName))
+      //     }
+      //     markers[dName][pName].setIcon(newIconConfig)
+      //     markers[dName][pName].setVisible(dName === c.name)
+      //   })
+      // })
       Object.keys(markers).forEach(dName => {
         Object.keys(markers[dName]).forEach(pName => {
-          const newIconConfig = {
-            ...ICON_CONFIG,
-            fillColor: getPropertyColorHex(dbMgr.getPropertyByName(pName))
-          }
-          markers[dName][pName].setIcon(newIconConfig)
-          markers[dName][pName].setVisible(dName === c.name)
+          markers[dName][pName].setVisible(false)
         })
+      })
+
+      c.getFilteredProperties(filterOptions).forEach(p => {
+        const newIconConfig = {
+          ...ICON_CONFIG,
+          fillColor: getPropertyColorHex(p)
+        }
+        markers[c.name][p.name].setIcon(newIconConfig)
+        markers[c.name][p.name].setVisible(true)
       })
     }
 
@@ -338,7 +352,8 @@ const MapUI = props => {
         setMapZoom(null, mapRef)
     }, [triggerReset])
     
-    
+    const noOfPropertyInHoverC = curHoverC && curHoverC.getFilteredProperties(filterOptions).length
+    const cHoverText = noOfPropertyInHoverC > 1 ? 'properties' : 'property'
     return (
       <div className="map-container">
         {(curHoverP || curHoverC) ?
@@ -347,7 +362,10 @@ const MapUI = props => {
           <div>
             {curHoverP.name}
           </div>
-          : <div>{curHoverC.name}</div>
+          : <div>
+              {curHoverC.name}<br></br>
+              <b>{noOfPropertyInHoverC}</b> {cHoverText}
+            </div>
           }
           
         </div>
