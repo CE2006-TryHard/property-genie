@@ -13,9 +13,9 @@ const views = ["General", "Evaluation"]
  * @property {Object[]} localReviews
  */
 const InfoPanelUI = props => {
-    const {isBookmarked, enableBookmark, filterOptions, property, onBookmark} = props
+    const {isBookmarked, enableBookmark, filterOptions, property, onBookmark, onLocateProperty} = props
     const [currentView, setCurrentView] = useState('General')
-    const [localReview, setLocalReviews] = useState([])
+    const [localReview, setLocalReviews] = useState(null)
 
   /**
    * @memberof InfoPanelUI
@@ -41,21 +41,29 @@ const InfoPanelUI = props => {
   * @param {watchlist} watchList []
   */
   useEffect(() => {
-    const {reviews, placeID} = property
-    if (!reviews) {
-        gService.getDetails({
-            placeId: placeID,
-            fields: ['review']
-        }, (place, status) => {
-            property.setReviews(place.reviews || []) // cache page review
-            if (place.reviews) setLocalReviews(place.reviews)
-            else setLocalReviews([])
-            console.log('place detail called')
-        })
-    } else {
-        setLocalReviews(reviews)
+    if (currentView === 'Evaluation') {
+      const {reviews, placeID} = property
+      if (!reviews) {
+          gService.getDetails({
+              placeId: placeID,
+              fields: ['review']
+          }, (place, status) => {
+              property.setReviews(place.reviews || []) // cache page review
+              if (place.reviews) setLocalReviews(place.reviews)
+              else setLocalReviews([])
+              console.log('place detail called')
+          })
+      } else {
+          setLocalReviews(reviews)
+      }
     }
-}, [])
+}, [currentView])
+
+useEffect(() => {
+  if (property) {
+    setCurrentView('General')
+  }
+}, [property])
 
   const {name, address, mrts, schools, avgMrtDist, avgSchoolDist, enblocStr} = property
   
@@ -67,6 +75,7 @@ const InfoPanelUI = props => {
       return (
       <div className="info-panel-detail-content general">
           <div className="profile-image-container">
+          <button onClick={onLocateProperty}>Locate the property on map</button>
           <h3>{name}</h3>
           <p className="address">{address}</p>
           <div className="profile-image-content">
@@ -90,13 +99,12 @@ const InfoPanelUI = props => {
               {mrts.map((m, i) => <div className="mrt-item" key={i}>
               {m.code.map((c, j) => {
                   const CC = c.slice(0,2)
-                  // console.log(CC)
                   const{bgColor, textColor, name} = LINES[CC]
                   const style = {
                   backgroundColor: bgColor,
                   color: textColor
                   }
-                  return <span className="mrt-line-logo" style={style} title={name} key={j}>{c}</span>
+                  return <span className="mrt-line-logo" style={style} title={name + " Line"} key={j}>{c}</span>
               })}
               <span>{m.name}</span>
               </div>)}
@@ -114,18 +122,34 @@ const InfoPanelUI = props => {
   const valueView = () => {
     return (
       <div className="info-panel-detail-content value">
-        <p>En Bloc: {enblocStr}</p>
-        <p>Shortest distance to MRT: {avgMrtDist}km</p>
-        <p>Shortest distance to School: {avgSchoolDist}km</p>
-        <div className="review-container">
+        <div className="score-summary-container">
+          <p>En Bloc: <span>{enblocStr}</span></p>
+          <p>Shortest distance to MRT: <span>{avgMrtDist}km</span></p>
+          <p>Shortest distance to School: <span>{avgSchoolDist}km</span></p>
+        </div>
+        <div className="google-review-container">
           <h3>Google Reviews</h3>
-          {localReview.map((r, i) => {
-            const {author_name, text} = r
-            return <div className="review-item" key={i}>
-              <h5>{author_name}</h5>
-              <p>{text}</p>
-            </div>
-          })}
+          {localReview ? 
+            (localReview.length ? localReview.map((r, i) => {
+              // console.log(r)
+              const {profile_photo_url, author_name, rating, text, time} = r
+              return <div className="review-item" key={i}>
+                <div className='profile'>
+                  <img className="profile-pic" src={profile_photo_url} />
+                  <div className="rating">
+                    <h5>{author_name}</h5>
+                    <div className="rating-stars">
+                      {[0,0,0,0,0].map((dummpy, i) => <span key={i} className={i + 1 <= rating ? 'checked' : ''}></span>)}
+                    </div>
+                  </div>
+                  
+                </div>
+               
+                <p>{text}</p>
+              </div>
+            }) : 'No review found.')
+          
+          : 'Loading reviews...'}
         </div>
       </div>
     )

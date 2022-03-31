@@ -45,16 +45,18 @@ const FilterPanelUI = props => {
     }
 
     return (<div className="filter-panel-container">
-        <h5>Only display properties that meet below values</h5>
-        {Object.keys(filterOptions).map((fOptKey, i) => (
-            <Slider key={i} title={filterOptions[fOptKey].label} min={0} max={1} step={0.1} 
-            initialVal={filterOptions[fOptKey].threshold}
-            onAfterChange={val => onSubmitSliderChange(fOptKey, val)}></Slider>
-        ))}
-        
-        <h5>What to be considered when calculating the value of property</h5>
-        <CheckBox options={filterOptions} onChange={onCheckboxChange}></CheckBox>
-
+        <div className="filter-section">
+            <h5>Only display properties that meet below values</h5>
+            {Object.keys(filterOptions).map((fOptKey, i) => (
+                <Slider key={i} title={filterOptions[fOptKey].label} min={0} max={1} step={0.1} 
+                initialVal={filterOptions[fOptKey].threshold}
+                onAfterChange={val => onSubmitSliderChange(fOptKey, val)}></Slider>
+            ))}
+        </div>
+        <div className="value-section">
+            <h5>What to be considered when calculating the value of property</h5>
+            <CheckBox options={filterOptions} onChange={onCheckboxChange}></CheckBox>
+        </div>
         <button onClick={onReset}>Reset</button>
     </div>)
     

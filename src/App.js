@@ -46,6 +46,7 @@ import {SearchItem} from './components/entities/index'
   const [properties, setProperties] = useState([])
   const [curSearch, setCurSearch] = useState(null)
   const [selectedProperty, setSelectedProperty] = useState(null)
+  const [locatedProperty, setlocatedProperty] = useState(null)
   const [selectedConstituency, setSelectedConstituency] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
   const [filterOptions, setFilterOptions] = useState({
@@ -57,6 +58,7 @@ import {SearchItem} from './components/entities/index'
   const [activeUser, setActiveUser] = useState(null)
   const [activeUserDataReady, setActiveUserDataReady] = useState(false)
   const [sidePanelIn, setSidePanelIn] = useState(false)
+  const [sidePanelContent, setSidePanelContent] = useState(0)
   const [mapTriggerReset, setMapTriggerReset] = useState(false)
 
 
@@ -183,7 +185,11 @@ import {SearchItem} from './components/entities/index'
     } else {
       setPageState(newPageState)
       setSidePanelIn(false)
-      if (newPageState > 0) setShowLightbox(true)
+      // setShowLightbox(false)
+      if (newPageState > 0) {
+        setSidePanelContent(newPageState)
+        setShowLightbox(true)
+      }
     }
   }
 
@@ -205,6 +211,7 @@ import {SearchItem} from './components/entities/index'
  * @param {Constituency} newConstituency latest selected constituency
  */
   const onConstituencySelectMap = newConstituency => {
+    setlocatedProperty(null)
     setSelectedProperty(null)
     setSelectedConstituency(newConstituency)
     setPageState(0)
@@ -216,6 +223,7 @@ import {SearchItem} from './components/entities/index'
  * @param {Property} newProperty latest selected constituency
  */
   const onPropertySelect = newProperty => {
+    setlocatedProperty(null)
     setSelectedProperty(newProperty)
     setPageState(6)
     onLightboxClose()
@@ -246,6 +254,11 @@ import {SearchItem} from './components/entities/index'
     setShowLightbox(false)
     setSidePanelIn(false)
     
+  }
+
+  const onLocatedPropertyChange = newLocatedProperty => {
+    onConstituencySelectMap(newLocatedProperty.constituency)
+    setlocatedProperty(newLocatedProperty)
   }
 
 /**
@@ -341,6 +354,7 @@ import {SearchItem} from './components/entities/index'
  */
   const onResetView = () => {
     setSelectedProperty(null)
+    setlocatedProperty(null)
     setPageState(0)
     setShowLightbox(false)
     setSelectedConstituency(null)
@@ -371,7 +385,7 @@ import {SearchItem} from './components/entities/index'
  * @typedef {FunctionalComponent} LightboxContent a functional component rendering lightbox content based on current page state.
  */
   const LightboxContent = () => {
-    switch (pageState) {
+    switch (sidePanelContent) {
       case 3:
         return (<LoginUI 
           onLogInGoogle={googleSignIn}
@@ -398,6 +412,7 @@ import {SearchItem} from './components/entities/index'
       <MapUI
         properties={properties}
         curConstituency={selectedConstituency}
+        locatedProperty={locatedProperty}
         filterOptions={filterOptions}
         onPropertySelect={onPropertySelect}
         onConstituencySelect={onConstituencySelectMap}
@@ -413,15 +428,18 @@ import {SearchItem} from './components/entities/index'
         <GreetUserMsg alwaysShow={sidePanelIn} activeUser={activeUser}></GreetUserMsg>
         <SidePanelWrapper
           isOpen={sidePanelIn}
-          onClose={() => setSidePanelIn(false)}
-          onToggle={() => setSidePanelIn(!sidePanelIn)}>
+          onClose={() => {setSidePanelIn(false)}}
+          onToggle={() => {
+            setSidePanelIn(!sidePanelIn)
+            if (!sidePanelIn) setShowLightbox(false)
+            }}>
           {sidePanelOptMgr.getOptionItems(activeUser).map((opt, i) => 
               <div className="side-panel-option" key={i}
               onClick={() => onSidePanelOptSelect(opt.state)}>{opt.label}</div>)
           }
         </SidePanelWrapper>
       </div>
-
+      
       {selectedProperty ? 
         <LightBoxWrapper isOpen={true} onClose={() => setSelectedProperty(null)}>
           <InfoPanelUI
@@ -429,13 +447,21 @@ import {SearchItem} from './components/entities/index'
             property={selectedProperty}
             enableBookmark={!!activeUser}
             isBookmarked={isBookmarked(selectedProperty)}
-            onBookmark={onBookmark}></InfoPanelUI>
+            onBookmark={onBookmark}
+            onLocateProperty={() => onLocatedPropertyChange(selectedProperty)}></InfoPanelUI>
         </LightBoxWrapper>
       : ''}
 
-      <LightBoxWrapper isOpen={showLightBox} onClose={onLightboxClose}>
+      <SidePanelWrapper
+        isOpen={!sidePanelIn && showLightBox}
+        hideCloseButton={true}
+        onClose={onLightboxClose}>
+          <LightboxContent></LightboxContent>
+      </SidePanelWrapper>
+
+      {/* <LightBoxWrapper isOpen={showLightBox} onClose={onLightboxClose}>
         <LightboxContent></LightboxContent>
-      </LightBoxWrapper>
+      </LightBoxWrapper> */}
 
       {/* Log out in progress message */}
       {pageState === 7 ?

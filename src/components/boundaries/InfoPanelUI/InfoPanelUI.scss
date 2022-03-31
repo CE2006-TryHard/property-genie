@@ -155,7 +155,69 @@
               }
   
               &.value {
+                padding: 10px;
+                box-sizing: border-box;
+                .score-summary-container {
+                  p {
+                    margin: 0;
+                    margin-bottom: 2px;
+                    span {
+                      display: inline-block;
+                      padding: 15px 20px;
+                      background-color: green;
+                      line-height: 1;
+                    }
+                  }
+                }
+
+                .google-review-container {
+                  h3 {
+                    font-size: 25px;
+                  }
+
+                  .review-item {
+                    padding-bottom: 20px;
+                    margin-bottom: 20px;
+                    border-bottom: 1px solid #aaaaaa;
+                    .profile {
+                      img {
+                        display: inline-block;
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 50%;
+                        border: 2px solid #FFFFFF;
+                        margin-right: 5px;
+                      }
   
+                      .rating {
+                        display: inline-block;
+                        h5 {
+                          display: inline;
+                        }
+  
+                        .rating-stars {
+                          & > span {
+                            background: #FFFFFF;
+                            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+                            border: 1px solid black;
+                            display: inline-block;
+                            height: 17px;
+                            width: 17px;
+                            
+                            &.checked {
+                              background: gold;
+                            }
+                          }
+                        }
+                      }
+                    } // profile
+                    p {
+                      font-size: 14px;
+                      margin: 0;
+                    }
+                  }
+                  
+                }
               }
             }
             

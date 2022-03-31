@@ -28,7 +28,7 @@ class Constituency {
 
     /**
      * 
-     * @returns return filtered list of properties belong to this constituency
+     * @returns {Property[]} return filtered list of properties belong to this constituency
      */
     getFilteredProperties(filterOpts) {
         // return this.properties
@@ -37,6 +37,14 @@ class Constituency {
             const {enbloc, distToMrt, distToSchool} = p.valueProps
             return enbloc >= enblocT && distToMrt >= mrtT && distToSchool >= schoolT
         })
+    }
+
+    /**
+     * 
+     * @returns {Property[]} return all properties belong to this constituency
+     */
+    getProperties () {
+        return this.properties
     }
 }
 

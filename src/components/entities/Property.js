@@ -64,26 +64,30 @@ class Property {
      * @returns {number}
      */
     getPropertyValue (filterOpts) {
-        const {enbloc, distToMrt, distToSchool} = this.valueProps
-        let value = 0
+        const {enbloc: enblocVal, distToMrt: distToMrtVal, distToSchool: distToSchoolVal} = this.valueProps
+        const {
+                enbloc: {checked: enblocChecked},
+                distToMrt: {checked: distToMrtChecked},
+                distToSchool: {checked: distToSchoolChecked}
+            } = filterOpts
         // all three are checked
-        if (filterOpts['enbloc'].checked && filterOpts['distToMrt'].checked && filterOpts['distToSchool'].checked) {
-            return enbloc * 0.4 + distToMrt * 0.35 + distToSchool * 0.25
+        if (enblocChecked && distToMrtChecked && distToSchoolChecked) {
+            return enblocVal * 0.4 + distToMrtVal * 0.35 + distToSchoolVal * 0.25
         }
-        // if only enbloc and distToMrt are checked
-        if (filterOpts['enbloc'].checked && filterOpts['distToMrt'].checked && !filterOpts['distToSchool'].checked) {
-            return enbloc * 0.55 + distToMrt * 0.45
+        // only enbloc and distToMrt are checked
+        if (enblocChecked && distToMrtChecked && !distToSchoolChecked) {
+            return enblocVal * 0.55 + distToMrtVal * 0.45
         }
-        // if only enbloc and distToSchool are checked
-        if (filterOpts['enbloc'].checked && !filterOpts['distToMrt'].checked && filterOpts['distToSchool'].checked) {
-            return enbloc * 0.6 + distToSchool * 0.4
+        // only enbloc and distToSchool are checked
+        if (enblocChecked && !distToMrtChecked && distToSchoolChecked) {
+            return enblocVal * 0.6 + distToSchoolVal * 0.4
         }
-        // if only distToMrt and distToSchool are checked
-        if (!filterOpts['enbloc'].checked && filterOpts['distToMrt'].checked && filterOpts['distToSchool'].checked) {
-            return distToMrt * 0.6 + distToSchool * 0.4
+        // only distToMrt and distToSchool are checked
+        if (!enblocChecked && distToMrtChecked && distToSchoolChecked) {
+            return distToMrtVal * 0.6 + distToSchoolVal * 0.4
         }
 
-        // remaining case is only one of them are checked or all are unchecked
+        // only one of them are checked or all are unchecked
         const checkedOption = Object.keys(filterOpts)
         .filter(key => filterOpts[key].checked)
         .map(key => this.valueProps[key])[0]
