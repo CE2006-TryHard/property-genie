@@ -1,8 +1,10 @@
 .search-bar-container {
     .search-bar-content {
         .css-clm9hd-placeholder,
-        .css-1nauho3-singleValue {
-            padding-left: 10px;
+        .css-1nauho3-singleValue,
+        .css-61pzuj-Input input,
+        .css-1vm4vgp-Input input {
+            padding-left: 10px !important;
         }
         .custom-option {
             padding: 5px;

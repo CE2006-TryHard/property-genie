@@ -1,17 +1,25 @@
 import {ENBLOC} from './../CONFIG'
+import {gService} from './../boundaries/MapUI/MapUI'
+import {dbMgr} from './../controls/Mgr'
+
+const dummyPropertyImg = require('./../../images/dummy-property.jpg')
 
 /**
  * An entity class representing a Property
  */
 class Property {
     constructor (props) {
-        const {placeID, name, address, mrts, schools, lat, lng, enblocID, avgMrtDist, avgSchoolDist, constituency} = props
+        const {id, name, mrts, schools, lat, lng, enblocID, avgMrtDist, avgSchoolDist, constituency} = props
         /** @public */
-        this.placeID = placeID
+        this.id = id
+        /** @public */
+        this.placeID = null
         /** @public */
         this.name = name
         /** @public */
-        this.address = address
+        this.img = null
+        /** @public */
+        this.address = null
         /** @public */
         this.lat = lat
         /** @public */
@@ -92,6 +100,77 @@ class Property {
         .filter(key => filterOpts[key].checked)
         .map(key => this.valueProps[key])[0]
         return checkedOption || 0
+    }
+
+    /**
+     * fetch proerty's address, placeID and reviews(if exists) from database
+     * @param {function} onFetchEnd callback function
+     */
+    fetchGeneralInfo(onFetchEnd) {
+        if (this.address && this.img) {
+            if (onFetchEnd) onFetchEnd(this.address, this.img)
+        } else {
+            dbMgr.fetchDataDB(`properties/${this.id}`, propertyData => {
+                const {addr, img, pID, reviewObj} = propertyData
+                this.address = addr
+                this.img = img
+                if (onFetchEnd) onFetchEnd(this.address, this.img)
+                this.placeID = pID
+                this.reviews = reviewObj && reviewObj.reviews
+            })
+        }
+    }
+
+    getImage () {
+        return this.img === 'nan' ? dummyPropertyImg : `https://www.singaporeexpats.com/singapore-property-pictures/properties/${this.img}.jpg`
+    }
+
+    /**
+     * fetch cached reviews from firebase
+     * if firebase has no review record, invokes Google Place API to fetch reviews
+     * TODO: clear cached review once cached timestamp exceed 29 days
+     * @param {function} onFetchEnd callback function
+     * 
+     */
+    fetchReview (onFetchEnd) {
+        // review found from local browser cached
+        if (this.reviews) {
+            onFetchEnd(this.reviews)
+            console.log('review fetched from browser cache')
+            return
+        }
+    
+        dbMgr.fetchDataDB(`properties/${this.id}/reviewObj`, reviewObj => {
+            // review found from database cache record
+            if (reviewObj) {
+                const {length, reviews} = reviewObj
+                this.reviews = reviews || []
+                onFetchEnd(this.reviews)
+                console.log('review fetched from database')
+                return
+            }
+            
+            // fetch review data from Google Place API
+            gService.getDetails({
+                placeId: this.placeID,
+                fields: ['review']
+            }, (place, status) => {
+                this.reviews = place.reviews || [] // cache reviews to current browser session
+                this.reviews = this.reviews.map(({author_name, profile_photo_url, rating, text}) => ({
+                    author_name, profile_photo_url, rating, text
+                }))
+                onFetchEnd(this.reviews)
+                console.log('review fetched from Google Place API')
+                const newReviewObj = {
+                    length: this.reviews.length,
+                    reviews: this.reviews
+                }
+                dbMgr.updateDataDB(`properties/${this.id}/reviewObj`, newReviewObj)
+                console.log('save reviews to firebase')
+
+            })
+            
+        })
     }
 }
 

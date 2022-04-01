@@ -2,8 +2,8 @@ import "./InfoPanelUI.scss"
 import { TabButton } from "../MiscUI"
 import React, { useEffect, useState } from 'react'
 import { LINES } from "../../CONFIG"
-import {gService } from "../MapUI/MapUI"
-
+const dummyProfileImg = require('./../../../images/dummy-profile.png')
+// const dummyPropertyImg = require('./../../../images/dummy-property.jpg')
 const views = ["General", "Evaluation"]
 
 /**
@@ -16,6 +16,8 @@ const InfoPanelUI = props => {
     const {isBookmarked, enableBookmark, filterOptions, property, onBookmark, onLocateProperty} = props
     const [currentView, setCurrentView] = useState('General')
     const [localReview, setLocalReviews] = useState(null)
+    const [localAddress, setLocalAddress] = useState(null)
+    const [localImg, setLocalImg] = useState(dummyProfileImg)
 
   /**
    * @memberof InfoPanelUI
@@ -41,21 +43,15 @@ const InfoPanelUI = props => {
   * @param {watchlist} watchList []
   */
   useEffect(() => {
-    if (currentView === 'Evaluation') {
-      const {reviews, placeID} = property
-      if (!reviews) {
-          gService.getDetails({
-              placeId: placeID,
-              fields: ['review']
-          }, (place, status) => {
-              property.setReviews(place.reviews || []) // cache page review
-              if (place.reviews) setLocalReviews(place.reviews)
-              else setLocalReviews([])
-              console.log('place detail called')
-          })
-      } else {
-          setLocalReviews(reviews)
-      }
+    if (currentView === 'General') {
+      property.fetchGeneralInfo((address, img) => {
+        setLocalAddress(address)
+        setLocalImg(property.getImage())
+      })
+    } else if (currentView === 'Evaluation') {
+      property.fetchReview(reviews => {
+        setLocalReviews(reviews)
+      })
     }
 }, [currentView])
 
@@ -65,7 +61,7 @@ useEffect(() => {
   }
 }, [property])
 
-  const {name, address, mrts, schools, avgMrtDist, avgSchoolDist, enblocStr} = property
+  const {name, mrts, schools, avgMrtDist, avgSchoolDist, enblocStr} = property
   
   /**
    * @memberof InfoPanelUI
@@ -75,17 +71,18 @@ useEffect(() => {
       return (
       <div className="info-panel-detail-content general">
           <div className="profile-image-container">
-          <button onClick={onLocateProperty}>Locate the property on map</button>
           <h3>{name}</h3>
-          <p className="address">{address}</p>
           <div className="profile-image-content">
           {enableBookmark && currentView === 'General' ? 
-              <div title={isBookmarked ? "Unbookmark the property" : "Bookmark the property"} className="bookmark-button-wrapper" onClick={onBookmarkClick}>
-              <div className={`bookmark-button ${isBookmarked ? 'checked' : ''}`}></div>
-              </div>
+            <svg className="bookmark-button" width="40" height="40" viewBox="0 0 51 48" onClick={onBookmarkClick}>
+              <title>{isBookmarked ? 'Unbookmark the property' : 'Bookmark the property'}</title>
+              <path fill={isBookmarked ? 'gold' : '#FFFFFF'} stroke="#000" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/>
+            </svg>
               : ''}
-              <img src=""/>
+              <img src={localImg}/>
           </div>
+          <p className="address">{localAddress}</p>
+          <button onClick={onLocateProperty}>Locate the property on map</button>
           </div>
           <div className="right">
           
@@ -131,15 +128,14 @@ useEffect(() => {
           <h3>Google Reviews</h3>
           {localReview ? 
             (localReview.length ? localReview.map((r, i) => {
-              // console.log(r)
-              const {profile_photo_url, author_name, rating, text, time} = r
+              const {profile_photo_url, author_name, rating, text} = r
               return <div className="review-item" key={i}>
                 <div className='profile'>
-                  <img className="profile-pic" src={profile_photo_url} />
+                  <img className="profile-pic" src={profile_photo_url} width="40" height="40" onError={e => e.target.src= dummyProfileImg}/>
                   <div className="rating">
                     <h5>{author_name}</h5>
                     <div className="rating-stars">
-                      {[0,0,0,0,0].map((dummpy, i) => <span key={i} className={i + 1 <= rating ? 'checked' : ''}></span>)}
+                      {[0,0,0,0,0].map((dummy, i) => <span key={i} className={i + 1 <= rating ? 'checked' : ''}></span>)}
                     </div>
                   </div>
                   

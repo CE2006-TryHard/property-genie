@@ -98,14 +98,23 @@ const SidePanelWrapper = props => {
  * @param {Object} props 
  */
 const Slider = props => {
-  const {title, min, max, step, initialVal, onAfterChange} = props
+  const {title, min, max, step, initialVal, tickLabels, autoLabel, autoLabelUnit, onAfterChange} = props
   const [val, setVal] = useState(initialVal)
   return (<div className="slider">
-          <span className="slider-title">{title}</span>
-          <input type='range' min={min} max={max} step={step} value={val}
-          onChange={e => setVal(e.target.value)}
-          onMouseUp={() => onAfterChange(val)}
-          onTouchEnd={() => onAfterChange(val)}/>
+          <span className="slider-title">{title}: <b>{autoLabel ? (val + autoLabelUnit) : tickLabels[val / step]}</b></span>
+          <div className="slider-content">
+            <input type='range' min={min} max={max} step={step} value={val}
+              onChange={e => setVal(parseFloat(e.target.value))}
+              onMouseUp={() => onAfterChange(val)}
+              onTouchEnd={() => onAfterChange(val)}/>
+              <div>
+              {tickLabels.map((t, i) => <span className="tick" key={i} style={{'left': `calc(${(1/(tickLabels.length-1) * i)*100}%)`}}>{t}</span>)}
+              </div>
+                
+
+          </div>
+          
+          
       </div>)
 }
 

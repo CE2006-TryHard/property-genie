@@ -7,7 +7,7 @@ import { useState } from "react"
  * @property {Boolean} isHoverOnClose
  */
 const LightboxWrapper = props => {
-  const {onClose} = props
+  const {disableClose, onClose} = props
   const [isHoverOnClose, setIsHoverOnClose] = useState(false)
 
 /**
@@ -16,7 +16,9 @@ const LightboxWrapper = props => {
   * @param {Event} e
   */
   const onWrapperClick = e => {
-    if (e.target.className.indexOf('lightbox-wrapper open') >= 0) {
+    if (disableClose) return
+    const {className} = e.target
+    if (className && className.indexOf && className.indexOf('lightbox-wrapper open') >= 0) {
       onClose()
     }
   }
@@ -27,7 +29,9 @@ const LightboxWrapper = props => {
   * @param {Event} e
   */
   const onHoverOnCloseRegion = e => {
-    setIsHoverOnClose(e.target.className.indexOf('lightbox-wrapper open') >= 0)
+    if (disableClose) return
+    const {className} = e.target
+    setIsHoverOnClose(className && className.indexOf && className.indexOf('lightbox-wrapper open') >= 0)
     // console.log('test')
   }
 

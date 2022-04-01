@@ -19,7 +19,7 @@
     }
 
     .bookmark-content {
-        padding: 50px 0 40px;
+        padding: 50px 0 80px;
         .bookmark-item {
             position: relative;
             padding: 10px;
@@ -52,7 +52,6 @@
              {
                 display: inline-block;
                 vertical-align: top;
-                display: inline-block;
 
             }
             .profile-image-container {
@@ -61,6 +60,11 @@
                 height: 100px;
                 margin: 0;
                 background-color: #aaaaaa;
+                img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
             }
             .bookmark-item-info {
                 display: inline-block;

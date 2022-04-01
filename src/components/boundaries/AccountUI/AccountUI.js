@@ -8,7 +8,7 @@ import { useState } from "react"
  * @property {Boolean} showRequestCompleteMsg value to toggle the display of request complete message.
  */
 const AccountUI = props => {
-    const {user: {name, email}} = props
+    const {user: {name, email, registerViaGoogle}} = props
     const [emailForPWChange, setEmailForPWChange] = useState('')
     const [showEmailField, setShowEmailField] = useState(false)
     const [showRequestCompleteMsg, setShowRequestCompleteMsg] = useState(false)
@@ -19,6 +19,7 @@ const AccountUI = props => {
      */
     const onRequestPWChange = () => {
         setShowEmailField(true)
+        setShowRequestCompleteMsg(false)
     }
 
     /**
@@ -28,14 +29,16 @@ const AccountUI = props => {
     const onSubmitPWChangeRequest = () => {
         // TODO: invoke Firebase API for email verification
         setShowRequestCompleteMsg(true)
+        setShowEmailField(false)
     }
 
     return (<div className="account-ui-container">
         <p>Name: {name}</p>
         <p>Email: {email}</p>
-        <button onClick={onRequestPWChange}>Update password</button>
+        <p>Register via {registerViaGoogle ? 'Google Account' : 'Email'}</p>
+        {registerViaGoogle ? '' : <button onClick={onRequestPWChange}>Update password</button>}
 
-        {showEmailField && !showRequestCompleteMsg? <div className="password-change-request-container">
+        {showEmailField ? <div className="password-change-request-container">
             <input type='text' value={emailForPWChange} onChange={e => setEmailForPWChange(e.target.value)}></input>
             <button onClick={onSubmitPWChangeRequest}>Submit request</button>
         </div> : ''}
@@ -43,3 +46,5 @@ const AccountUI = props => {
         {showRequestCompleteMsg ? <p>Password change request submitted. A verification link will be sent to your email if it is valid.</p> : ''}
     </div>)
 }
+
+export default AccountUI

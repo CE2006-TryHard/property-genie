@@ -12,11 +12,13 @@ import {STATIONS, SCHOOLS, CONSTITUENCY_NAME} from '../CONFIG'
 class DatabaseMgr {
   constructor () {
     /** @public */
-    this.properties = []
+    this.properties = null
     /** @public */
-    this.constituencies = {}
+    this.constituencies = null
+    /** @public */
+    this.avgPropertiesCount = null
 
-    this.fetchPropertyData()
+    // this.fetchPropertyData()
     this.initFirebase()
     
   }
@@ -35,11 +37,10 @@ class DatabaseMgr {
         newUser.registerViaGoogle = registerViaGoogle || false
         newUser.recentSearchStr = recentSearchStr || []
         newUser.bookmarkStr = bookmarkStr || []
-
-        onFetchEnd(newUser)
       } else {
-        console.log('no data available')
+        console.log('no data available. Initialise user with name, email, and default value.')
       }
+      onFetchEnd(newUser)
     })
     // onValue(ref(db, ), snapshot => {
     //   const {recentSearchStr, bookmarkStr, isVerified, registerViaGoogle} = snapshot.val()
@@ -85,6 +86,18 @@ class DatabaseMgr {
         console.log('data not found', key)
       }
     })
+  }
+
+  /**
+   * 
+   * @param {String} key 
+   * @param {Object} value 
+   */
+  updateDataDB(key, value) {
+    const updates = {}
+    const db = getDatabase()
+    updates[key] = value
+    update(ref(db), updates)
   }
   
   /**
@@ -154,11 +167,18 @@ class DatabaseMgr {
   /**
    * fetch all properties data from local csv
    */
-  fetchPropertyData () {
+  fetchPropertyData (onFetchEnd) {
+    if (this.properties && this.constituencies) {
+      onFetchEnd(this.properties, this.constituencies)
+      return
+    }
+
     fetch('data/data-all.csv')
       .then(res => res.text())
       .then(raw => Papa.parse(raw, {header: true}))
       .then(parsedRaw => {
+        this.properties = []
+        this.constituencies = {}
         parsedRaw.data
           .forEach(d => {
             d['lat'] = parseFloat(d['lat'])
@@ -190,10 +210,21 @@ class DatabaseMgr {
             if (!this.constituencies[dName]) {
               this.constituencies[dName] = new Constituency(dName)
             }
-            this.constituencies[dName].avgPropertiesCount = this.properties.length / 31
           })
+          this.setAvgPropertiesCount(this.properties.length / 31)
+
+          onFetchEnd(this.properties, this.constituencies)
         // console.log(this.constituencies)
       })
+  }
+
+
+  setAvgPropertiesCount (val) {
+    this.avgPropertiesCount = val
+  }
+
+  getAvgPropertiesCount () {
+    return this.avgPropertiesCount
   }
 
   /**

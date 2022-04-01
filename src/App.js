@@ -1,6 +1,6 @@
 import './styles/App.scss'
 
-import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, MapUI, SearchBarUI} from './components/boundaries/index'
+import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, MapUI, SearchBarUI, AccountUI} from './components/boundaries/index'
 import { GreetUserMsg, HomeLogo, SidePanelWrapper } from './components/boundaries/MiscUI'
 import {dbMgr, sidePanelOptMgr} from './components/controls/Mgr'
 
@@ -51,9 +51,10 @@ import {SearchItem} from './components/entities/index'
   const [recentSearches, setRecentSearches] = useState([])
   const [filterOptions, setFilterOptions] = useState({
     enbloc: {label: 'Enbloc', checked: true, threshold: 0},
-    distToMrt: {label: 'Distance to MRT', checked: false, threshold: 0},
-    distToSchool: {label: 'Distance to School', checked: false, threshold: 0}
+    distToMrt: {label: 'Distance to MRT', checked: false, threshold: 2},
+    distToSchool: {label: 'Distance to School', checked: false, threshold: 2}
   })
+
   const [bookmarks, setBookmarks] = useState([])
   const [activeUser, setActiveUser] = useState(null)
   const [activeUserDataReady, setActiveUserDataReady] = useState(false)
@@ -70,6 +71,7 @@ import {SearchItem} from './components/entities/index'
  */
   useEffect(() => {
     if (googleUser && googleUser.profileObj) {
+      console.log('google user', googleUser)
       // fetch user data
       const {name, email} = googleUser.profileObj
       dbMgr.initActiveUser(name, email, activeUser => {
@@ -100,7 +102,11 @@ import {SearchItem} from './components/entities/index'
         })
       } else {
         // logged out state
-        setActiveUserDataReady(true)
+        dbMgr.fetchPropertyData((properties, constituencies) => {
+          setProperties(properties)
+          setActiveUserDataReady(true)
+        })
+        
        
       }
       // const activeUser
@@ -114,12 +120,16 @@ import {SearchItem} from './components/entities/index'
  * @param {Array} watchList [activeUser]
  */
   useEffect(() => {
-    let pps = dbMgr.getProperties()
-    let ccs = dbMgr.getConstituencies()
-    setProperties(pps)
-    
+    // console.log('test', activeUser)
+    // let pps = dbMgr.getProperties()
+    // let ccs = dbMgr.getConstituencies()
+    // setProperties(pps)
+
     if (activeUser) {
-      // update recent search
+      console.log('active user')
+      dbMgr.fetchPropertyData((pps, ccs) => {
+        setProperties(pps)
+        // update recent search
       let tempSearches = activeUser.recentSearchStr
         .map(({type, name}) => {
           const searchObj = type === 'c' ? ccs[name] : pps.filter(p => p.name === name)[0]
@@ -136,26 +146,35 @@ import {SearchItem} from './components/entities/index'
       dbMgr.updateUserDataDB(activeUser, 'recentSearchStr', tempSearches.map(s => ({type: s.type, name: s.name})))
 
       // update bookmarks
-      setBookmarks(activeUser.bookmarkStr.map(bName => pps.filter(p => p.name === bName)[0]))
+      const bookmarkLists = activeUser.bookmarkStr.map(bName => pps.filter(p => p.name === bName)[0])
+      setBookmarks(bookmarkLists)
+      bookmarkLists.forEach(b => {
+        b.fetchGeneralInfo()
+      })
 
+        setActiveUserDataReady(true)
+      })
+      
       // for first load, set data ready to render the rest of UI
-      setActiveUserDataReady(true)
+      // setActiveUserDataReady(true)
     }
   }, [activeUser])
 
   /**
    * Testing purpose only
    */
-  useEffect(() => {
-    console.log('google user')
-  }, [googleUser])
+  // useEffect(() => {
+  //   if (googleUser) {
+  //     console.log('google user')
+  //   }
+  // }, [googleUser])
   
   /**
    *  Testing purpose only
    */
-  useEffect(() => {
-    console.log('is initialised')
-  }, [isInitialized])
+  // useEffect(() => {
+  //   console.log('is initialised')
+  // }, [isInitialized])
 
   // useEffect(() => {
   //   console.log('is signed in')
@@ -402,17 +421,20 @@ import {SearchItem} from './components/entities/index'
             onBookmarkRemoveAll={removeAllBookmarks}></BookmarkUI>)
       case 5:
         return (<FilterPanelUI filterOptions={filterOptions} onFilterChange={onFilterChange}></FilterPanelUI>)
+      case 8:
+        return activeUser ? <AccountUI user={activeUser}></AccountUI> : ''
         }
     return ''
   }
 
-  if (!isInitialized || !activeUserDataReady) return (<div>Loading...</div>)
+  if (!isInitialized || !activeUserDataReady) return (<div className="loader"></div>)
 
   return (<div className="property-web-app">
       <MapUI
         properties={properties}
         curConstituency={selectedConstituency}
         locatedProperty={locatedProperty}
+        onRemoveLocatedProperty={() => setlocatedProperty(null)}
         filterOptions={filterOptions}
         onPropertySelect={onPropertySelect}
         onConstituencySelect={onConstituencySelectMap}
@@ -459,13 +481,10 @@ import {SearchItem} from './components/entities/index'
           <LightboxContent></LightboxContent>
       </SidePanelWrapper>
 
-      {/* <LightBoxWrapper isOpen={showLightBox} onClose={onLightboxClose}>
-        <LightboxContent></LightboxContent>
-      </LightBoxWrapper> */}
-
       {/* Log out in progress message */}
       {pageState === 7 ?
-        <LightBoxWrapper isOpen={pageState === 7} hideCloseButton={true}>
+        <LightBoxWrapper isOpen={true} hideCloseButton={true} disableClose={true}>
+          <div className="loader"></div>
           <div className="logout-container">Log out...</div>
         </LightBoxWrapper>
       : ""}

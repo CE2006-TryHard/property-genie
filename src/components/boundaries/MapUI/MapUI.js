@@ -3,7 +3,8 @@ import "./MapUI.scss"
 import {Loader} from "@googlemaps/js-api-loader"
 // import {MarkerClusterer} from '@googlemaps/markerclusterer'
 import { dbMgr } from '../../controls/Mgr'
-import { CONSTITUENCY_MAP_CONFIG, MAP_STYLES } from './MAP_CONFIG'
+import { CONSTITUENCY_MAP_CONFIG, MAP_STYLES, MARKER_COLOR_SCHEME } from './MAP_CONFIG'
+import { map } from '@firebase/util'
 
 const MAP_CENTER = {lat:1.360514, lng: 103.840300}
 const MAP_ZOOM = 11.5
@@ -12,15 +13,9 @@ const MAP_BOUND_RESTRICTION = {
   strictBounds: false
 }
 
-const ICON_CONFIG = {
-  path: "M0,5a5,5 0 1,0 10,0a5,5 0 1,0 -10,0",
-  fillColor: "red",
-  fillOpacity: 0.8,
-  strokeWeight: 1,
-  strokeColor: '#555555',
-  rotation: 0,
-  scale: 1.5
-}
+let marker_image = {}
+const MARKER_OPACITY_0 = 0.2
+const MARKER_OPACITY_1 = 0.7
 
 const CONSTITUENCY_POLYGON_CONFIG = {
   cursor: 'default',
@@ -45,7 +40,7 @@ const markers = {}
  * @property {Property} curHoverP
  */
 const MapUI = props => {
-    const {filterOptions, curConstituency, locatedProperty, triggerReset, onPropertySelect, onConstituencySelect} = props
+    const {filterOptions, curConstituency, locatedProperty, onRemoveLocatedProperty, triggerReset, onPropertySelect, onConstituencySelect} = props
     const [overlayPos, setOverlayPos] = useState({left: 0, top: 0})
     const [curHoverC, setCurHoverC] = useState(null)
     const [curHoverP, setCurHoverP] = useState(null)
@@ -93,38 +88,13 @@ const MapUI = props => {
         
         return rgbToHex(r,g,b)
       }
-      
-    /**
-     * @memberof MapUI
-     * @typedef {function} getPropertyColorHex convert property value into color form
-     * @param {Property} property
-     * @return {String} hex color code in string
-     */
-      const getPropertyColorHex = property => {
-        const maxPropertyVal = Math.max(...property.constituency.properties.map(p => p.getPropertyValue(filterOptions)))
-        const colorFrom = [255, 223, 122]
-        const colorTo = [0, 223, 122]
-    
-        let [r, g, b] = colorFrom
-        
-        if (maxPropertyVal > 0) {
-          let ratio = property.getPropertyValue(filterOptions) / maxPropertyVal
-          ratio = Math.min(1, ratio)
-    
-          r -= Math.round(ratio * (colorFrom[0] - colorTo[0]))
-          g = 223
-          b = 122
-        }
-        
-        return rgbToHex(r,g,b)
-    }
 
     /**
      * @memberof MapUI
-     * @typedef {function} updateMarkerAppearance update map display based on current selected constituency
+     * @typedef {function} showMarkerFromConstituency update map display based on current selected constituency
      * @param {Constituency} c
      */
-    const updateMarkerAppearance = c => {
+    const showMarkerFromConstituency = c => {
       if (!c) {
         Object.keys(markers).forEach(dName => {
           Object.keys(markers[dName]).forEach(pName => {
@@ -139,23 +109,16 @@ const MapUI = props => {
         // initialise marker if had not done so
         if (!markers[c.name][p.name]) {
           markers[c.name][p.name] = new googleRef.maps.Marker({
+            icon: marker_image[99],
             position: {lat: p.lat, lng: p.lng},
-            icon: ICON_CONFIG,
+            opacity: 0.6,
             map: mapRef,
             editable: false
           })
   
-          googleRef.maps.event.addListener(markers[c.name][p.name], 'click', () => {
-            onPropertySelect(p)
-          })
-  
-          googleRef.maps.event.addListener(markers[c.name][p.name], 'mouseover', () => {
-            setCurHoverP(p)
-          })
-  
-          googleRef.maps.event.addListener(markers[c.name][p.name], 'mouseout', () => {
-            setCurHoverP(null)
-          })
+          googleRef.maps.event.addListener(markers[c.name][p.name], 'click', () => onPropertySelect(p))
+          googleRef.maps.event.addListener(markers[c.name][p.name], 'mouseover', () => setCurHoverP(p))
+          googleRef.maps.event.addListener(markers[c.name][p.name], 'mouseout', () => setCurHoverP(null))
         }
       })
 
@@ -163,78 +126,23 @@ const MapUI = props => {
         Object.keys(markers[cName]).forEach(pName => {
           markers[cName][pName].setVisible(false)
           if (cName === c.name) {
-            const newIconConfig = {
-              ...ICON_CONFIG,
-                fillOpacity: 0.4,
-                strokeColor: '#aaaaaa',
-                strokeWeight: 1,
-                fillColor: '#cccccc'
-            }
             markers[cName][pName].setZIndex(0)
-            markers[cName][pName].setIcon(newIconConfig)
+            markers[cName][pName].setOpacity(MARKER_OPACITY_0)
+            markers[cName][pName].setIcon(marker_image[99])
           }
         })
+      })
+
+      c.getFilteredProperties(filterOptions).forEach(p => {
+        markers[c.name][p.name].setZIndex(1)
+        const val = Math.floor(p.getPropertyValue(filterOptions) * 10)
+        markers[c.name][p.name].setOpacity(MARKER_OPACITY_1)
+        markers[c.name][p.name].setZIndex(1)
+        markers[c.name][p.name].setIcon(marker_image[val])
       })
 
       c.getProperties().forEach(p => {
         markers[c.name][p.name].setVisible(true)
-      })
-
-      c.getFilteredProperties(filterOptions).forEach(p => {
-        const newIconConfig = {
-          ...ICON_CONFIG,
-          fillColor: getPropertyColorHex(p),
-        }
-        markers[c.name][p.name].setZIndex(1)
-        markers[c.name][p.name].setIcon(newIconConfig)
-      })
-    }
-
-    /**
-     * @memberof MapUI
-     * @typedef {function} updateMouseOverPolygonEvent update mouseover event listener of polygon object
-     */
-    const updateMouseOverPolygonEvent = () => {
-      const constituencies = dbMgr.getConstituencies()
-      mapRef.data.addListener('mouseover', e => {
-        const c = constituencies[e.feature.getProperty('Name')]
-        setCurHoverC(c)
-
-        mapRef.data.setStyle(f => {
-          const tConstituency = constituencies[f.getProperty('Name')]
-          const isTargetConstituency = curConstituency && curConstituency === tConstituency
-          return {
-            ...CONSTITUENCY_POLYGON_CONFIG,
-            fillColor: getConstituencyColorHex(tConstituency),
-            strokeWeight: isTargetConstituency? 2 : 1,
-            strokeColor: isTargetConstituency || tConstituency === c ? '#333333' : '#FFFFFF',
-            fillOpacity: isTargetConstituency ? 0 : 0.7,
-            zIndex: isTargetConstituency || tConstituency === c ? 1 : 0
-          }
-        })
-      })
-    }
-
-    /**
-     * @memberof MapUI
-     * @typedef {function} updateMouseOutPolygonEvent update mouseout event listener of polygon object
-     */
-    const updateMouseOutPolygonEvent = () => {
-      const constituencies = dbMgr.getConstituencies()
-      mapRef.data.addListener('mouseout', e => {
-        setCurHoverC(null)
-        
-        mapRef.data.setStyle(f => {
-          const isTargetConstituency = curConstituency && f.getProperty('Name') === curConstituency.name
-          return {
-            ...CONSTITUENCY_POLYGON_CONFIG,
-            strokeColor: isTargetConstituency ? '#333333' : '#FFFFFF',
-            strokeWeight: isTargetConstituency? 2 : 1,
-            fillColor: getConstituencyColorHex(constituencies[f.getProperty('Name')]),
-            fillOpacity: isTargetConstituency ? 0 : 0.7,
-            zIndex: isTargetConstituency ? 1 : 0
-          }
-        })
       })
     }
 
@@ -259,6 +167,20 @@ const MapUI = props => {
       
     }
 
+    const registerPolygonMouseOverEvent = () => {
+      const constituencies = dbMgr.getConstituencies()
+      mapRef.data.addListener('mouseover', e => {
+        const c = constituencies[e.feature.getProperty('Name')]
+        if (!c.mapFeature) c.mapFeature = e.feature
+        setCurHoverC(c)
+      })
+    }
+
+    const registerPolygonMouseOutEvent = () => {
+      // initialise polygon mouse out event
+      mapRef.data.addListener('mouseout', () => setCurHoverC(null))
+    }
+
     /**
      * @memberof MapUI
      * @typedef {function} useEffect1 load Google API and setup the map when component is firstly mounted
@@ -272,6 +194,11 @@ const MapUI = props => {
       })
   
       loader.load().then(google => {
+        marker_image = [0,1,2,3,4,5,6,7,8,9,10,99].reduce((acc, index) => {
+          acc[index] = new google.maps.MarkerImage(`images/circles/${index}.png`, null, null, null, new google.maps.Size(16,16))
+          return acc
+        }, {})
+        
         googleRef = google
         mapRef = new google.maps.Map(document.querySelector(".map-content"), {
           center: MAP_CENTER,
@@ -286,15 +213,17 @@ const MapUI = props => {
           styles: MAP_STYLES
         })
 
-        markerInfoWindow = new google.maps.InfoWindow({
-          content: 'check'
+        console.log('google map api loaded')
+
+        markerInfoWindow = new google.maps.InfoWindow({content: 'dummy'})
+        googleRef.maps.event.addListener(markerInfoWindow, 'closeclick', () => {
+          onRemoveLocatedProperty()
         })
-  
         gService = new google.maps.places.PlacesService(mapRef)
-        const constituencies = dbMgr.getConstituencies()
-  
+
         mapRef.data.loadGeoJson('data/constituencies.geojson')
-  
+        
+        const constituencies = dbMgr.getConstituencies()
         mapRef.data.setStyle(feature => {
           return {
             ...CONSTITUENCY_POLYGON_CONFIG,
@@ -302,9 +231,11 @@ const MapUI = props => {
             fillOpacity: 0.7
           }
         })
-  
-        mapRef.data.addListener('mousemove', e => {
-          const {clientX, clientY} = e.domEvent
+        
+        // initialise mouse cursor move event
+        // keep track on mouse cursor position
+        document.addEventListener('mousemove', e => {
+          const {clientX, clientY} = e
           setOverlayPos({left: clientX + 10, top: clientY + 10})
         })
 
@@ -312,15 +243,15 @@ const MapUI = props => {
         //   const {lat, lng} = e.latLng.toJSON()
         //   console.log(lat, lng)
         // })
-  
+        
+        // intialise polygon click event
         mapRef.data.addListener('click', e => {
           const c = constituencies[e.feature.getProperty('Name')]
           onConstituencySelect(c)
         })
 
-        updateMouseOverPolygonEvent()
-        updateMouseOutPolygonEvent()
-
+        registerPolygonMouseOverEvent()
+        registerPolygonMouseOutEvent()
         
       })
     }, [])
@@ -334,12 +265,12 @@ const MapUI = props => {
     useEffect(() => {
       if (!mapRef) return
       const constituencies = dbMgr.getConstituencies()
-      updateMarkerAppearance(curConstituency)
-      updateMouseOverPolygonEvent()
-      updateMouseOutPolygonEvent()
-  
+      showMarkerFromConstituency(curConstituency)
+      
+      mapRef.data.revertStyle()
       mapRef.data.setStyle(f => {
         const isTargetConstituency = curConstituency && f.getProperty('Name') === curConstituency.name
+        
         return {
           ...CONSTITUENCY_POLYGON_CONFIG,
           strokeColor: isTargetConstituency ? '#333333' : '#FFFFFF',
@@ -349,7 +280,6 @@ const MapUI = props => {
           zIndex: isTargetConstituency ? 1 : 0
         }
       })
-
     }, [curConstituency, filterOptions])
 
     /**
@@ -359,36 +289,56 @@ const MapUI = props => {
      * @param {Array} watchList [curConstituency]
      */
      useEffect(() => {
-      if (!mapRef) return
-      setMapZoom(curConstituency, mapRef)
-  
+      if (mapRef) setMapZoom(curConstituency, mapRef)
     }, [curConstituency])
-
 
     /**
      * @memberof MapUI
-     * @typedef {function} useEffect4 update map display when current located property changed
+     * @typedef {function} useEffect4 average number of properties value in Database Control Class instance
+     * @param {function} callback
+     * @param {Array} watchList [filterOptions]
+     */
+    useEffect(() => {
+      const constituencies = dbMgr.getConstituencies()
+      const avgPropertiesCount = Object.keys(constituencies).reduce((acc, cName) => {
+            return acc + constituencies[cName].getFilteredProperties(filterOptions).length
+        }, 0) / 31
+      dbMgr.setAvgPropertiesCount(avgPropertiesCount)
+    }, [filterOptions])
+
+    /**
+     * @memberof MapUI
+     * @typedef {function} useEffect5 update map display when current located property changed
      * @param {function} callback
      * @param {Array} watchList [locatedProperty]
      */
     useEffect(() => {
       if (locatedProperty) {
         if (curConstituency) {
+          curConstituency.getProperties().forEach(p => {
+            markers[curConstituency.name][p.name].setOpacity(MARKER_OPACITY_0)
+            markers[curConstituency.name][p.name].setZIndex(0)
+          })
+  
           const {lat, lng} = locatedProperty
           mapRef.setCenter({lat: lat, lng: lng})
           markerInfoWindow.open(mapRef, markers[curConstituency.name][locatedProperty.name])
           markerInfoWindow.setContent(locatedProperty.name)
+
+          markers[curConstituency.name][locatedProperty.name].setOpacity(1)
+          markers[curConstituency.name][locatedProperty.name].setZIndex(1)
         }
       } else {
-        if (markerInfoWindow) {
-          markerInfoWindow.close()
-        }
+        if (markerInfoWindow) markerInfoWindow.close()
+        
+        if (curConstituency) showMarkerFromConstituency(curConstituency)
+        
       }
     }, [locatedProperty])
     
     /**
      * @memberof MapUI
-     * @typedef {function} useEffect5 reset map display when triggerReset changed
+     * @typedef {function} useEffect6 reset map display when triggerReset changed
      * @param {function} callback
      * @param {Array} watchList [triggerReset]
      */
@@ -397,22 +347,72 @@ const MapUI = props => {
         setMapZoom(null, mapRef)
     }, [triggerReset])
 
+    // /**
+    //  * @memberof MapUI
+    //  * @typedef {function} useEffect7 update map display when hover on a marker
+    //  * @param {function} callback
+    //  * @param {Array} watchList [curHoverP]
+    //  */
+    // useEffect(() => {
+    //   if (!curConstituency) return
 
-    const noOfFilteredPropertyInHoverC = curHoverC && curHoverC.getFilteredProperties(filterOptions).length
-    const totalNoOfPropertyInHoverC = curHoverC && curHoverC.getProperties().length
-    const cHoverTextTotal = totalNoOfPropertyInHoverC > 1 ? 'properties' : 'property'
+    //   curConstituency.getProperties().forEach(p => {
+    //     markers[curConstituency.name][p.name].setZIndex(0)
+    //   })
+
+    //   if (curHoverP) {
+    //     markers[curConstituency.name][curHoverP.name].setOpacity(1)
+    //     markers[curConstituency.name][curHoverP.name].setZIndex(1)
+    //   } else {
+    //     curConstituency.getProperties().forEach(p => {
+    //       markers[curConstituency.name][p.name].setOpacity(MARKER_OPACITY_0)
+    //     })  
+    //     curConstituency.getFilteredProperties(filterOptions).forEach(p => {
+    //       markers[curConstituency.name][p.name].setOpacity(MARKER_OPACITY_1)
+    //       markers[curConstituency.name][p.name].setZIndex(1)
+    //     })
+    //   }
+    // }, [curHoverP])
+
+    /**
+     * @memberof MapUI
+     * @typedef {function} useEffect8 update map display when hover on a constituency polygon
+     * @param {function} callback
+     * @param {Array} watchList [curHoverC]
+     */
+    useEffect(() => {
+      if (!mapRef) return
+      if (curHoverC && curHoverC === curConstituency) return // exclude hover event from current constituency polygon
+
+      if (curHoverC) {
+        mapRef.data.overrideStyle(curHoverC.mapFeature, {
+          strokeWeight: curHoverC === curConstituency ? 2 : 1,
+          strokeColor: '#333333',
+          zIndex: 1
+        })
+      } else {
+        mapRef.data.revertStyle()
+      }
+    }, [curHoverC])
+
+
+    const cHoverTextTotal = c => c && c.getProperties().length > 1 ? 'properties' : 'property'
+    const cSummaryText = c => c && (c.getFilteredProperties(filterOptions).length + '/' + c.getProperties().length)
+    const curHoverPVal = p => p && p.getPropertyValue(filterOptions)
+    const curHoverCCopy = curHoverC && curHoverC !== curConstituency && curHoverC
     return (
       <div className="map-container">
-        {(curHoverP || curHoverC) ?
+        {(curHoverP || curHoverCCopy) ?
         <div className="info-bubble" style={overlayPos}>
           {curHoverP ?
-          <div>
-            {curHoverP.name}<br />
-            Score: <b>{(curHoverP.getPropertyValue(filterOptions) * 100).toFixed(0)}%</b>
+          <div className="hover-property-text">
+            <b>{curHoverP.name}</b><br />
+            Score: <b className="score" style={{color: MARKER_COLOR_SCHEME[Math.floor(curHoverPVal(curHoverP) * 10)]}}>{(curHoverPVal(curHoverP) * 100).toFixed(0)}%</b>
           </div>
-          : <div>
-              {curHoverC.name}<br />
-              <b>{noOfFilteredPropertyInHoverC}/{totalNoOfPropertyInHoverC}</b> {cHoverTextTotal}
+          : 
+          <div>
+              <b>{curHoverCCopy.name}</b><br />
+              <b>{cSummaryText(curHoverCCopy)}</b> {cHoverTextTotal(curHoverCCopy)}
             </div>
           }
           

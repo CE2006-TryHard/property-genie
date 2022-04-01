@@ -1,3 +1,28 @@
+.loader {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #333333;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+  /* Safari */
+  @-webkit-keyframes spin {
+    0% { -webkit-transform: translate(-50%, -50%) rotate(0deg); }
+    100% { -webkit-transform: translate(-50%, -50%) rotate(360deg); }
+  }
+  
+  @keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+
 .property-web-app {
   position: relative;
 
@@ -185,9 +210,12 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #FFFFFF;
+    // background-color: #FFFFFF;
     padding: 10px;
     pointer-events: none;
+    // z-index: 4;
+    font-size: 20px;
+    color: #FFFFFF;
   }
 } // property-web-app
 
@@ -205,38 +233,63 @@ span.text-button-remove {
 }
 
 .slider {
-  display: flex;
-  align-items: center;
-
-  .slider-title {
-    font-size: 15px;
-    padding-right: 10px;
+  & > * {
+    display: inline-block;
+    vertical-align: center;
   }
+  // .slider-title {
+  //   font-size: 15px;
+  //   padding-right: 10px;
+  // }
 
-  & > input[type=range] {
-    -webkit-appearance: none;
+  .slider-content {
+    position: relative;
+    padding-bottom: 12px;
     width: 100%;
-    height: 10px;
-    background: #FFFFFF;
-    outline: none;
-    opacity: 0.7;
 
-    &::-webkit-slider-thumb {
+    input[type=range] {
       -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 15px;
-      background: #333333;
-      cursor: pointer;
-    }
-    
-    &::-moz-range-thumb {
-      width: 20px;
-      height: 15px;
-      background: #333333;
-      cursor: pointer;
+      width: 100%;
+      height: 10px;
+      background: #FFFFFF;
+      outline: none;
+      opacity: 0.7;
+      margin: 0;
+  
+      &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 15px;
+        background: #333333;
+        cursor: pointer;
+      }
+      
+      &::-moz-range-thumb {
+        width: 20px;
+        height: 15px;
+        background: #333333;
+        cursor: pointer;
+      }
+    } // input 
+
+    span.tick {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      font-size: 10px;
+
+      &:not(:first-of-type) {
+        transform: translateX(-50%);
+      }
+
+      &:last-child {
+        transform: translateX(-100%);
+      }
+      
     }
   }
+  
   
 }
 

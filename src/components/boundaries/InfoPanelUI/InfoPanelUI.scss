@@ -16,14 +16,16 @@
             display: flex;
             width: 100%;
             height: 30px;
+
             .tab-item {
-                padding: 3px 10px;
+                padding: 5px 10px;
                 background-color: #B9D0E6;
                 color: #333333;
                 border-top-left-radius: 10px;
                 border-top-right-radius: 10px;
                 cursor: pointer;
-
+                font-size: 20px;
+                line-height: 1;
                 &.current {
                   background-color: #3C73A8;
                   color: #FFFFFF;
@@ -51,9 +53,12 @@
                 
                 .profile-image-container {
                   position: relative;
-                  width: 230px;
-                  margin: 10px;
+                  width: 150px;
+                  padding: 10px 5px 10px 10px;
                   
+                  @media (min-width: 420px) {
+                    width: 230px;
+                  }
                   h3 {
                     margin: 0;
                     font-size: 22px;
@@ -73,36 +78,40 @@
                   .profile-image-content {
                     position: relative;
                     img {
-                      width: 230px;
-                      height: 100px;
+                      width: 100%;
+                      height: 150px;
                       background-color: grey;
+                      object-fit: cover;
+                      object-position: bottom;
                     }
 
-                    .bookmark-button-wrapper {
+                    .bookmark-button {
                       position: absolute;
                       top: 5px;
                       left: 5px;
+                      width: 40px;
+                      height: 40px;
                       z-index: 1;
                       pointer-events: all;
                       cursor: pointer;
-                      filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.4));
+                      // filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.4));
         
-                      .bookmark-button {
-                        background: #FFFFFF;
-                        clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-                        border: 1px solid black;
-                        display: inline-block;
-                        height: 30px;
-                        width: 30px;
+                      // .bookmark-button {
+                      //   background: #FFFFFF;
+                      //   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+                      //   border: 1px solid black;
+                      //   display: inline-block;
+                      //   height: 30px;
+                      //   width: 30px;
                         transition: transform 0.25s;
                         &:hover {
                           transform: scale(1.1);
                         }
           
-                        &.checked {
-                          background: gold;
-                        }
-                      }
+                      //   &.checked {
+                      //     background: gold;
+                      //   }
+                      // }
                     }
                   }
 
@@ -110,7 +119,7 @@
                 }
 
                 .right {
-                  padding: 10px 0;
+                  padding: 10px;
                   
                   & > * {
                     margin: 0;

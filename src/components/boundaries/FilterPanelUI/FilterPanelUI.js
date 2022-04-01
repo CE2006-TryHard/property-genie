@@ -38,19 +38,52 @@ const FilterPanelUI = props => {
     const onReset = () => {
         const newFilterOptions = JSON.parse(JSON.stringify(filterOptions))
         Object.keys(newFilterOptions).forEach(key => {
-            newFilterOptions[key].checked = false
-            newFilterOptions[key].threshold = 0
+            newFilterOptions[key].checked = key === 'enbloc' 
+            newFilterOptions[key].threshold = key === 'enbloc' ? 0 : 2
         })
         onFilterChange(newFilterOptions)
     }
 
+    const filterOptionFormat = [
+        {
+            key: 'enbloc',
+            label: 'Enbloc value lies within range',
+            min: 0,
+            max: 1,
+            step: 0.25,
+            tickLabels: ['<20%', '20%-39%', '40%-59%', '60%-79%', '>80%']
+        },
+        {
+            key: 'distToMrt',
+            label: 'Distance to MRT lesser than',
+            min: 0.2,
+            max: 2,
+            step: 0.1,
+            autoLabel: true,
+            unit: 'km',
+            tickLabels: ['0.2km', '2km']
+        },
+        {
+            key: 'distToSchool',
+            label: 'Distance to School lesser than',
+            min: 0.2,
+            max: 2,
+            step: 0.1,
+            autoLabel: true,
+            unit: 'km',
+            tickLabels: ['0.2km', '2km']
+        }
+    ]
     return (<div className="filter-panel-container">
         <div className="filter-section">
             <h5>Only display properties that meet below values</h5>
-            {Object.keys(filterOptions).map((fOptKey, i) => (
-                <Slider key={i} title={filterOptions[fOptKey].label} min={0} max={1} step={0.1} 
-                initialVal={filterOptions[fOptKey].threshold}
-                onAfterChange={val => onSubmitSliderChange(fOptKey, val)}></Slider>
+            {filterOptionFormat.map(({key,label, min, max, step, autoLabel, unit, tickLabels}) => (
+                <Slider key={key} title={label} min={min} max={max} step={step}
+                tickLabels={tickLabels}
+                initialVal={filterOptions[key].threshold}
+                autoLabel={autoLabel}
+                autoLabelUnit={unit}
+                onAfterChange={val => onSubmitSliderChange(key, val)}></Slider>
             ))}
         </div>
         <div className="value-section">

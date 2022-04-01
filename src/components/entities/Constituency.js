@@ -1,3 +1,5 @@
+import { dbMgr } from "../controls/Mgr"
+
 /**
  * An entity class representing a Constituency
  */
@@ -11,7 +13,8 @@ class Constituency {
         /** @public */
         this.properties = []
         /** @public */
-        this.avgPropertiesCount = 0
+        this.mapFeature = null
+        // this.avgPropertiesCount = 0
     }
 
     /**
@@ -20,9 +23,10 @@ class Constituency {
      * @return {number} calculated value that evaluate a constituency as a whole
      */
     getConstituencyValue(filterOpts) {
-        return this.properties.reduce((acc, p) => {
+        const filteredProperties = this.getFilteredProperties(filterOpts)
+        return filteredProperties.reduce((acc, p) => {
             return acc + p.getPropertyValue(filterOpts)
-        }, 0) * this.properties.length / this.avgPropertiesCount
+        }, 0) * filteredProperties.length / dbMgr.getAvgPropertiesCount()
         // return 1
     }
 
@@ -31,11 +35,10 @@ class Constituency {
      * @returns {Property[]} return filtered list of properties belong to this constituency
      */
     getFilteredProperties(filterOpts) {
-        // return this.properties
         const {enbloc: {threshold: enblocT}, distToMrt: {threshold: mrtT}, distToSchool: {threshold: schoolT}} = filterOpts
         return this.properties.filter(p => {
-            const {enbloc, distToMrt, distToSchool} = p.valueProps
-            return enbloc >= enblocT && distToMrt >= mrtT && distToSchool >= schoolT
+            const {valueProps: {enbloc}, avgMrtDist, avgSchoolDist} = p
+            return enbloc >= enblocT && avgMrtDist <= mrtT && avgSchoolDist <= schoolT
         })
     }
 

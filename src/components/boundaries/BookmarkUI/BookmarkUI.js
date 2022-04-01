@@ -68,7 +68,7 @@ const BookmarkUI = props => {
             {bookmarks.length ?
                 bookmarks.map((b, i) => <div className="bookmark-item" key={i}>
                     <div className="profile-image-container">
-                        <img />
+                        <img src={b.getImage()} />
                     </div>
                     <div className="bookmark-item-info">
                         <h3>{b.name}</h3>
