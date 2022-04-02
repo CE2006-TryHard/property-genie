@@ -7,6 +7,7 @@ import {dbMgr, sidePanelOptMgr} from './components/controls/Mgr'
 import { useGoogleAuth } from './components/controls/GoogleAuth'
 import {useEffect, useState} from 'react'
 import {SearchItem} from './components/entities/index'
+import { CONSTITUENCY_NAME } from './components/CONFIG'
 
 // page state
 // HOME         1
@@ -50,9 +51,10 @@ import {SearchItem} from './components/entities/index'
   const [selectedConstituency, setSelectedConstituency] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
   const [filterOptions, setFilterOptions] = useState({
-    enbloc: {label: 'Enbloc', checked: true, threshold: 0},
-    distToMrt: {label: 'Distance to MRT', checked: false, threshold: 2},
-    distToSchool: {label: 'Distance to School', checked: false, threshold: 2}
+    score: {label: 'Score', checked: false, threshold: 0},
+    enbloc: {label: 'Enbloc', checked: true, threshold: 1},
+    distToMrt: {label: 'Distance to MRT', checked: false, threshold: 4},
+    distToSchool: {label: 'Distance to School', checked: false, threshold: 4}
   })
 
   const [bookmarks, setBookmarks] = useState([])
@@ -71,7 +73,7 @@ import {SearchItem} from './components/entities/index'
  */
   useEffect(() => {
     if (googleUser && googleUser.profileObj) {
-      console.log('google user', googleUser)
+      // console.log('google user', googleUser)
       // fetch user data
       const {name, email} = googleUser.profileObj
       dbMgr.initActiveUser(name, email, activeUser => {
@@ -102,7 +104,7 @@ import {SearchItem} from './components/entities/index'
         })
       } else {
         // logged out state
-        dbMgr.fetchPropertyData((properties, constituencies) => {
+        dbMgr.fetchPropertyData(filterOptions, (properties, constituencies) => {
           setProperties(properties)
           setActiveUserDataReady(true)
         })
@@ -120,33 +122,27 @@ import {SearchItem} from './components/entities/index'
  * @param {Array} watchList [activeUser]
  */
   useEffect(() => {
-    // console.log('test', activeUser)
-    // let pps = dbMgr.getProperties()
-    // let ccs = dbMgr.getConstituencies()
-    // setProperties(pps)
-
     if (activeUser) {
       console.log('active user')
-      dbMgr.fetchPropertyData((pps, ccs) => {
+      dbMgr.fetchPropertyData(filterOptions, (pps, ccs) => {
         setProperties(pps)
         // update recent search
-      let tempSearches = activeUser.recentSearchStr
-        .map(({type, name}) => {
-          const searchObj = type === 'c' ? ccs[name] : pps.filter(p => p.name === name)[0]
-          // console.log(type, searchObj)
+      let tempSearches = activeUser.recentSearches
+        .map(({type, id}) => {
+          const searchObj = type === 'c' ? ccs[CONSTITUENCY_NAME[id].name] : pps.filter(p => p.id === id)[0]
           return new SearchItem(type, searchObj)
         })
         
-        // .map(pName => pps.filter(p => p.name === pName)[0]).filter(p => p)
-      while (recentSearches.length > 0) {
-        tempSearches = addRecentSearch(tempSearches, recentSearches.pop())
+      const localRecentSearches = [...recentSearches]
+      while (localRecentSearches.length > 0) {
+        tempSearches = addRecentSearch(tempSearches, localRecentSearches.pop())
       }
       setRecentSearches(tempSearches)
       // console.log(tempSearches)
-      dbMgr.updateUserDataDB(activeUser, 'recentSearchStr', tempSearches.map(s => ({type: s.type, name: s.name})))
+      dbMgr.updateUserDataDB(activeUser, 'recentSearches', tempSearches.map(s => ({type: s.type, id: s.value.id})))
 
       // update bookmarks
-      const bookmarkLists = activeUser.bookmarkStr.map(bName => pps.filter(p => p.name === bName)[0])
+      const bookmarkLists = activeUser.bookmarks.map(bID => pps.filter(p => p.id === bID)[0])
       setBookmarks(bookmarkLists)
       bookmarkLists.forEach(b => {
         b.fetchGeneralInfo()
@@ -259,10 +255,10 @@ import {SearchItem} from './components/entities/index'
     setRecentSearches(tempSearches)
     setCurSearch(newSearch)
     tempSearches = tempSearches.map(cs => {
-      return {type: cs.type, name: cs.name}
+      return {type: cs.type, id: cs.value.id}
     })
 
-    dbMgr.updateUserDataDB(activeUser, 'recentSearchStr', tempSearches)
+    dbMgr.updateUserDataDB(activeUser, 'recentSearches', tempSearches)
     
     if (newSearch.type === 'c') {
       onConstituencySelectMap(newSearch.value)
@@ -307,7 +303,7 @@ import {SearchItem} from './components/entities/index'
  */
   const onBookmark = (property, isBookmarked) => {
     // do not do curBookmarks = bookmarks as any changes toward curBookmarks leads to wrong mutation of bookmarks
-    // wrong mutation like directly changing bookmarks, which is wrong since bookmarks is based on hook
+    // wrong mutation like directly changing bookmarks, which is wrong since bookmarks is initialised via useState.
     // instead, deep copy(array) here would fix the issue
     let curBookmarks = [...bookmarks] 
     const targetIndex = getBookmarkIndex(property)
@@ -318,7 +314,7 @@ import {SearchItem} from './components/entities/index'
       curBookmarks = [...curBookmarks.slice(0, targetIndex), ...curBookmarks.slice(targetIndex + 1, curBookmarks.length)]
     }
     setBookmarks(curBookmarks)
-    dbMgr.updateUserDataDB(activeUser, 'bookmarkStr', curBookmarks.map(b => b.name))
+    dbMgr.updateUserDataDB(activeUser, 'bookmarks', curBookmarks.map(b => b.id))
   }
   
   /**
@@ -327,7 +323,7 @@ import {SearchItem} from './components/entities/index'
    */
   const removeAllBookmarks = () => {
     setBookmarks([])
-    dbMgr.updateUserDataDB(activeUser, 'bookmarkStr', [])
+    dbMgr.updateUserDataDB(activeUser, 'bookmarks', [])
   }
 
   /**
@@ -364,6 +360,7 @@ import {SearchItem} from './components/entities/index'
  * @param {object} newFilterOptions new filter combination
  */
   const onFilterChange = newFilterOptions => {
+    dbMgr.updateFilterDependVals(newFilterOptions)
     setFilterOptions(newFilterOptions)
   }
 
@@ -456,7 +453,7 @@ import {SearchItem} from './components/entities/index'
             if (!sidePanelIn) setShowLightbox(false)
             }}>
           {sidePanelOptMgr.getOptionItems(activeUser).map((opt, i) => 
-              <div className="side-panel-option" key={i}
+              <div className="side-panel-option noselect" key={i}
               onClick={() => onSidePanelOptSelect(opt.state)}>{opt.label}</div>)
           }
         </SidePanelWrapper>

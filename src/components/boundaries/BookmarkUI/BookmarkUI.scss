@@ -1,21 +1,26 @@
 .bookmark-container {
     position: absolute;
-    top: 50px;
+    top: 0;
     left: 0;
     width: 100%;
     height: calc(100% - 50px);
     background-color: #B9D0E6;
-    overflow-y: auto;
+    // overflow-y: auto;
 
     .remove-all-bookmark-button {
         position: fixed;
         padding: 10px 10px 15px;
         box-sizing: border-box;
         width: calc(100% - 17px);
+        // width: 100%;
         top: 50px;
         left: 0;
         z-index: 1;
         background: linear-gradient(to bottom, rgba(#B9D0E6, 1) 70%, rgba(#B9D0E6, 0) 100%);
+
+        span {
+
+        }
     }
 
     .bookmark-content {
@@ -31,7 +36,7 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: rgba(black, 0.6);
+                background-color: rgba(black, 0.8);
                 white-space: normal;
                 padding: 10px;
                 box-sizing: border-box;
@@ -44,6 +49,23 @@
 
                 & > div {
                     text-align: center;
+
+                    .confirm-button,
+                    .cancel-button {
+                        cursor: pointer;
+                        display: inline-block;
+                        background-color: #FFFFFF;
+                        color: #333333;
+                        padding: 10px 20px;
+                        font-size: 16px;
+                        line-height: 1;
+                        margin-right: 5px;
+                        transition: background-color 0.3s;
+                
+                        &:hover {
+                            background-color: #cccccc;
+                        }
+                    }
                 }
             }
 
@@ -56,10 +78,11 @@
             }
             .profile-image-container {
                 position: relative;
-                width: 100px;
-                height: 100px;
+                width: 120px;
+                height: 120px;
                 margin: 0;
                 background-color: #aaaaaa;
+                
                 img {
                     width: 100%;
                     height: 100%;
@@ -70,21 +93,36 @@
                 display: inline-block;
                 padding-left: 10px;
                 white-space: normal;
-                width: calc(100% - 110px);
+                width: calc(100% - 130px);
                 & > * {
-                    display: block;
+                    display: inline-block;
                     margin: 0;
                     margin-bottom: 10px;
                 }
 
                 h3 {
-                    font-size: 14px;
+                    font-size: 16px;
                 }
 
                 .view-detail-button {
-
+                    display: inline-block;
+                    cursor: pointer;
+                    background-color: #555555;
+                    color: #FFFFFF;
+                    font-size: 16px;
+                    line-height: 1;
+                    padding: 10px 20px;
+                    transition: background-color 0.3s;
+                    &:hover {
+                        background-color: #444444;
+                    }
                 }
             }
+        }
+
+        .no-bookmark-msg {
+            margin: 0;
+            padding: 10px;
         }
     } // bookmark-content
 
@@ -112,7 +150,7 @@
         left: 0;
         height: 100%;
         width: 100%;
-        background-color: rgba(black, 0.7);
+        background-color: rgba(black, 0.9);
 
         .remove-bookmark-all-content {
             position: absolute;
@@ -123,11 +161,28 @@
             width: 100%;
             box-sizing: border-box;
             padding: 10px;
+            color: #FFFFFF;
             
-            & > * {
+            & > div {
                 margin: 0 auto;
                 text-align: center;
-                color: #FFFFFF;
+
+                .confirm-button,
+                .cancel-button {
+                    cursor: pointer;
+                    display: inline-block;
+                    background-color: #FFFFFF;
+                    color: #333333;
+                    padding: 10px 20px;
+                    font-size: 16px;
+                    line-height: 1;
+                    margin-right: 5px;
+                    transition: background-color 0.3s;
+            
+                    &:hover {
+                        background-color: #cccccc;
+                    }
+                }
             }
         }
     }

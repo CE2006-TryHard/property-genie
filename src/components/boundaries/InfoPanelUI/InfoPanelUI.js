@@ -1,9 +1,10 @@
 import "./InfoPanelUI.scss"
+import {Scrollbars} from 'react-custom-scrollbars-2'
 import { TabButton } from "../MiscUI"
 import React, { useEffect, useState } from 'react'
 import { LINES } from "../../CONFIG"
+import { MARKER_COLOR_SCHEME } from "../MapUI/MAP_CONFIG"
 const dummyProfileImg = require('./../../../images/dummy-profile.png')
-// const dummyPropertyImg = require('./../../../images/dummy-property.jpg')
 const views = ["General", "Evaluation"]
 
 /**
@@ -17,7 +18,7 @@ const InfoPanelUI = props => {
     const [currentView, setCurrentView] = useState('General')
     const [localReview, setLocalReviews] = useState(null)
     const [localAddress, setLocalAddress] = useState(null)
-    const [localImg, setLocalImg] = useState(dummyProfileImg)
+    const [localImg, setLocalImg] = useState(null)
 
   /**
    * @memberof InfoPanelUI
@@ -43,12 +44,7 @@ const InfoPanelUI = props => {
   * @param {watchlist} watchList []
   */
   useEffect(() => {
-    if (currentView === 'General') {
-      property.fetchGeneralInfo((address, img) => {
-        setLocalAddress(address)
-        setLocalImg(property.getImage())
-      })
-    } else if (currentView === 'Evaluation') {
+    if (currentView === 'Evaluation') {
       property.fetchReview(reviews => {
         setLocalReviews(reviews)
       })
@@ -57,18 +53,24 @@ const InfoPanelUI = props => {
 
 useEffect(() => {
   if (property) {
+    property.fetchGeneralInfo((address, img) => {
+      setLocalAddress(address)
+      setLocalImg(property.getImage())
+    })
     setCurrentView('General')
   }
 }, [property])
 
-  const {name, mrts, schools, avgMrtDist, avgSchoolDist, enblocStr} = property
+  const {id, name, mrts, schools, avgMrtDist, avgSchoolDist, enblocStr, valueProps: {enbloc, distToMrt, distToSchool}} = property
   
   /**
    * @memberof InfoPanelUI
   * @typedef {function} generalView Functional Component rendering "General" view
   */
   const generalView = () => {
+    const score = property.getPropertyValue(filterOptions)
       return (
+        
       <div className="info-panel-detail-content general">
           <div className="profile-image-container">
           <h3>{name}</h3>
@@ -79,20 +81,25 @@ useEffect(() => {
               <path fill={isBookmarked ? 'gold' : '#FFFFFF'} stroke="#000" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/>
             </svg>
               : ''}
-              <img src={localImg}/>
+              <img src={localImg} alt={id}/>
           </div>
           <p className="address">{localAddress}</p>
-          <button onClick={onLocateProperty}>Locate the property on map</button>
+          <div className="view-on-map-button">
+          <div onClick={onLocateProperty}>View on map</div>
+          </div>
           </div>
           <div className="right">
           
-          <p className="score"><b>Score:</b> {(property.getPropertyValue(filterOptions)*100).toFixed(0)}%</p>
+          <p className="score">Score: <b style={{color: MARKER_COLOR_SCHEME[Math.floor(score*10)]}}>{(score*100).toFixed(0)}%</b></p>
           <div className="school">
-              <b>School(s) nearby:</b>
-              {schools.map((s, i) => <p key={i}>{s.name}</p>)}
+              <b>Nearby schools:</b>
+              <ul>
+                {schools.map((s, i) => <li key={i}>{s.name}</li>)}
+              </ul>
+              
           </div>
           <div className="mrt">
-              <b>Nearest MRTs:</b>
+              <b>Nearby MRTs:</b>
               {mrts.map((m, i) => <div className="mrt-item" key={i}>
               {m.code.map((c, j) => {
                   const CC = c.slice(0,2)
@@ -112,6 +119,7 @@ useEffect(() => {
       )
   }
 
+  
   /**
    * @memberof InfoPanelUI
   * @typedef {function} valueView Functional Component rendering "Evaluation" view
@@ -120,9 +128,18 @@ useEffect(() => {
     return (
       <div className="info-panel-detail-content value">
         <div className="score-summary-container">
-          <p>En Bloc: <span>{enblocStr}</span></p>
-          <p>Shortest distance to MRT: <span>{avgMrtDist}km</span></p>
-          <p>Shortest distance to School: <span>{avgSchoolDist}km</span></p>
+          <div style={{opacity: filterOptions['enbloc'].checked ? 1 : 0.3}} className="score-item">
+            <p>En Bloc probability:</p>
+            <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(enbloc * 10)]}}><b>{enblocStr}</b></span>
+          </div>
+          <div style={{opacity: filterOptions['distToMrt'].checked ? 1 : 0.3}}className="score-item">
+            <p>Distance to the <span>nearest MRT:</span></p>
+            <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(distToMrt * 10)]}}><b>{avgMrtDist}km</b></span>
+          </div>
+          <div style={{opacity: filterOptions['distToSchool'].checked ? 1 : 0.3}}className="score-item">
+            <p>Distance to the <span>nearest School:</span></p>
+            <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(distToSchool * 10)]}}><b>{avgSchoolDist}km</b></span>
+          </div>
         </div>
         <div className="google-review-container">
           <h3>Google Reviews</h3>
@@ -151,12 +168,15 @@ useEffect(() => {
     )
   }
   
-    return (<div className="info-panel-container">
+    return (
+    <div className="info-panel-container">
       <div className="info-panel-content">
         <TabButton options={views} current={currentView} onChange={onViewChange}></TabButton>
-        <div className="info-panel-detail-container">
+        {/* <div className="info-panel-detail-container"> */}
+          <Scrollbars className="info-panel-detail-container">
           {currentView === 'General' ? generalView() : valueView()}
-        </div>
+        {/* </div> */}
+        </Scrollbars>
       </div>
     </div>)
 }

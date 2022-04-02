@@ -4,7 +4,6 @@ import {Loader} from "@googlemaps/js-api-loader"
 // import {MarkerClusterer} from '@googlemaps/markerclusterer'
 import { dbMgr } from '../../controls/Mgr'
 import { CONSTITUENCY_MAP_CONFIG, MAP_STYLES, MARKER_COLOR_SCHEME } from './MAP_CONFIG'
-import { map } from '@firebase/util'
 
 const MAP_CENTER = {lat:1.360514, lng: 103.840300}
 const MAP_ZOOM = 11.5
@@ -14,7 +13,7 @@ const MAP_BOUND_RESTRICTION = {
 }
 
 let marker_image = {}
-const MARKER_OPACITY_0 = 0.2
+const MARKER_OPACITY_0 = 0.1
 const MARKER_OPACITY_1 = 0.7
 
 const CONSTITUENCY_POLYGON_CONFIG = {
@@ -69,22 +68,16 @@ const MapUI = props => {
      */
     const getConstituencyColorHex = c => {
         const colorFrom = [181, 181, 181]
-        const colorTo = [0, 181, 122]
+        const colorTo = [0, 181, 200]
         if (!c.properties.length) return '#222222'
-        const constituencies = dbMgr.getConstituencies()
-        const avgConstituencyVal = Object.keys(constituencies).reduce((acc, dName) => {
-          return acc + constituencies[dName].getConstituencyValue(filterOptions)
-        }, 0) / 31
-    
+        
         let [r,g,b] = colorFrom
         
-        if (avgConstituencyVal > 0) {
-          let ratio = c.getConstituencyValue(filterOptions) / avgConstituencyVal
-          ratio = Math.min(1, ratio)
-          r -= Math.round(ratio * colorFrom[0])
-          g = colorFrom[1]
-          b -= Math.round(ratio * (colorFrom[2]-colorTo[2]))
-        }
+        let ratio = c.getConstituencyScore(filterOptions)
+        ratio = Math.min(1, ratio)
+        r -= Math.round(ratio * colorFrom[0])
+        g = colorFrom[1]
+        b += Math.round(ratio * (colorTo[2]-colorFrom[2]))
         
         return rgbToHex(r,g,b)
       }
@@ -128,19 +121,30 @@ const MapUI = props => {
           if (cName === c.name) {
             markers[cName][pName].setZIndex(0)
             markers[cName][pName].setOpacity(MARKER_OPACITY_0)
-            markers[cName][pName].setIcon(marker_image[99])
+            // markers[cName][pName].setIcon(marker_image[99])
+            // const val = Math.floor(dbMgr.getPrp.getPropertyValue(filterOptions) * 10)
+            // markers[cName][pName].setIcon(marker_image[val])
           }
         })
       })
 
-      c.getFilteredProperties(filterOptions).forEach(p => {
-        markers[c.name][p.name].setZIndex(1)
+      c.getProperties().forEach(p => {
         const val = Math.floor(p.getPropertyValue(filterOptions) * 10)
-        markers[c.name][p.name].setOpacity(MARKER_OPACITY_1)
-        markers[c.name][p.name].setZIndex(1)
         markers[c.name][p.name].setIcon(marker_image[val])
+        markers[c.name][p.name].setVisible(true)
       })
 
+      if (locatedProperty) {
+        markers[locatedProperty.constituency.name][locatedProperty.name].setOpacity(1)
+      } else {
+        c.getFilteredProperties(filterOptions).forEach(p => {
+          const val = Math.floor(p.getPropertyValue(filterOptions) * 10)
+          markers[c.name][p.name].setOpacity(MARKER_OPACITY_1)
+          markers[c.name][p.name].setZIndex(1)
+          // markers[c.name][p.name].setIcon(marker_image[val])
+        })
+      } 
+      
       c.getProperties().forEach(p => {
         markers[c.name][p.name].setVisible(true)
       })
@@ -188,6 +192,9 @@ const MapUI = props => {
      * @param {Array} watchList []
      */
     useEffect(() => { // componentDidMount
+      const constituencies = dbMgr.getConstituencies()
+
+      // intialise google map
       const loader = new Loader({
         apiKey: 'AIzaSyAvXrCz1aaHL0MH8a6qQFW9zfwS8FP_mks',
         libraries: ['places']
@@ -223,7 +230,7 @@ const MapUI = props => {
 
         mapRef.data.loadGeoJson('data/constituencies.geojson')
         
-        const constituencies = dbMgr.getConstituencies()
+        
         mapRef.data.setStyle(feature => {
           return {
             ...CONSTITUENCY_POLYGON_CONFIG,
@@ -264,6 +271,7 @@ const MapUI = props => {
      */
     useEffect(() => {
       if (!mapRef) return
+      // console.log('use effect triggered', filterOptions)
       const constituencies = dbMgr.getConstituencies()
       showMarkerFromConstituency(curConstituency)
       
@@ -294,21 +302,7 @@ const MapUI = props => {
 
     /**
      * @memberof MapUI
-     * @typedef {function} useEffect4 average number of properties value in Database Control Class instance
-     * @param {function} callback
-     * @param {Array} watchList [filterOptions]
-     */
-    useEffect(() => {
-      const constituencies = dbMgr.getConstituencies()
-      const avgPropertiesCount = Object.keys(constituencies).reduce((acc, cName) => {
-            return acc + constituencies[cName].getFilteredProperties(filterOptions).length
-        }, 0) / 31
-      dbMgr.setAvgPropertiesCount(avgPropertiesCount)
-    }, [filterOptions])
-
-    /**
-     * @memberof MapUI
-     * @typedef {function} useEffect5 update map display when current located property changed
+     * @typedef {function} useEffect4 update map display when current located property changed
      * @param {function} callback
      * @param {Array} watchList [locatedProperty]
      */
@@ -338,7 +332,7 @@ const MapUI = props => {
     
     /**
      * @memberof MapUI
-     * @typedef {function} useEffect6 reset map display when triggerReset changed
+     * @typedef {function} useEffect5 reset map display when triggerReset changed
      * @param {function} callback
      * @param {Array} watchList [triggerReset]
      */
@@ -376,7 +370,7 @@ const MapUI = props => {
 
     /**
      * @memberof MapUI
-     * @typedef {function} useEffect8 update map display when hover on a constituency polygon
+     * @typedef {function} useEffect6 update map display when hover on a constituency polygon
      * @param {function} callback
      * @param {Array} watchList [curHoverC]
      */
@@ -395,9 +389,9 @@ const MapUI = props => {
       }
     }, [curHoverC])
 
-
     const cHoverTextTotal = c => c && c.getProperties().length > 1 ? 'properties' : 'property'
     const cSummaryText = c => c && (c.getFilteredProperties(filterOptions).length + '/' + c.getProperties().length)
+    const cScore = c => c && (c.getConstituencyScore(filterOptions) * 100).toFixed(0)
     const curHoverPVal = p => p && p.getPropertyValue(filterOptions)
     const curHoverCCopy = curHoverC && curHoverC !== curConstituency && curHoverC
     return (
@@ -412,6 +406,7 @@ const MapUI = props => {
           : 
           <div>
               <b>{curHoverCCopy.name}</b><br />
+              Score: <b style={{color: getConstituencyColorHex(curHoverCCopy)}}>{cScore(curHoverCCopy)}%</b><br />
               <b>{cSummaryText(curHoverCCopy)}</b> {cHoverTextTotal(curHoverCCopy)}
             </div>
           }
@@ -419,6 +414,34 @@ const MapUI = props => {
         </div>
          : ""}
         <div className="map-content"></div>
+        <div className="legend-container noselect">
+          <div className="property-legend-content">
+              <b>Property's score</b>
+              <div className="color-content">
+                {MARKER_COLOR_SCHEME.map((color, i) => {
+                  return <span key={i} className="scheme" style={{
+                    backgroundColor: color,
+                    width: 135 / MARKER_COLOR_SCHEME.length
+                  }}></span>
+                })}
+              </div>
+              <div className="annot">
+                <span>0%</span>
+                <span>100%</span>
+              </div>
+            </div>
+            
+          <div className="constituency-legend-content">
+            <b>Constituency's score</b>
+            <div className="color-content"></div>
+            <div className="annot">
+              <span>0%</span>
+              <span>100%</span>
+            </div>
+         </div>
+        </div>
+        
+        
       </div>
     )
   }

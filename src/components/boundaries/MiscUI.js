@@ -28,7 +28,7 @@ const TabButton = props => {
   return (<div className="tab-button-container">
       {props.options.map((opt, i) => 
           (<div key={i}
-              className={`tab-item ${props.current === opt ? 'current' : ''}`}
+              className={`tab-item noselect ${props.current === opt ? 'current' : ''}`}
               onClick={() => onChange(opt)}
               >{opt}</div>))}
   </div>)
@@ -46,7 +46,7 @@ const CheckBox = props => {
   }
 
   const checkBoxItemClass = key => {
-    return `checkbox-item ${options[key].checked ? 'checked' : ''}`
+    return `checkbox-item noselect ${options[key].checked ? 'checked' : ''}`
   }
 
   return (<div className="checkbox-container">
@@ -84,7 +84,7 @@ const SidePanelWrapper = props => {
               <div className="side-panel-content">
                 {children}
               </div>
-              <div className={"close-region"}
+              <div className="close-region"
                 onClick={onClose}
                 onMouseOver={() => setHoverOnCloseRegion(true)}
                 onMouseOut={() => setHoverOnCloseRegion(false)}></div>
@@ -98,23 +98,31 @@ const SidePanelWrapper = props => {
  * @param {Object} props 
  */
 const Slider = props => {
-  const {title, min, max, step, initialVal, tickLabels, autoLabel, autoLabelUnit, onAfterChange} = props
+  const {title, min, max, step, initialVal, tickLabels, autoLabel, autoLabelUnit, autoLabelPreUnit, onAfterChange} = props
   const [val, setVal] = useState(initialVal)
   return (<div className="slider">
-          <span className="slider-title">{title}: <b>{autoLabel ? (val + autoLabelUnit) : tickLabels[val / step]}</b></span>
+          <p className="slider-title noselect">{title}:&nbsp; 
+            {autoLabel ? <b>
+              <span dangerouslySetInnerHTML={{__html:autoLabelPreUnit}}></span>
+              {val}
+              <span dangerouslySetInnerHTML={{__html:autoLabelUnit}}></span>
+            </b> : <b>
+            <span dangerouslySetInnerHTML={{__html:tickLabels[val/step]}}></span>
+              </b>}
+              </p>
           <div className="slider-content">
             <input type='range' min={min} max={max} step={step} value={val}
               onChange={e => setVal(parseFloat(e.target.value))}
-              onMouseUp={() => onAfterChange(val)}
-              onTouchEnd={() => onAfterChange(val)}/>
+              onMouseUp={e => onAfterChange(e.target.value)}
+              onTouchEnd={e => onAfterChange(e.target.value)}/>
               <div>
-              {tickLabels.map((t, i) => <span className="tick" key={i} style={{'left': `calc(${(1/(tickLabels.length-1) * i)*100}%)`}}>{t}</span>)}
+              {
+                tickLabels.map((t, i) => <span className="tick noselect" key={i} style={{'left': `calc(${(1/(tickLabels.length-1) * i)*100}%)`}}>
+                  <span dangerouslySetInnerHTML={{__html:t}}></span>
+                </span>)
+              }
               </div>
-                
-
           </div>
-          
-          
       </div>)
 }
 

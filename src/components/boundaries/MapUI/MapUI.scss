@@ -6,12 +6,92 @@
     position: absolute;
     width: 100vw;
     height: 100vh;
-    // background-color: green;
+    background-color: #333333;
     z-index: 0;
 
     .gmnoprint, .gm-style-cc,
     #root > div > div.map-container > div > div > div > div:nth-child(15) {
         display: none;
+    }
+
+    .legend-container {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      padding: 5px;
+      margin: 0px;
+
+      & > div {
+        width: 135px;
+        padding: 5px 8px;
+        box-sizing: content-box;
+        background-color: rgba(black, 0.4);
+        // margin-bottom: 5px;
+        margin-right: 5px;
+        display: inline-block;
+        vertical-align: top;
+
+        @media (min-width: 420px) {
+          display: block;
+          margin-bottom: 5px;
+        }
+
+        &:last-of-type {
+          margin-right: 0;
+        }
+
+        b {
+          display: inline-block;
+          margin: 0;
+          padding: 0;
+          padding-bottom: 5px;
+          font-size: 14px;
+          color: #FFFFFF;
+          line-height: 1;
+        }
+
+        .annot {
+          position: relative;
+          height: 10px;
+          margin-bottom: 5px;
+          span {
+            position: absolute;
+            font-size: 13px;
+            color: #FFFFFF;
+            left: 0;
+            top: 0;
+            
+            padding: 0;
+            line-height: 1;
+  
+            &:last-child {
+              left: auto;
+              right: 0;
+            }
+          }
+        }
+      }
+      .constituency-legend-content {
+        .color-content {
+          height: 10px;
+          background: linear-gradient(to right, rgb(181,181,181) 10%, rgb(0,181,200) 100%);
+        }
+      }
+
+      .property-legend-content {
+        .color-content {
+          height: 10px;
+          white-space: nowrap;
+          span {
+            display: inline-block;
+            vertical-align: top;
+            height: 10px;
+          }
+        }
+  
+        
+      }
+      
     }
   
     .map-content {

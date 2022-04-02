@@ -1,5 +1,6 @@
 import { useState } from "react"
 import './BookmarkUI.scss'
+import {Scrollbars} from 'react-custom-scrollbars-2'
 
 /**
  * @namespace BookmarkUI
@@ -61,9 +62,11 @@ const BookmarkUI = props => {
         setRemoveAllBookmarks(false)
     }
 
-    return (<div className="bookmark-container">
+    return (
+        <Scrollbars className="bookmark-container">
+    {/* <div className="bookmark-container"> */}
         {bookmarks.length ? <div className="remove-all-bookmark-button" >
-            <button onClick={onVerifyRemoveAllBookmarks}>Remove all bookmark(s)</button></div> : ""}
+            <span className="text-button-remove" onClick={onVerifyRemoveAllBookmarks}>Remove all bookmark(s)</span></div> : ""}
         <div className="bookmark-content">
             {bookmarks.length ?
                 bookmarks.map((b, i) => <div className="bookmark-item" key={i}>
@@ -72,21 +75,21 @@ const BookmarkUI = props => {
                     </div>
                     <div className="bookmark-item-info">
                         <h3>{b.name}</h3>
-                        <button className="view-detail-button" onClick={() => onViewPropertyDetail(b)}>View detail</button>
+                        <div className="view-detail-button" onClick={() => onViewPropertyDetail(b)}>View detail</div>
                         <span className="text-button-remove" onClick={() => onVerifyRemoveBookmark(b)}>Remove</span>
                     </div>
                     {bookmarkToBeRemoved && bookmarkToBeRemoved.name === b.name ?
                         <div className="remove-bookmark-item-overlay">
                             <p>Are you sure you want to delete bookmark "<b>{b.name}</b>"?</p>
                             <div>
-                                <button onClick={onConfirmRemoveBookmark}>Confirm</button>
-                                <button onClick={onCancelRemoveBookmark}>Cancel</button>
+                                <div className="confirm-button" onClick={onConfirmRemoveBookmark}>Confirm</div>
+                                <div className="cancel-button" onClick={onCancelRemoveBookmark}>Cancel</div>
                             </div>
                         </div>
                     : ''}
 
                 </div>)
-                : "You have not added any bookmark."}
+                : <div className="no-bookmark-msg">You have not added any bookmark.</div>}
         </div>
 
         {removeAllBookmarks ?
@@ -94,14 +97,16 @@ const BookmarkUI = props => {
                 <div className="remove-bookmark-all-content">
                     <p>Are you sure you want to delete <b>ALL bookmark(s)</b>?</p>
                     <div>
-                        <button onClick={onConfirmRemoveBookmark}>Confirm</button>
-                        <button onClick={onCancelRemoveBookmark}>Cancel</button>
+                        <div className="confirm-button" onClick={onConfirmRemoveBookmark}>Confirm</div>
+                        <div className="cancel-button" onClick={onCancelRemoveBookmark}>Cancel</div>
                     </div>
                 </div>
             </div>
             : ""}
 
-    </div>)
+    {/* </div> */}
+    </Scrollbars>
+    )
 }
 
 export default BookmarkUI

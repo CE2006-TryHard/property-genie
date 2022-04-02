@@ -16,9 +16,9 @@ class User {
         /** @public */
         this.isVerified = false
         /** @public */
-        this.bookmarkStr = []
+        this.bookmarks = []
         /** @public */
-        this.recentSearchStr = []
+        this.recentSearches = []
     }
     /**
      * @param {Boolean} val set if user is verified

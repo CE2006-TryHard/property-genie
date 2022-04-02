@@ -114,7 +114,7 @@ class Property {
                 const {addr, img, pID, reviewObj} = propertyData
                 this.address = addr
                 this.img = img
-                if (onFetchEnd) onFetchEnd(this.address, this.img)
+                if (onFetchEnd) onFetchEnd(this.address, this.getImage())
                 this.placeID = pID
                 this.reviews = reviewObj && reviewObj.reviews
             })

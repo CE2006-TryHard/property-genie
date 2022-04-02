@@ -7,7 +7,8 @@ class Constituency {
     /**
      * @param {String} name constituency name
      */
-    constructor (name) {
+    constructor (id, name) {
+        this.id = id
         /** @public */
         this.name = name
         /** @public */
@@ -24,10 +25,19 @@ class Constituency {
      */
     getConstituencyValue(filterOpts) {
         const filteredProperties = this.getFilteredProperties(filterOpts)
+        if (!dbMgr.totalNoOfFilteredProperties) return 0
+        
+        
         return filteredProperties.reduce((acc, p) => {
             return acc + p.getPropertyValue(filterOpts)
-        }, 0) * filteredProperties.length / dbMgr.getAvgPropertiesCount()
+        }, 0) * filteredProperties.length / dbMgr.totalNoOfFilteredProperties
         // return 1
+    }
+
+    getConstituencyScore(filterOpts) {
+        if (!dbMgr.avgConstituencyValue) return 0
+        const score = this.getConstituencyValue(filterOpts) / dbMgr.avgConstituencyValue
+        return score > 1 ? 1 : score
     }
 
     /**
@@ -35,10 +45,13 @@ class Constituency {
      * @returns {Property[]} return filtered list of properties belong to this constituency
      */
     getFilteredProperties(filterOpts) {
-        const {enbloc: {threshold: enblocT}, distToMrt: {threshold: mrtT}, distToSchool: {threshold: schoolT}} = filterOpts
+        const {score: {threshold: scoreT}, enbloc: {threshold: enblocT}, distToMrt: {threshold: mrtT}, distToSchool: {threshold: schoolT}} = filterOpts
         return this.properties.filter(p => {
             const {valueProps: {enbloc}, avgMrtDist, avgSchoolDist} = p
-            return enbloc >= enblocT && avgMrtDist <= mrtT && avgSchoolDist <= schoolT
+            return p.getPropertyValue(filterOpts)*100 >= scoreT &&
+                    enbloc <= enblocT &&
+                    avgMrtDist <= mrtT &&
+                    avgSchoolDist <= schoolT
         })
     }
 

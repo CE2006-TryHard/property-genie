@@ -9,6 +9,8 @@ class SearchItem {
         /** @public */
         this.value = value
         /** @public */
+        this.id = value.id
+        /** @public */
         this.name = value.name
         /** @public */
         this.label = value.name

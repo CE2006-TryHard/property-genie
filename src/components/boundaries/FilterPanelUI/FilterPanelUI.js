@@ -1,5 +1,7 @@
 import "./FilterPanelUI.scss"
 import { CheckBox, Slider } from "../MiscUI"
+import {Scrollbars} from 'react-custom-scrollbars-2'
+import { dbMgr } from "../../controls/Mgr"
 
 /**
  * @namespace FilterPanelUI
@@ -26,6 +28,7 @@ const FilterPanelUI = props => {
      * @param {Number} value filter option "threshold" value 
      */
     const onSubmitSliderChange = (key, value) => {
+        console.log('after change val', value)
         let newFilterOptions = JSON.parse(JSON.stringify(filterOptions))
         newFilterOptions[key].threshold = value
         onFilterChange(newFilterOptions)
@@ -38,60 +41,94 @@ const FilterPanelUI = props => {
     const onReset = () => {
         const newFilterOptions = JSON.parse(JSON.stringify(filterOptions))
         Object.keys(newFilterOptions).forEach(key => {
-            newFilterOptions[key].checked = key === 'enbloc' 
-            newFilterOptions[key].threshold = key === 'enbloc' ? 0 : 2
+            newFilterOptions[key].checked = false
+            if (key === 'score') {
+                newFilterOptions[key].threshold = 0
+            } else if (key === 'enbloc') {
+                newFilterOptions[key].threshold = 1
+                newFilterOptions[key].checked = true
+            } else if (key === 'distToMrt') {
+                newFilterOptions[key].threshold = 4
+            } else if (key === 'distToSchool') {
+                newFilterOptions[key].threshold = 4
+            }
         })
         onFilterChange(newFilterOptions)
     }
 
     const filterOptionFormat = [
         {
+            key: 'score',
+            label: 'Minimum score',
+            min: 0,
+            max: 100,
+            step: 10,
+            autoLabel: true,
+            unit: '%',
+            tickLabels: ['0%', '100%']
+        },
+        {
             key: 'enbloc',
-            label: 'Enbloc value lies within range',
+            label: 'En Bloc probability',
             min: 0,
             max: 1,
             step: 0.25,
-            tickLabels: ['<20%', '20%-39%', '40%-59%', '60%-79%', '>80%']
+            tickLabels: ['<20%', '<40%', '<60%', '<80%', '&#8804<b></b>100%']
+            // tickLabels: ['<20%', '20%-39%', '40%-59%', '60%-79%', '>80%']
         },
         {
             key: 'distToMrt',
-            label: 'Distance to MRT lesser than',
+            label: 'Distance to MRT',
             min: 0.2,
-            max: 2,
+            max: 4,
             step: 0.1,
             autoLabel: true,
             unit: 'km',
-            tickLabels: ['0.2km', '2km']
+            preUnit: '&#8804',
+            tickLabels: ['0.2km', `4km`]
         },
         {
             key: 'distToSchool',
-            label: 'Distance to School lesser than',
+            label: 'Distance to School',
             min: 0.2,
-            max: 2,
+            max: 4,
             step: 0.1,
             autoLabel: true,
             unit: 'km',
-            tickLabels: ['0.2km', '2km']
+            preUnit: '&#8804',
+            tickLabels: ['0.2km', `4km`]
         }
     ]
-    return (<div className="filter-panel-container">
+
+    const filterOptionCopy = Object.keys(filterOptions)
+        .filter(filterKey => filterKey !== 'score')
+        .reduce((acc, filterKey) => {
+            acc[filterKey] = filterOptions[filterKey]
+        return acc
+    }, {})
+    return (
+    <Scrollbars className="filter-panel-container">
+        <div className="value-section">
+            <h5 className="noselect">What to be considered when calculating the value of property</h5>
+            <CheckBox options={filterOptionCopy} onChange={onCheckboxChange}></CheckBox>
+        </div>
         <div className="filter-section">
-            <h5>Only display properties that meet below values</h5>
-            {filterOptionFormat.map(({key,label, min, max, step, autoLabel, unit, tickLabels}) => (
+            <h5 className="noselect">Only display properties that meet below values</h5>
+            {filterOptionFormat.map(({key,label, min, max, step, autoLabel, unit, preUnit, tickLabels}) => (
                 <Slider key={key} title={label} min={min} max={max} step={step}
                 tickLabels={tickLabels}
                 initialVal={filterOptions[key].threshold}
                 autoLabel={autoLabel}
-                autoLabelUnit={unit}
+                autoLabelPreUnit={preUnit || ''}
+                autoLabelUnit={unit || ''}
                 onAfterChange={val => onSubmitSliderChange(key, val)}></Slider>
             ))}
         </div>
-        <div className="value-section">
-            <h5>What to be considered when calculating the value of property</h5>
-            <CheckBox options={filterOptions} onChange={onCheckboxChange}></CheckBox>
+        <div className="reset-button-container">
+            <div className="reset-button noselect" title="Reset to default filter settings" onClick={onReset}>Reset</div>
         </div>
-        <button onClick={onReset}>Reset</button>
-    </div>)
+    </Scrollbars>
+    )
     
 }
 

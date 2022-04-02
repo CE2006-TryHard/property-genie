@@ -17,8 +17,9 @@ class DatabaseMgr {
     this.constituencies = null
     /** @public */
     this.avgPropertiesCount = null
-
-    // this.fetchPropertyData()
+    this.totalNoOfFilteredProperties = null
+    this.avgConstituencyValue = null
+    
     this.initFirebase()
     
   }
@@ -32,22 +33,22 @@ class DatabaseMgr {
     const dbRef = ref(getDatabase())
     get(child(dbRef, `account/${newUser.id}`)).then(snapshot => {
       if (snapshot.exists()) {
-        const {recentSearchStr, bookmarkStr, isVerified, registerViaGoogle} = snapshot.val()
+        const {recentSearches, bookmarks, isVerified, registerViaGoogle} = snapshot.val()
         newUser.isVerified = isVerified
         newUser.registerViaGoogle = registerViaGoogle || false
-        newUser.recentSearchStr = recentSearchStr || []
-        newUser.bookmarkStr = bookmarkStr || []
+        newUser.recentSearches = recentSearches || []
+        newUser.bookmarks = bookmarks || []
       } else {
         console.log('no data available. Initialise user with name, email, and default value.')
       }
       onFetchEnd(newUser)
     })
     // onValue(ref(db, ), snapshot => {
-    //   const {recentSearchStr, bookmarkStr, isVerified, registerViaGoogle} = snapshot.val()
+    //   const {recentSearches, bookmarks, isVerified, registerViaGoogle} = snapshot.val()
     //   newUser.isVerified = isVerified
     //   newUser.registerViaGoogle = registerViaGoogle || false
-    //   newUser.recentSearchStr = recentSearchStr || []
-    //   newUser.bookmarkStr = bookmarkStr || []
+    //   newUser.recentSearches = recentSearches || []
+    //   newUser.bookmarks = bookmarks || []
     //   onFetchEnd(newUser)
     //   console.log('magic!')
     // })
@@ -167,7 +168,7 @@ class DatabaseMgr {
   /**
    * fetch all properties data from local csv
    */
-  fetchPropertyData (onFetchEnd) {
+  fetchPropertyData (filterOptions, onFetchEnd) {
     if (this.properties && this.constituencies) {
       onFetchEnd(this.properties, this.constituencies)
       return
@@ -198,7 +199,7 @@ class DatabaseMgr {
             const constituencyID = parseInt(d['constituencyID'])
             let constituencyName = CONSTITUENCY_NAME[constituencyID].name
             
-            if (!this.constituencies[constituencyName]) this.constituencies[constituencyName] = new Constituency(constituencyName)
+            if (!this.constituencies[constituencyName]) this.constituencies[constituencyName] = new Constituency(constituencyID, constituencyName)
             p.constituency = this.constituencies[constituencyName]
             this.constituencies[constituencyName].properties.push(p)
 
@@ -208,23 +209,26 @@ class DatabaseMgr {
           Object.keys(CONSTITUENCY_NAME).forEach(dID => {
             const dName = CONSTITUENCY_NAME[dID].name
             if (!this.constituencies[dName]) {
-              this.constituencies[dName] = new Constituency(dName)
+              this.constituencies[dName] = new Constituency(dID, dName)
             }
           })
-          this.setAvgPropertiesCount(this.properties.length / 31)
-
+          
+          this.updateFilterDependVals(filterOptions)
           onFetchEnd(this.properties, this.constituencies)
-        // console.log(this.constituencies)
       })
   }
 
+  updateFilterDependVals (filterOptions) {
+    // needed by avgConstituencyValue, must be called before avgConstituencyValue
+    this.totalNoOfFilteredProperties = Object.keys(this.constituencies).reduce((acc, cName) => {
+      return acc + this.constituencies[cName].getFilteredProperties(filterOptions).length
+    }, 0)
 
-  setAvgPropertiesCount (val) {
-    this.avgPropertiesCount = val
-  }
+    this.avgConstituencyValue = Object.keys(this.constituencies).reduce((valSum, cName) => valSum + this.constituencies[cName].getConstituencyValue(filterOptions), 0) / 31
 
-  getAvgPropertiesCount () {
-    return this.avgPropertiesCount
+    this.avgPropertiesCount = this.totalNoOfFilteredProperties / 31
+
+    
   }
 
   /**

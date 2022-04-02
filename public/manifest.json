@@ -1,8 +1,12 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "TryHard App",
+  "name": "TryHard App demo",
   "icons": [
-    
+    {
+      "src": "images/home.svg",
+      "sizes": "192x192",
+      "type": "image/svg"
+    }
   ],
   "start_url": ".",
   "display": "standalone",
