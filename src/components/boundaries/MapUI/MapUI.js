@@ -73,7 +73,8 @@ const MapUI = props => {
         
         let [r,g,b] = colorFrom
         
-        let ratio = c.getConstituencyScore(filterOptions)
+        // let ratio = c.getConstituencyScore(filterOptions)
+        let ratio = c.getScore()
         ratio = Math.min(1, ratio)
         r -= Math.round(ratio * colorFrom[0])
         g = colorFrom[1]
@@ -129,16 +130,19 @@ const MapUI = props => {
       })
 
       c.getProperties().forEach(p => {
-        const val = Math.floor(p.getPropertyValue(filterOptions) * 10)
+        // const val = Math.floor(p.getPropertyValue(filterOptions) * 10)
+        const val = Math.floor(p.getScore() * 10)
         markers[c.name][p.name].setIcon(marker_image[val])
         markers[c.name][p.name].setVisible(true)
       })
 
       if (locatedProperty) {
+        markers[locatedProperty.constituency.name][locatedProperty.name].setZIndex(1)
         markers[locatedProperty.constituency.name][locatedProperty.name].setOpacity(1)
       } else {
         c.getFilteredProperties(filterOptions).forEach(p => {
-          const val = Math.floor(p.getPropertyValue(filterOptions) * 10)
+          // const val = Math.floor(p.getPropertyValue(filterOptions) * 10)
+          const val = Math.floor(p.getScore() * 10)
           markers[c.name][p.name].setOpacity(MARKER_OPACITY_1)
           markers[c.name][p.name].setZIndex(1)
           // markers[c.name][p.name].setIcon(marker_image[val])
@@ -243,7 +247,7 @@ const MapUI = props => {
         // keep track on mouse cursor position
         document.addEventListener('mousemove', e => {
           const {clientX, clientY} = e
-          setOverlayPos({left: clientX + 10, top: clientY + 10})
+          setOverlayPos({left: clientX + 15, top: clientY + 15})
         })
 
         // mapRef.addListener('click', e => {
@@ -288,6 +292,7 @@ const MapUI = props => {
           zIndex: isTargetConstituency ? 1 : 0
         }
       })
+      console.log('filter option changed')
     }, [curConstituency, filterOptions])
 
     /**
@@ -391,8 +396,8 @@ const MapUI = props => {
 
     const cHoverTextTotal = c => c && c.getProperties().length > 1 ? 'properties' : 'property'
     const cSummaryText = c => c && (c.getFilteredProperties(filterOptions).length + '/' + c.getProperties().length)
-    const cScore = c => c && (c.getConstituencyScore(filterOptions) * 100).toFixed(0)
-    const curHoverPVal = p => p && p.getPropertyValue(filterOptions)
+    const cScore = c => c && (c.getScore() * 100).toFixed(0)
+    const curHoverPVal = p => p && p.getScore()
     const curHoverCCopy = curHoverC && curHoverC !== curConstituency && curHoverC
     return (
       <div className="map-container">
@@ -414,7 +419,7 @@ const MapUI = props => {
         </div>
          : ""}
         <div className="map-content"></div>
-        <div className="legend-container noselect">
+        <div className="legend-container">
           <div className="property-legend-content">
               <b>Property's score</b>
               <div className="color-content">

@@ -138,7 +138,6 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
         tempSearches = addRecentSearch(tempSearches, localRecentSearches.pop())
       }
       setRecentSearches(tempSearches)
-      // console.log(tempSearches)
       dbMgr.updateUserDataDB(activeUser, 'recentSearches', tempSearches.map(s => ({type: s.type, id: s.value.id})))
 
       // update bookmarks
@@ -183,7 +182,7 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  * @param {SearchItem} newSearch User latest search item.
  */
   const addRecentSearch = (recentSearch, newSearch) => {
-    recentSearch = recentSearch.filter(rs => rs.name !== newSearch.name)
+    recentSearch = recentSearch.filter(rs => rs.value.id !== newSearch.value.id)
     recentSearch.unshift(newSearch)
     if (recentSearch.length > 10) recentSearch.splice(10 - recentSearch.length)
     return recentSearch

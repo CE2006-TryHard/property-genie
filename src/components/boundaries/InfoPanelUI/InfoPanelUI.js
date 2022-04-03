@@ -68,7 +68,8 @@ useEffect(() => {
   * @typedef {function} generalView Functional Component rendering "General" view
   */
   const generalView = () => {
-    const score = property.getPropertyValue(filterOptions)
+    // const score = property.getPropertyValue(filterOptions)
+    const score = property.getScore()
       return (
         
       <div className="info-panel-detail-content general">
@@ -125,21 +126,27 @@ useEffect(() => {
   * @typedef {function} valueView Functional Component rendering "Evaluation" view
   */
   const valueView = () => {
+    // const score = property.getPropertyValue(filterOptions)
+    const score = property.getScore()
     return (
       <div className="info-panel-detail-content value">
         <div className="score-summary-container">
-          <div style={{opacity: filterOptions['enbloc'].checked ? 1 : 0.3}} className="score-item">
-            <p>En Bloc probability:</p>
-            <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(enbloc * 10)]}}><b>{enblocStr}</b></span>
-          </div>
-          <div style={{opacity: filterOptions['distToMrt'].checked ? 1 : 0.3}}className="score-item">
-            <p>Distance to the <span>nearest MRT:</span></p>
-            <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(distToMrt * 10)]}}><b>{avgMrtDist}km</b></span>
-          </div>
-          <div style={{opacity: filterOptions['distToSchool'].checked ? 1 : 0.3}}className="score-item">
-            <p>Distance to the <span>nearest School:</span></p>
-            <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(distToSchool * 10)]}}><b>{avgSchoolDist}km</b></span>
-          </div>
+        <p className="score-header"><b style={{color: MARKER_COLOR_SCHEME[Math.floor(score*10)]}}>{(score*100).toFixed(0)}%</b> calculated by:</p>
+          <ul>
+            <li style={{opacity: filterOptions['enbloc'].checked ? 1 : 0.3}} className="score-item">
+              <p>En Bloc probability:</p>
+              <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(enbloc * 10)]}}><b>{enblocStr}</b></span>
+            </li>
+            <li style={{opacity: filterOptions['distToMrt'].checked ? 1 : 0.3}}className="score-item">
+              <p>Distance to the <span>nearest MRT:</span></p>
+              <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(distToMrt * 10)]}}><b>{avgMrtDist}km</b></span>
+            </li>
+            <li style={{opacity: filterOptions['distToSchool'].checked ? 1 : 0.3}}className="score-item">
+              <p>Distance to the <span>nearest School:</span></p>
+              <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(distToSchool * 10)]}}><b>{avgSchoolDist}km</b></span>
+            </li>
+          </ul>
+          
         </div>
         <div className="google-review-container">
           <h3>Google Reviews</h3>

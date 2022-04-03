@@ -214,18 +214,26 @@ class DatabaseMgr {
           })
           
           this.updateFilterDependVals(filterOptions)
+          
           onFetchEnd(this.properties, this.constituencies)
       })
   }
 
   updateFilterDependVals (filterOptions) {
+    // needed by getConsituencyValue()
+    this.properties.forEach(p => p.updatePropertyScore(filterOptions))
+  
     // needed by avgConstituencyValue, must be called before avgConstituencyValue
     this.totalNoOfFilteredProperties = Object.keys(this.constituencies).reduce((acc, cName) => {
       return acc + this.constituencies[cName].getFilteredProperties(filterOptions).length
     }, 0)
 
     this.avgConstituencyValue = Object.keys(this.constituencies).reduce((valSum, cName) => valSum + this.constituencies[cName].getConstituencyValue(filterOptions), 0) / 31
-
+    
+    Object.keys(this.constituencies).forEach(cName => {
+      this.constituencies[cName].updateConstituencyScore(filterOptions, this.avgConstituencyValue)
+    })
+    // this.avgConstituencyValue *= 1.4
     this.avgPropertiesCount = this.totalNoOfFilteredProperties / 31
 
     

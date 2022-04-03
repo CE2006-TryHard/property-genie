@@ -44,6 +44,8 @@ class Property {
             distToMrt: this.getDistValue(avgMrtDist),
             distToSchool: this.getDistValue(avgSchoolDist)
         }
+        /** @public */
+        this.score = 0
     }
     /**
      * @param {Object[]} val update review object related to a property
@@ -59,14 +61,21 @@ class Property {
     getDistValue (val) {
         // distance beyond 1km => 1
         // distance below => use it as it is
-        if (val >= 0 && val < 0.2) return 1
-        if (val >= 0.2 && val < 0.4) return 0.75
-        if (val >= 0.4 && val < 0.6) return 0.5
-        if (val >= 0.6 && val < 0.8) return 0.25
+        if (val >= 0 && val < 0.25) return 1
+        if (val >= 0.25 && val < 0.5) return 0.75
+        if (val >= 0.5 && val < 0.75) return 0.5
+        if (val >= 0.75 && val <= 1) return 0.25
         // if (val >= 0.8 && val <= 1) return 0
         return 0
     }
 
+    updatePropertyScore (filterOpts) {
+        this.score = this.getPropertyValue(filterOpts)
+    }
+
+    getScore () {
+        return this.score
+    }
      /**
      * @param  {Object} filterOpts
      * @returns {number}
