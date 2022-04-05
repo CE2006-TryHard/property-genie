@@ -55,7 +55,7 @@ useEffect(() => {
   if (property) {
     property.fetchGeneralInfo((address, img) => {
       setLocalAddress(address)
-      setLocalImg(property.getImage())
+      setLocalImg(img)
     })
     setCurrentView('General')
   }

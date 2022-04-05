@@ -1,6 +1,5 @@
 import { useState } from "react"
 import './BookmarkUI.scss'
-import {Scrollbars} from 'react-custom-scrollbars-2'
 
 /**
  * @namespace BookmarkUI
@@ -63,20 +62,19 @@ const BookmarkUI = props => {
     }
 
     return (
-        <Scrollbars className="bookmark-container">
-    {/* <div className="bookmark-container"> */}
+    <div className="bookmark-container">
         {bookmarks.length ? <div className="remove-all-bookmark-button" >
-            <span className="text-button-remove" onClick={onVerifyRemoveAllBookmarks}>Remove all bookmark(s)</span></div> : ""}
+            <span className="text-button text-button-remove" onClick={onVerifyRemoveAllBookmarks}>Remove all bookmark(s)</span></div> : ""}
         <div className="bookmark-content">
             {bookmarks.length ?
                 bookmarks.map((b, i) => <div className="bookmark-item" key={i}>
                     <div className="profile-image-container">
-                        <img src={b.getImage()} />
+                        <img src={b.img} />
                     </div>
                     <div className="bookmark-item-info">
                         <h3>{b.name}</h3>
                         <div className="view-detail-button" onClick={() => onViewPropertyDetail(b)}>View detail</div>
-                        <span className="text-button-remove" onClick={() => onVerifyRemoveBookmark(b)}>Remove</span>
+                        <span className="text-button text-button-remove" onClick={() => onVerifyRemoveBookmark(b)}>Remove</span>
                     </div>
                     {bookmarkToBeRemoved && bookmarkToBeRemoved.name === b.name ?
                         <div className="remove-bookmark-item-overlay">
@@ -104,8 +102,7 @@ const BookmarkUI = props => {
             </div>
             : ""}
 
-    {/* </div> */}
-    </Scrollbars>
+    </div>
     )
 }
 

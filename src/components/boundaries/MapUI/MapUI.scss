@@ -8,11 +8,16 @@
     height: 100vh;
     background-color: #333333;
     z-index: 0;
-
+  
     .gmnoprint, .gm-style-cc,
     #root > div > div.map-container > div > div > div > div:nth-child(15) {
         display: none;
     }
+
+    // .info-window-content {
+    //   font-size: 13px;
+    //   line-height: 1.2;
+    // }
 
     .legend-container {
       position: fixed;
@@ -103,12 +108,25 @@
       height: 100%;
     }
 
+    .marker-info-bubble {
+      position: fixed;
+      z-index: 1;
+      padding: 8px 12px;
+      background-color: white;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.2;
+      pointer-events: none;
+    }
+
     .info-bubble {
       position: fixed;
       z-index: 1;
-      padding: 5px 8px;
+      padding: 8px 12px;
       background-color: white;
+      border-radius: 8px;
       font-size: 13px;
+      line-height: 1.2;
       pointer-events: none;
 
       .hover-property-text {

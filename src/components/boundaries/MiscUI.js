@@ -1,6 +1,7 @@
 import {ReactComponent as HomeLogo} from './../../images/home.svg'
 import {ReactComponent as SgLogo} from './../../images/sg.svg'
-import { useState } from 'react'
+import {Scrollbars} from 'react-custom-scrollbars-2'
+import { useEffect, useState } from 'react'
 
 /**
  * Functional Component displays greet user message after user logged in.
@@ -10,7 +11,7 @@ const GreetUserMsg = props => {
   if (props.activeUser) {
     return (
       <div className={`user-greet-msg ${props.alwaysShow ? 'show' : ''}`}>
-        Welcome, {props.activeUser.name}
+        Welcome,<br/> {props.activeUser.name || props.activeUser.email}
       </div>
     )
   }
@@ -80,10 +81,13 @@ const SidePanelWrapper = props => {
                   <line stroke="#333333" x1="10.5" y1="21.9" x2="26.1" y2="21.9" strokeWidth="1.7" strokeMiterlimit="10" fill="none"></line>
                   </g>}
             </svg>}
-          <div className={`side-panel-container ${hoverOnCloseRegion ? 'closing' : ''}`}>
-              <div className="side-panel-content">
-                {children}
-              </div>
+          <div className={`side-panel-container ${hoverOnCloseRegion ? 'closing' : ''} ` + props.className}>
+              {/* <div className="side-panel-content"> */}
+                <Scrollbars className="side-panel-content" style={{width:300, height: `calc(100%)`}}>
+                  {children}
+                </Scrollbars>
+                
+              {/* </div> */}
               <div className="close-region"
                 onClick={onClose}
                 onMouseOver={() => setHoverOnCloseRegion(true)}
@@ -98,9 +102,10 @@ const SidePanelWrapper = props => {
  * @param {Object} props 
  */
 const Slider = props => {
-  const {title, min, max, step, initialVal, tickLabels, autoLabel, autoLabelUnit, autoLabelPreUnit, onAfterChange} = props
+  const {enabled, title, min, max, step, initialVal, tickLabels, autoLabel, autoLabelUnit, autoLabelPreUnit, onAfterChange} = props
   const [val, setVal] = useState(initialVal)
-  return (<div className="slider">
+
+  return (<div className={`slider ${enabled ? '' : 'disabled'}`}>
           <p className="slider-title noselect">{title}:&nbsp; 
             {autoLabel ? <b>
               <span dangerouslySetInnerHTML={{__html:autoLabelPreUnit}}></span>
@@ -117,7 +122,7 @@ const Slider = props => {
               onTouchEnd={e => onAfterChange(e.target.value)}/>
               <div>
               {
-                tickLabels.map((t, i) => <span className="tick noselect" key={i} style={{'left': `calc(${(1/(tickLabels.length-1) * i)*100}%)`}}>
+                tickLabels.map((t, i) => <span className="tick" key={i} style={{'left': `calc(${(1/(tickLabels.length-1) * i)*100}%)`}}>
                   <span dangerouslySetInnerHTML={{__html:t}}></span>
                 </span>)
               }
@@ -126,4 +131,13 @@ const Slider = props => {
       </div>)
 }
 
-export {GreetUserMsg, HomeLogo, SgLogo, TabButton, CheckBox, SidePanelWrapper, Slider}
+const GoogleSignInButton = props => {
+  return (<div className="google-btn" onClick={props.onClick}>
+  <div className="google-icon-wrapper">
+    <img className="google-icon" src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"/>
+  </div>
+  <p className="btn-text"><b>{props.label || 'Sign in with google'}</b></p>
+</div>)
+}
+
+export {GreetUserMsg, HomeLogo, SgLogo, TabButton, CheckBox, SidePanelWrapper, Slider, GoogleSignInButton}

@@ -1,23 +1,25 @@
 import './styles/App.scss'
 
-import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, MapUI, SearchBarUI, AccountUI} from './components/boundaries/index'
+import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, RegisterUI, MapUI, SearchBarUI, AccountUI} from './components/boundaries/index'
 import { GreetUserMsg, HomeLogo, SidePanelWrapper } from './components/boundaries/MiscUI'
-import {dbMgr, sidePanelOptMgr} from './components/controls/Mgr'
+import {dbMgr, sidePanelOptMgr, userAuthMgr} from './components/controls/Mgr'
 
-import { useGoogleAuth } from './components/controls/GoogleAuth'
+import { useFirebaseAuth } from './components/controls/FirebaseAuth'
 import {useEffect, useState} from 'react'
 import {SearchItem} from './components/entities/index'
 import { CONSTITUENCY_NAME } from './components/CONFIG'
 
+
 // page state
-// HOME         1
-// ZOOM IN      2
-// LOGIN        3
-// BOOKMARK     4
-// FILTER       5
-// INFORMATION  6
-// LOGOUT       7
-// ACCOUNT INFO 8
+// HOME         0
+// LOGIN        2
+// REGISTER     3
+// ACCOUNT INFO 4
+// BOOKMARK     5
+// FILTER       6
+// INFORMATION  7
+// LOGOUT       9
+
 /**
  * @namespace App
  * @description control module
@@ -34,33 +36,31 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  * @property {Property[]} bookmarks list of properties as user's bookmark
  * @property {User} activeUser current logged in user instance.
  * @property {Boolean} sidePanelIn value to show/hide side panel
+ * @property {Boolean} subSidePanelIn value to show/hide the secondary side panel
  * @property {Boolean} mapTriggerReset value to trigger a map display
  * @returns {FunctionalComponent}
  */
  function App() {
-  const {signIn: googleSignIn, signOut, googleUser, isInitialized} = useGoogleAuth()
-
-  const [isSignedOut, setIsSignedOut] = useState(false)
-  const [isRegistering, setIsRegistering] = useState(false)
+  const {authUserInfo, isInitialized} = useFirebaseAuth()
   const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
   const [properties, setProperties] = useState([])
   const [curSearch, setCurSearch] = useState(null)
   const [selectedProperty, setSelectedProperty] = useState(null)
-  const [locatedProperty, setlocatedProperty] = useState(null)
   const [selectedConstituency, setSelectedConstituency] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
   const [filterOptions, setFilterOptions] = useState({
-    score: {label: 'Score', checked: false, threshold: 0},
+    score: {label: 'Score', checked: true, threshold: 0},
     enbloc: {label: 'Enbloc', checked: true, threshold: 1},
-    distToMrt: {label: 'Distance to MRT', checked: false, threshold: 4},
-    distToSchool: {label: 'Distance to School', checked: false, threshold: 4}
+    distToMrt: {label: 'Distance to MRT', checked: true, threshold: 4},
+    distToSchool: {label: 'Distance to School', checked: true, threshold: 4}
   })
 
   const [bookmarks, setBookmarks] = useState([])
   const [activeUser, setActiveUser] = useState(null)
   const [activeUserDataReady, setActiveUserDataReady] = useState(false)
   const [sidePanelIn, setSidePanelIn] = useState(false)
+  const [subSidePanelIn, setSubSidePanelIn] = useState(false)
   const [sidePanelContent, setSidePanelContent] = useState(0)
   const [mapTriggerReset, setMapTriggerReset] = useState(false)
 
@@ -69,51 +69,22 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
    * @memberof App
  * @typedef {function} useEffect1 fetch google auth session from previous login.
  * @param {function} callback Anonymous function invoked when value of states from watchlist is updated.
- * @param {Array} watchList [googleUser, isInitialized]
+ * @param {Array} watchList [authUser]
  */
   useEffect(() => {
-    if (googleUser && googleUser.profileObj) {
-      // console.log('google user', googleUser)
-      // fetch user data
-      const {name, email} = googleUser.profileObj
-      dbMgr.initActiveUser(name, email, activeUser => {
-        if (isRegistering) { // active user obtain via google register
-          if (activeUser.registerViaGoogle) {
-            console.log('account already register. auto login in via google')
-          } else {
-            dbMgr.updateUserDataDB(activeUser, 'registerViaGoogle', true)
-            dbMgr.updateUserDataDB(activeUser, 'isVerified', true)
-            console.log('on finish register via google')
-          }
-          
-        }
+    if (authUserInfo) {
+      dbMgr.initActiveUser(authUserInfo, activeUser => {
         setActiveUser(activeUser)
-        setIsSignedOut(false)
       })
-      onLightboxClose()
-    } else if (isInitialized && !isSignedOut) {
-      // no active google account login session
-      // check if local storage contain manual email login record
-      const localUser = localStorage.getItem('activeUser')
-      if (localUser) {
-        console.log('found local user')
-        const {name, email} = localUser
-        dbMgr.initActiveUser(name, email, activeUser => {
-          setActiveUser(activeUser)
-          setIsSignedOut(false)
-        })
-      } else {
-        // logged out state
-        dbMgr.fetchPropertyData(filterOptions, (properties, constituencies) => {
-          setProperties(properties)
-          setActiveUserDataReady(true)
-        })
-        
-       
-      }
-      // const activeUser
+    } else if (isInitialized) {
+      console.log('check no usr')
+      // no active user session storage found
+      dbMgr.fetchPropertyData(filterOptions, (properties, constituencies) => {
+        setProperties(properties)
+        setActiveUserDataReady(true)
+      })
     }
-  }, [googleUser, isInitialized])
+  }, [authUserInfo, isInitialized])
 
 /**
  * @memberof App
@@ -124,6 +95,8 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
   useEffect(() => {
     if (activeUser) {
       console.log('active user')
+      setSubSidePanelIn(false)
+
       dbMgr.fetchPropertyData(filterOptions, (pps, ccs) => {
         setProperties(pps)
         // update recent search
@@ -149,31 +122,8 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
 
         setActiveUserDataReady(true)
       })
-      
-      // for first load, set data ready to render the rest of UI
-      // setActiveUserDataReady(true)
     }
   }, [activeUser])
-
-  /**
-   * Testing purpose only
-   */
-  // useEffect(() => {
-  //   if (googleUser) {
-  //     console.log('google user')
-  //   }
-  // }, [googleUser])
-  
-  /**
-   *  Testing purpose only
-   */
-  // useEffect(() => {
-  //   console.log('is initialised')
-  // }, [isInitialized])
-
-  // useEffect(() => {
-  //   console.log('is signed in')
-  // }, [isSignedIn])
 
 /**
  * @memberof App
@@ -194,29 +144,20 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  * @param {integer} newPageState new page state index.
  */
   const onSidePanelOptSelect = (newPageState) => {
-    if (newPageState === 7) { // logout state
-      onLogOut()
-    } else {
-      setPageState(newPageState)
-      setSidePanelIn(false)
-      // setShowLightbox(false)
-      if (newPageState > 0) {
+    switch (newPageState) {
+      case 2: // login
+      case 4: // account info
+      case 5: // bookmark
+      case 6: // filter
+        setSidePanelIn(false)
         setSidePanelContent(newPageState)
-        setShowLightbox(true)
-      }
+        setSubSidePanelIn(true)
+        break
+      case 9:
+        setPageState(newPageState)
+        onLogOut()
+      break
     }
-  }
-
-/**
- * @memberof App
- * @typedef {function} onLightboxClose called when user clicks on lightbox's close button/area.
- */
-  const onLightboxClose = () => {
-    if (pageState === 3) {
-      setIsRegistering(false)
-    }
-    setPageState(0)
-    setShowLightbox(false)
   }
 
 /**
@@ -225,7 +166,6 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  * @param {Constituency} newConstituency latest selected constituency
  */
   const onConstituencySelectMap = newConstituency => {
-    setlocatedProperty(null)
     setSelectedProperty(null)
     setSelectedConstituency(newConstituency)
     setPageState(0)
@@ -237,10 +177,10 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  * @param {Property} newProperty latest selected constituency
  */
   const onPropertySelect = newProperty => {
-    setlocatedProperty(null)
+    if (newProperty) setSelectedConstituency(newProperty.constituency)
     setSelectedProperty(newProperty)
-    setPageState(6)
-    onLightboxClose()
+    setSubSidePanelIn(false)
+    setShowLightbox(true)
   }
 
 /**
@@ -262,17 +202,14 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
     if (newSearch.type === 'c') {
       onConstituencySelectMap(newSearch.value)
     } else if (newSearch.type === 'p') {
+      onConstituencySelectMap(newSearch.value.constituency)
       onPropertySelect(newSearch.value)
+      setShowLightbox(true)
     }
 
-    setShowLightbox(false)
     setSidePanelIn(false)
+    setSubSidePanelIn(false)
     
-  }
-
-  const onLocatedPropertyChange = newLocatedProperty => {
-    onConstituencySelectMap(newLocatedProperty.constituency)
-    setlocatedProperty(newLocatedProperty)
   }
 
 /**
@@ -327,28 +264,15 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
 
   /**
  * @memberof App
- * @typedef {function} isBookmarked check if a property had been bookmarked.
- * @param {Property} property property to be checked
- * @returns {Boolean}
- */
-  const isBookmarked = property => {
-    if (!property) return false
-    return bookmarks.filter(b => b === property).length > 0
-  }
-
-  /**
- * @memberof App
  * @typedef {function} onLogOut called when user clicks on log out button.
  */
   const onLogOut = () => {
-    setPageState(7)
     setTimeout(() => {
-      signOut()
+      userAuthMgr.generalSignOut()
       setActiveUser(null)
       localStorage.removeItem('activeUser')
       setSidePanelIn(false)
       setPageState(0)
-      setIsSignedOut(true)
     }, 1000)
     
   }
@@ -369,68 +293,59 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  */
   const onResetView = () => {
     setSelectedProperty(null)
-    setlocatedProperty(null)
+    setSelectedConstituency(null)
     setPageState(0)
     setShowLightbox(false)
-    setSelectedConstituency(null)
     setSidePanelIn(false)
+    setSubSidePanelIn(false)
     setMapTriggerReset(!mapTriggerReset)
   }
 
-/**
- * @memberof App
- * @typedef {function} onRegisterChange called when page changes between registerUI and not registerUI
- * @param {Boolean} newIsRegistering set isRegistering value.
- */
-  const onRegisterChange = newIsRegistering => {
-    setIsRegistering(newIsRegistering)
-  }
-
-  /**
- * @memberof App
- * @typedef {function} onRegisterManual called when user submit registration request via manual mode.
- * @param {object} userInfo user information required for registration
- */
-  const onRegisterManual = userInfo => {
-    console.log('on register manual', userInfo)
-  }
-
-/**
- * @memberof App
- * @typedef {FunctionalComponent} LightboxContent a functional component rendering lightbox content based on current page state.
- */
-  const LightboxContent = () => {
+// /**
+//  * @memberof App
+//  * @typedef {FunctionalComponent} SidePanelSubContent a functional component rendering lightbox content based on current page state.
+//  */
+  const SidePanelSubContent = () => {
     switch (sidePanelContent) {
-      case 3:
-        return (<LoginUI 
-          onLogInGoogle={googleSignIn}
-          activeUser={activeUser}
-          isRegistering={isRegistering}
-          onRegisterChange={onRegisterChange}
-          onRegisterManual={onRegisterManual}></LoginUI>)
+      case 2:
+        return (
+          <LoginUI 
+            activeUser={activeUser}>
+              <div className="google-login-container">
+                {"Does not have an account?"}<span className="register-ui-entry-button text-button" onClick={() => setSidePanelContent(3)}>Register</span>
+              </div>
+            </LoginUI>
+            )
+        case 3:
+          return (
+            <RegisterUI 
+              onBack={() => {
+                setSidePanelContent(2)
+                setPageState(2)
+              }}></RegisterUI>
+          )
       case 4:
+        return activeUser ? <AccountUI user={activeUser}></AccountUI> : ''
+      case 5:
         return (<BookmarkUI
             bookmarks={bookmarks}
             filterOptions={filterOptions}
             onPropertySelect={onPropertySelect}
             onBookmarkRemove={onBookmark}
             onBookmarkRemoveAll={removeAllBookmarks}></BookmarkUI>)
-      case 5:
+      case 6:
         return (<FilterPanelUI filterOptions={filterOptions} onFilterChange={onFilterChange}></FilterPanelUI>)
-      case 8:
-        return activeUser ? <AccountUI user={activeUser}></AccountUI> : ''
-        }
+      }
     return ''
   }
 
-  if (!isInitialized || !activeUserDataReady) return (<div className="loader"></div>)
+  if (!activeUserDataReady) return (<div className="loader"></div>)
 
   return (<div className="property-web-app">
       <MapUI
         properties={properties}
         curConstituency={selectedConstituency}
-        locatedProperty={locatedProperty}
-        onRemoveLocatedProperty={() => setlocatedProperty(null)}
+        curProperty={selectedProperty}
         filterOptions={filterOptions}
         onPropertySelect={onPropertySelect}
         onConstituencySelect={onConstituencySelectMap}
@@ -448,8 +363,8 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
           isOpen={sidePanelIn}
           onClose={() => {setSidePanelIn(false)}}
           onToggle={() => {
-            setSidePanelIn(!sidePanelIn)
-            if (!sidePanelIn) setShowLightbox(false)
+              setSidePanelIn(!sidePanelIn)
+              if (!sidePanelIn) setSubSidePanelIn(false)
             }}>
           {sidePanelOptMgr.getOptionItems(activeUser).map((opt, i) => 
               <div className="side-panel-option noselect" key={i}
@@ -458,28 +373,29 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
         </SidePanelWrapper>
       </div>
       
-      {selectedProperty ? 
+      {showLightBox && selectedProperty ? 
         <LightBoxWrapper isOpen={true} onClose={() => setSelectedProperty(null)}>
           <InfoPanelUI
             filterOptions={filterOptions}
             property={selectedProperty}
             enableBookmark={!!activeUser}
-            isBookmarked={isBookmarked(selectedProperty)}
+            isBookmarked={bookmarks.filter(b => b === selectedProperty).length > 0}
             onBookmark={onBookmark}
-            onLocateProperty={() => onLocatedPropertyChange(selectedProperty)}></InfoPanelUI>
+            onLocateProperty={() => setShowLightbox(false)}></InfoPanelUI>
         </LightBoxWrapper>
       : ''}
 
       <SidePanelWrapper
-        isOpen={!sidePanelIn && showLightBox}
+        className="sub-side-panel-content"
+        isOpen={subSidePanelIn}
         hideCloseButton={true}
-        onClose={onLightboxClose}>
-          <LightboxContent></LightboxContent>
+        onClose={() => setSubSidePanelIn(false)}>
+          <SidePanelSubContent></SidePanelSubContent>
       </SidePanelWrapper>
 
       {/* Log out in progress message */}
-      {pageState === 7 ?
-        <LightBoxWrapper isOpen={true} hideCloseButton={true} disableClose={true}>
+      {pageState === 9 ?
+        <LightBoxWrapper className="logout-lightbox" isOpen={true} hideCloseButton={true} disableClose={true}>
           <div className="loader"></div>
           <div className="logout-container">Log out...</div>
         </LightBoxWrapper>

@@ -1,7 +1,5 @@
 import "./FilterPanelUI.scss"
 import { CheckBox, Slider } from "../MiscUI"
-import {Scrollbars} from 'react-custom-scrollbars-2'
-import { dbMgr } from "../../controls/Mgr"
 
 /**
  * @namespace FilterPanelUI
@@ -19,6 +17,9 @@ const FilterPanelUI = props => {
     const onCheckboxChange = (key, value) => {
         const newfilterOptions = JSON.parse(JSON.stringify(filterOptions))
         newfilterOptions[key].checked = value
+        if (!value) {
+            newfilterOptions[key].threshold = filterOptionFormat.filter(fo => fo.key === key)[0].max
+        }
         onFilterChange(newfilterOptions)
     }
 
@@ -41,12 +42,12 @@ const FilterPanelUI = props => {
     const onReset = () => {
         const newFilterOptions = JSON.parse(JSON.stringify(filterOptions))
         Object.keys(newFilterOptions).forEach(key => {
-            newFilterOptions[key].checked = false
+            newFilterOptions[key].checked = true
             if (key === 'score') {
                 newFilterOptions[key].threshold = 0
             } else if (key === 'enbloc') {
                 newFilterOptions[key].threshold = 1
-                newFilterOptions[key].checked = true
+                // newFilterOptions[key].checked = true
             } else if (key === 'distToMrt') {
                 newFilterOptions[key].threshold = 4
             } else if (key === 'distToSchool') {
@@ -107,15 +108,15 @@ const FilterPanelUI = props => {
         return acc
     }, {})
     return (
-    <Scrollbars className="filter-panel-container">
+    <div className="filter-panel-container">
         <div className="value-section">
-            <h5 className="noselect">What to be considered when calculating the value of property</h5>
+            <h5 className="noselect">Calculates property score by:</h5>
             <CheckBox options={filterOptionCopy} onChange={onCheckboxChange}></CheckBox>
         </div>
         <div className="filter-section">
-            <h5 className="noselect">Only display properties that meet below values</h5>
+            <h5 className="noselect">Futher customize the properties you want to see</h5>
             {filterOptionFormat.map(({key,label, min, max, step, autoLabel, unit, preUnit, tickLabels}) => (
-                <Slider key={key} title={label} min={min} max={max} step={step}
+                <Slider enabled={key === 'score' || filterOptionCopy[key].checked} key={key} title={label} min={min} max={max} step={step}
                 tickLabels={tickLabels}
                 initialVal={filterOptions[key].threshold}
                 autoLabel={autoLabel}
@@ -127,7 +128,7 @@ const FilterPanelUI = props => {
         <div className="reset-button-container">
             <div className="reset-button noselect" title="Reset to default filter settings" onClick={onReset}>Reset</div>
         </div>
-    </Scrollbars>
+    </div>
     )
     
 }

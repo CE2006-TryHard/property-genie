@@ -106,7 +106,7 @@ class Property {
 
         // only one of them are checked or all are unchecked
         const checkedOption = Object.keys(filterOpts)
-        .filter(key => filterOpts[key].checked)
+        .filter(key => key !== 'score' && filterOpts[key].checked)
         .map(key => this.valueProps[key])[0]
         return checkedOption || 0
     }
@@ -122,16 +122,22 @@ class Property {
             dbMgr.fetchDataDB(`properties/${this.id}`, propertyData => {
                 const {addr, img, pID, reviewObj} = propertyData
                 this.address = addr
-                this.img = img
-                if (onFetchEnd) onFetchEnd(this.address, this.getImage())
+                this.img = this.getImage(img)
+                if (onFetchEnd) onFetchEnd(this.address, this.img)
                 this.placeID = pID
                 this.reviews = reviewObj && reviewObj.reviews
             })
         }
     }
 
-    getImage () {
-        return this.img === 'nan' ? dummyPropertyImg : `https://www.singaporeexpats.com/singapore-property-pictures/properties/${this.img}.jpg`
+    getImage (img) {
+        if (img === 'nan') return dummyPropertyImg
+        if (img.indexOf('.JPG') >= 0) {
+            return `https://www.singaporeexpats.com/singapore-property-pictures/properties/${img}`
+        }
+        return `https://www.singaporeexpats.com/singapore-property-pictures/properties/${img}.jpg`
+        
+        
     }
 
     /**

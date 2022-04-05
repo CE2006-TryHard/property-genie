@@ -81,48 +81,773 @@ const LINES = {
     }
 }
 
-const STATIONS = { 
-    "1": { "name": "ADMIRALTY", "code": ["NS10"] }, "2": { "name": "ALJUNIED", "code": ["EW9"] }, "3": { "name": "ANG MO KIO", "code": ["NS16"] }, 
-    "4": { "name": "BARTLEY", "code": ["CC12"] }, "5": { "name": "BAYFRONT", "code": ["DT16", "CE1"] }, "6": { "name": "BEAUTY WORLD", "code": ["DT5"] }, 
-    "7": { "name": "BEDOK", "code": ["EW5"] }, "8": { "name": "BEDOK NORTH", "code": ["DT29"] }, "9": { "name": "BEDOK RESERVOIR", "code": ["DT30"] }, 
-    "10": { "name": "BENCOOLEN", "code": ["DT21"] }, "11": { "name": "BENDEMEER", "code": ["DT23"] }, "12": { "name": "BISHAN", "code": ["CC15", "NS17"] }, 
-    "13": { "name": "BOON KENG", "code": ["NE9"] }, "14": { "name": "BOON LAY", "code": ["EW27"] }, "15": { "name": "BOTANIC GARDENS", "code": ["DT9", "CC19"] }, 
-    "16": { "name": "BRADDELL", "code": ["NS18"] }, "17": { "name": "BRAS BASAH", "code": ["CC2"] }, "18": { "name": "BUANGKOK", "code": ["NE15"] }, 
-    "19": { "name": "BUGIS", "code": ["DT14", "EW12"] }, "20": { "name": "BUKIT BATOK", "code": ["NS2"] }, "21": { "name": "BUKIT GOMBAK", "code": ["NS3"] },
-    "22": { "name": "BUKIT PANJANG", "code": ["DT1", "BP6"] }, "23": { "name": "BUONA VISTA", "code": ["CC22", "EW21"] }, "24": { "name": "CALDECOTT", "code": ["CC17"] }, 
-    "25": { "name": "CANBERRA", "code": ["NS12"] }, "26": { "name": "CASHEW", "code": ["DT2"] }, "27": { "name": "CHANGI AIRPORT", "code": ["CG2"] }, 
-    "28": { "name": "CHINATOWN", "code": ["DT19", "NE4"] }, "29": { "name": "CHINESE GARDEN", "code": ["EW25"] }, "30": { "name": "CHOA CHU KANG", "code": ["NS4", "BP1"] },
-    "31": { "name": "CITY HALL", "code": ["EW13", "NS25"] }, "32": { "name": "CLARKE QUAY", "code": ["NE5"] }, "33": { "name": "CLEMENTI", "code": ["EW23"] }, 
-    "34": { "name": "COMMONWEALTH", "code": ["EW20"] }, "35": { "name": "DAKOTA", "code": ["CC8"] }, "36": { "name": "DHOBY GHAUT", "code": ["CC1", "NS24", "NE6"] }, 
-    "37": { "name": "DOVER", "code": ["EW22"] }, "38": { "name": "DOWNTOWN", "code": ["DT17"] }, "39": { "name": "ESPLANADE", "code": ["CC3"] }, 
-    "40": { "name": "EUNOS", "code": ["EW7"] }, "41": { "name": "EXPO", "code": ["DT35", "CG1"] }, "42": { "name": "FARRER PARK", "code": ["NE8"] }, 
-    "43": { "name": "FARRER ROAD", "code": ["CC20"] }, "44": { "name": "FORT CANNING", "code": ["DT20"] }, "45": { "name": "GEYLANG BAHRU", "code": ["DT24"] }, 
-    "46": { "name": "GUL CIRCLE", "code": ["EW30"] }, "47": { "name": "HARBOURFRONT", "code": ["CC29", "NE1"] }, "48": { "name": "HAW PAR VILLA", "code": ["CC25"] }, 
-    "49": { "name": "HILLVIEW", "code": ["DT3"] }, "50": { "name": "HOLLAND VILLAGE", "code": ["CC21"] }, "51": { "name": "HOUGANG", "code": ["NE14"] }, 
-    "52": { "name": "JALAN BESAR", "code": ["DT22"] }, "53": { "name": "JOO KOON", "code": ["EW29"] }, "54": { "name": "JURONG EAST", "code": ["EW24", "NS1"] }, 
-    "55": { "name": "KAKI BUKIT", "code": ["DT28"] }, "56": { "name": "KALLANG", "code": ["EW10"] }, "57": { "name": "KEMBANGAN", "code": ["EW6"] }, 
-    "58": { "name": "KENT RIDGE", "code": ["CC24"] }, "59": { "name": "KHATIB", "code": ["NS14"] }, "60": { "name": "KING ALBERT PARK", "code": ["DT6"] }, 
-    "61": { "name": "KOVAN", "code": ["NE13"] }, "62": { "name": "KRANJI", "code": ["NS7"] }, "63": { "name": "LABRADOR PARK", "code": ["CC27"] }, 
-    "64": { "name": "LAKESIDE", "code": ["EW26"] }, "65": { "name": "LAVENDER", "code": ["EW11"] }, "66": { "name": "LITTLE INDIA", "code": ["DT12", "NE7"] }, 
-    "67": { "name": "LORONG CHUAN", "code": ["CC14"] }, "68": { "name": "MACPHERSON", "code": ["DT26", "CC10"] }, "69": { "name": "MARINA BAY", "code": ["CE2", "NS27"] }, 
-    "70": { "name": "MARINA SOUTH PIER", "code": ["NS28"] }, "71": { "name": "MARSILING", "code": ["NS"] }, "72": { "name": "MARYMOUNT", "code": ["CC16"] }, 
-    "73": { "name": "MATTAR", "code": ["DT25"] }, "74": { "name": "MOUNTBATTEN", "code": ["CC7"] }, "75": { "name": "NEWTON", "code": ["DT11", "NS21"] }, 
-    "76": { "name": "NICOLL HIGHWAY", "code": ["CC5"] }, "77": { "name": "NOVENA", "code": ["NS20"] }, "78": { "name": "ONE-NORTH", "code": ["CC23"] }, 
-    "79": { "name": "ORCHARD", "code": ["NS22"] }, "80": { "name": "OUTRAM PARK", "code": ["NE3", "EW16"] }, "81": { "name": "PASIR PANJANG", "code": ["CC26"] }, 
-    "82": { "name": "PASIR RIS", "code": ["EW1"] }, "83": { "name": "PAYA LEBAR", "code": ["CC9", "EW8"] }, "84": { "name": "PIONEER", "code": ["EW28"] }, 
-    "85": { "name": "POTONG PASIR", "code": ["NE10"] }, "86": { "name": "PROMENADE", "code": ["DT15", "CC4"] }, "87": { "name": "PUNGGOL", "code": ["NE17"] }, 
-    "88": { "name": "QUEENSTOWN", "code": ["EW19"] }, "89": { "name": "RAFFLES PLACE", "code": ["EW14", "NS26"] }, "90": { "name": "REDHILL", "code": ["EW18"] }, 
-    "91": { "name": "ROCHOR", "code": ["DT13"] }, "92": { "name": "SEMBAWANG", "code": ["NS11"] }, "93": { "name": "SENGKANG", "code": ["NE16"] }, 
-    "94": { "name": "SERANGOON", "code": ["CC13", "NE12"] }, "95": { "name": "SIMEI", "code": ["EW3"] }, "96": { "name": "SIXTH AVENUE", "code": ["DT7"] }, 
-    "97": { "name": "SOMERSET", "code": ["NS23"] }, "98": { "name": "STADIUM", "code": ["CC6"] }, "99": { "name": "STEVENS", "code": ["DT10"] }, 
-    "123": { "name": "SUNGEI BEDOK", "code": ["TE", "DT"] }, "100": { "name": "TAI SENG", "code": ["CC11"] }, "101": { "name": "TAMPINES", "code": ["DT32", "EW2"] }, 
-    "102": { "name": "TAMPINES EAST", "code": ["DT33"] }, "103": { "name": "TAMPINES WEST", "code": ["DT31"] }, "104": { "name": "TAN KAH KEE", "code": ["DT8"] }, 
-    "105": { "name": "TANAH MERAH", "code": ["EW4", "CG"] }, "106": { "name": "TANJONG PAGAR", "code": ["EW15"] }, "107": { "name": "TELOK AYER", "code": ["DT18"] }, 
-    "108": { "name": "TELOK BLANGAH", "code": ["CC28"] }, "109": { "name": "TIONG BAHRU", "code": ["EW17"] }, "110": { "name": "TOA PAYOH", "code": ["NS19"] }, 
-    "111": { "name": "TUAS CRESCENT", "code": ["EW31"] }, "112": { "name": "TUAS LINK", "code": ["EW33"] }, "113": { "name": "TUAS WEST ROAD", "code": ["EW32"] }, 
-    "114": { "name": "UBI", "code": ["DT27"] }, "115": { "name": "UPPER CHANGI", "code": ["DT34"] }, "116": { "name": "WOODLANDS", "code": ["TE2", "NS9"] }, 
-    "117": { "name": "WOODLANDS NORTH", "code": ["TE1"] }, "118": { "name": "WOODLANDS SOUTH", "code": ["TE3"] }, "119": { "name": "WOODLEIGH", "code": ["NE11"] },
-    "120": { "name": "YEW TEE", "code": ["NS5"] }, "121": { "name": "YIO CHU KANG", "code": ["NS15"] }, "122": { "name": "YISHUN", "code": ["NS13"] } }
+let STATIONS = {
+    "1": {
+        "name": "ADMIRALTY",
+        "code": [
+            "NS10"
+        ]
+    },
+    "2": {
+        "name": "ALJUNIED",
+        "code": [
+            "EW9"
+        ]
+    },
+    "3": {
+        "name": "ANG MO KIO",
+        "code": [
+            "NS16"
+        ]
+    },
+    "4": {
+        "name": "BARTLEY",
+        "code": [
+            "CC12"
+        ]
+    },
+    "5": {
+        "name": "BAYFRONT",
+        "code": [
+            "CE1",
+            "DT16"
+        ]
+    },
+    "6": {
+        "name": "BEAUTY WORLD",
+        "code": [
+            "DT5"
+        ]
+    },
+    "7": {
+        "name": "BEDOK",
+        "code": [
+            "EW5"
+        ]
+    },
+    "8": {
+        "name": "BEDOK NORTH",
+        "code": [
+            "DT29"
+        ]
+    },
+    "9": {
+        "name": "BEDOK RESERVOIR",
+        "code": [
+            "DT30"
+        ]
+    },
+    "10": {
+        "name": "BENCOOLEN",
+        "code": [
+            "DT21"
+        ]
+    },
+    "11": {
+        "name": "BENDEMEER",
+        "code": [
+            "DT23"
+        ]
+    },
+    "12": {
+        "name": "BISHAN",
+        "code": [
+            "CC15",
+            "NS17"
+        ]
+    },
+    "13": {
+        "name": "BOON KENG",
+        "code": [
+            "NE9"
+        ]
+    },
+    "14": {
+        "name": "BOON LAY",
+        "code": [
+            "EW27"
+        ]
+    },
+    "15": {
+        "name": "BOTANIC GARDENS",
+        "code": [
+            "CC19",
+            "DT9"
+        ]
+    },
+    "16": {
+        "name": "BRADDELL",
+        "code": [
+            "NS18"
+        ]
+    },
+    "17": {
+        "name": "BRAS BASAH",
+        "code": [
+            "CC2"
+        ]
+    },
+    "18": {
+        "name": "BUANGKOK",
+        "code": [
+            "NE15"
+        ]
+    },
+    "19": {
+        "name": "BUGIS",
+        "code": [
+            "DT14",
+            "EW12"
+        ]
+    },
+    "20": {
+        "name": "BUKIT BATOK",
+        "code": [
+            "NS2"
+        ]
+    },
+    "21": {
+        "name": "BUKIT GOMBAK",
+        "code": [
+            "NS3"
+        ]
+    },
+    "22": {
+        "name": "BUKIT PANJANG",
+        "code": [
+            "BP6",
+            "DT1"
+        ]
+    },
+    "23": {
+        "name": "BUONA VISTA",
+        "code": [
+            "CC22",
+            "EW21"
+        ]
+    },
+    "24": {
+        "name": "CALDECOTT",
+        "code": [
+            "CC17"
+        ]
+    },
+    "25": {
+        "name": "CANBERRA",
+        "code": [
+            "NS12"
+        ]
+    },
+    "26": {
+        "name": "CASHEW",
+        "code": [
+            "DT2"
+        ]
+    },
+    "27": {
+        "name": "CHANGI AIRPORT",
+        "code": [
+            "CG2"
+        ]
+    },
+    "28": {
+        "name": "CHINATOWN",
+        "code": [
+            "DT19",
+            "NE4"
+        ]
+    },
+    "29": {
+        "name": "CHINESE GARDEN",
+        "code": [
+            "EW25"
+        ]
+    },
+    "30": {
+        "name": "CHOA CHU KANG",
+        "code": [
+            "BP1",
+            "NS4"
+        ]
+    },
+    "31": {
+        "name": "CITY HALL",
+        "code": [
+            "EW13",
+            "NS25"
+        ]
+    },
+    "32": {
+        "name": "CLARKE QUAY",
+        "code": [
+            "NE5"
+        ]
+    },
+    "33": {
+        "name": "CLEMENTI",
+        "code": [
+            "EW23"
+        ]
+    },
+    "34": {
+        "name": "COMMONWEALTH",
+        "code": [
+            "EW20"
+        ]
+    },
+    "35": {
+        "name": "DAKOTA",
+        "code": [
+            "CC8"
+        ]
+    },
+    "36": {
+        "name": "DHOBY GHAUT",
+        "code": [
+            "CC1",
+            "NE6",
+            "NS24"
+        ]
+    },
+    "37": {
+        "name": "DOVER",
+        "code": [
+            "EW22"
+        ]
+    },
+    "38": {
+        "name": "DOWNTOWN",
+        "code": [
+            "DT17"
+        ]
+    },
+    "39": {
+        "name": "ESPLANADE",
+        "code": [
+            "CC3"
+        ]
+    },
+    "40": {
+        "name": "EUNOS",
+        "code": [
+            "EW7"
+        ]
+    },
+    "41": {
+        "name": "EXPO",
+        "code": [
+            "CG1",
+            "DT35"
+        ]
+    },
+    "42": {
+        "name": "FARRER PARK",
+        "code": [
+            "NE8"
+        ]
+    },
+    "43": {
+        "name": "FARRER ROAD",
+        "code": [
+            "CC20"
+        ]
+    },
+    "44": {
+        "name": "FORT CANNING",
+        "code": [
+            "DT20"
+        ]
+    },
+    "45": {
+        "name": "GEYLANG BAHRU",
+        "code": [
+            "DT24"
+        ]
+    },
+    "46": {
+        "name": "GUL CIRCLE",
+        "code": [
+            "EW30"
+        ]
+    },
+    "47": {
+        "name": "HARBOURFRONT",
+        "code": [
+            "CC29",
+            "NE1"
+        ]
+    },
+    "48": {
+        "name": "HAW PAR VILLA",
+        "code": [
+            "CC25"
+        ]
+    },
+    "49": {
+        "name": "HILLVIEW",
+        "code": [
+            "DT3"
+        ]
+    },
+    "50": {
+        "name": "HOLLAND VILLAGE",
+        "code": [
+            "CC21"
+        ]
+    },
+    "51": {
+        "name": "HOUGANG",
+        "code": [
+            "NE14"
+        ]
+    },
+    "52": {
+        "name": "JALAN BESAR",
+        "code": [
+            "DT22"
+        ]
+    },
+    "53": {
+        "name": "JOO KOON",
+        "code": [
+            "EW29"
+        ]
+    },
+    "54": {
+        "name": "JURONG EAST",
+        "code": [
+            "EW24",
+            "NS1"
+        ]
+    },
+    "55": {
+        "name": "KAKI BUKIT",
+        "code": [
+            "DT28"
+        ]
+    },
+    "56": {
+        "name": "KALLANG",
+        "code": [
+            "EW10"
+        ]
+    },
+    "57": {
+        "name": "KEMBANGAN",
+        "code": [
+            "EW6"
+        ]
+    },
+    "58": {
+        "name": "KENT RIDGE",
+        "code": [
+            "CC24"
+        ]
+    },
+    "59": {
+        "name": "KHATIB",
+        "code": [
+            "NS14"
+        ]
+    },
+    "60": {
+        "name": "KING ALBERT PARK",
+        "code": [
+            "DT6"
+        ]
+    },
+    "61": {
+        "name": "KOVAN",
+        "code": [
+            "NE13"
+        ]
+    },
+    "62": {
+        "name": "KRANJI",
+        "code": [
+            "NS7"
+        ]
+    },
+    "63": {
+        "name": "LABRADOR PARK",
+        "code": [
+            "CC27"
+        ]
+    },
+    "64": {
+        "name": "LAKESIDE",
+        "code": [
+            "EW26"
+        ]
+    },
+    "65": {
+        "name": "LAVENDER",
+        "code": [
+            "EW11"
+        ]
+    },
+    "66": {
+        "name": "LITTLE INDIA",
+        "code": [
+            "DT12",
+            "NE7"
+        ]
+    },
+    "67": {
+        "name": "LORONG CHUAN",
+        "code": [
+            "CC14"
+        ]
+    },
+    "68": {
+        "name": "MACPHERSON",
+        "code": [
+            "CC10",
+            "DT26"
+        ]
+    },
+    "69": {
+        "name": "MARINA BAY",
+        "code": [
+            "CE2",
+            "NS27"
+        ]
+    },
+    "70": {
+        "name": "MARINA SOUTH PIER",
+        "code": [
+            "NS28"
+        ]
+    },
+    "71": {
+        "name": "MARSILING",
+        "code": [
+            "NS"
+        ]
+    },
+    "72": {
+        "name": "MARYMOUNT",
+        "code": [
+            "CC16"
+        ]
+    },
+    "73": {
+        "name": "MATTAR",
+        "code": [
+            "DT25"
+        ]
+    },
+    "74": {
+        "name": "MOUNTBATTEN",
+        "code": [
+            "CC7"
+        ]
+    },
+    "75": {
+        "name": "NEWTON",
+        "code": [
+            "DT11",
+            "NS21"
+        ]
+    },
+    "76": {
+        "name": "NICOLL HIGHWAY",
+        "code": [
+            "CC5"
+        ]
+    },
+    "77": {
+        "name": "NOVENA",
+        "code": [
+            "NS20"
+        ]
+    },
+    "78": {
+        "name": "ONE-NORTH",
+        "code": [
+            "CC23"
+        ]
+    },
+    "79": {
+        "name": "ORCHARD",
+        "code": [
+            "NS22"
+        ]
+    },
+    "80": {
+        "name": "OUTRAM PARK",
+        "code": [
+            "EW16",
+            "NE3"
+        ]
+    },
+    "81": {
+        "name": "PASIR PANJANG",
+        "code": [
+            "CC26"
+        ]
+    },
+    "82": {
+        "name": "PASIR RIS",
+        "code": [
+            "EW1"
+        ]
+    },
+    "83": {
+        "name": "PAYA LEBAR",
+        "code": [
+            "CC9",
+            "EW8"
+        ]
+    },
+    "84": {
+        "name": "PIONEER",
+        "code": [
+            "EW28"
+        ]
+    },
+    "85": {
+        "name": "POTONG PASIR",
+        "code": [
+            "NE10"
+        ]
+    },
+    "86": {
+        "name": "PROMENADE",
+        "code": [
+            "CC4",
+            "DT15"
+        ]
+    },
+    "87": {
+        "name": "PUNGGOL",
+        "code": [
+            "NE17"
+        ]
+    },
+    "88": {
+        "name": "QUEENSTOWN",
+        "code": [
+            "EW19"
+        ]
+    },
+    "89": {
+        "name": "RAFFLES PLACE",
+        "code": [
+            "EW14",
+            "NS26"
+        ]
+    },
+    "90": {
+        "name": "REDHILL",
+        "code": [
+            "EW18"
+        ]
+    },
+    "91": {
+        "name": "ROCHOR",
+        "code": [
+            "DT13"
+        ]
+    },
+    "92": {
+        "name": "SEMBAWANG",
+        "code": [
+            "NS11"
+        ]
+    },
+    "93": {
+        "name": "SENGKANG",
+        "code": [
+            "NE16"
+        ]
+    },
+    "94": {
+        "name": "SERANGOON",
+        "code": [
+            "CC13",
+            "NE12"
+        ]
+    },
+    "95": {
+        "name": "SIMEI",
+        "code": [
+            "EW3"
+        ]
+    },
+    "96": {
+        "name": "SIXTH AVENUE",
+        "code": [
+            "DT7"
+        ]
+    },
+    "97": {
+        "name": "SOMERSET",
+        "code": [
+            "NS23"
+        ]
+    },
+    "98": {
+        "name": "STADIUM",
+        "code": [
+            "CC6"
+        ]
+    },
+    "99": {
+        "name": "STEVENS",
+        "code": [
+            "DT10"
+        ]
+    },
+    "100": {
+        "name": "TAI SENG",
+        "code": [
+            "CC11"
+        ]
+    },
+    "101": {
+        "name": "TAMPINES",
+        "code": [
+            "DT32",
+            "EW2"
+        ]
+    },
+    "102": {
+        "name": "TAMPINES EAST",
+        "code": [
+            "DT33"
+        ]
+    },
+    "103": {
+        "name": "TAMPINES WEST",
+        "code": [
+            "DT31"
+        ]
+    },
+    "104": {
+        "name": "TAN KAH KEE",
+        "code": [
+            "DT8"
+        ]
+    },
+    "105": {
+        "name": "TANAH MERAH",
+        "code": [
+            "CG",
+            "EW4"
+        ]
+    },
+    "106": {
+        "name": "TANJONG PAGAR",
+        "code": [
+            "EW15"
+        ]
+    },
+    "107": {
+        "name": "TELOK AYER",
+        "code": [
+            "DT18"
+        ]
+    },
+    "108": {
+        "name": "TELOK BLANGAH",
+        "code": [
+            "CC28"
+        ]
+    },
+    "109": {
+        "name": "TIONG BAHRU",
+        "code": [
+            "EW17"
+        ]
+    },
+    "110": {
+        "name": "TOA PAYOH",
+        "code": [
+            "NS19"
+        ]
+    },
+    "111": {
+        "name": "TUAS CRESCENT",
+        "code": [
+            "EW31"
+        ]
+    },
+    "112": {
+        "name": "TUAS LINK",
+        "code": [
+            "EW33"
+        ]
+    },
+    "113": {
+        "name": "TUAS WEST ROAD",
+        "code": [
+            "EW32"
+        ]
+    },
+    "114": {
+        "name": "UBI",
+        "code": [
+            "DT27"
+        ]
+    },
+    "115": {
+        "name": "UPPER CHANGI",
+        "code": [
+            "DT34"
+        ]
+    },
+    "116": {
+        "name": "WOODLANDS",
+        "code": [
+            "NS9",
+            "TE2"
+        ]
+    },
+    "117": {
+        "name": "WOODLANDS NORTH",
+        "code": [
+            "TE1"
+        ]
+    },
+    "118": {
+        "name": "WOODLANDS SOUTH",
+        "code": [
+            "TE3"
+        ]
+    },
+    "119": {
+        "name": "WOODLEIGH",
+        "code": [
+            "NE11"
+        ]
+    },
+    "120": {
+        "name": "YEW TEE",
+        "code": [
+            "NS5"
+        ]
+    },
+    "121": {
+        "name": "YIO CHU KANG",
+        "code": [
+            "NS15"
+        ]
+    },
+    "122": {
+        "name": "YISHUN",
+        "code": [
+            "NS13"
+        ]
+    },
+    "123": {
+        "name": "SUNGEI BEDOK",
+        "code": [
+            "DT",
+            "TE"
+        ]
+    }
+}
 
 const ENBLOC = {
     '1': {val: 0, label: '<20%'},  
@@ -155,7 +880,7 @@ const SCHOOLS = {
     71: '7 GREEN PRIMARY SCHOOL', 72: 'CHANGKAT PRIMARY SCHOOL', 73: 'FENGSHAN PRIMARY SCHOOL', 74: "ST. GABRIEL'S PRIMARY SCHOOL", 
     75: '116 RING PRIMARY SCHOOL', 76: 'GREENWOOD PRIMARY SCHOOL', 77: '116 PRIMARY SCHOOL', 78: 'ELIAS PARK PRIMARY SCHOOL', 
     79: 'PARK VIEW PRIMARY SCHOOL', 80: 'MERIDIAN PRIMARY SCHOOL', 81: 'CATHOLIC HIGH SCHOOL', 82: 'CHIJ PRIMARY (110)', 
-    83: '72 CONVENT SCHOOL', 84: 'FIRST 110 PRIMARY SCHOOL', 85: 'AI TONG SCHOOL', 86: '3 PRIMARY SCHOOL', 
+    83: 'MARYMOUNT CONVENT SCHOOL', 84: 'FIRST 110 PRIMARY SCHOOL', 85: 'AI TONG SCHOOL', 86: 'ANG MO KIO PRIMARY SCHOOL', 
     87: 'GUANGYANG PRIMARY SCHOOL', 88: 'MAHA BODHI SCHOOL', 89: 'GREENRIDGE PRIMARY SCHOOL', 90: 'BEACON PRIMARY SCHOOL', 
     91: 'ZHENGHUA PRIMARY SCHOOL', 92: 'QIFA PRIMARY SCHOOL', 93: 'CASUARINA PRIMARY SCHOOL', 94: 'LOYANG PRIMARY SCHOOL', 
     95: 'CHIJ OUR LADY OF THE NATIVITY', 96: 'NAN HUA PRIMARY SCHOOL', 97: 'CHIJ OUR LADY OF GOOD COUNSEL', 

@@ -18,6 +18,13 @@
         background-color: rgba(black, 0.3);
     }
 
+    &.logout-lightbox {
+        top: 0;
+        height: 100%;
+        z-index: 3;
+        background-color: rgba(black, 0.7);
+    }
+
     .lightbox-container {
         position: absolute;
         top: 50%;
@@ -31,7 +38,6 @@
         @media (min-width: 420px) {
             height: 350px;
         }
-
         span.close-button {
             position: absolute;
             right: 5px;

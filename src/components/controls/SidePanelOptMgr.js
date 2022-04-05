@@ -6,19 +6,22 @@ class SidePanelOptMgr {
         /** @public */
         this.optionItems = {
             loginsignup: {
-                label: 'Log in / Register', hide: false, state: 3
+                label: 'Log in / Register', hide: false, state: 2
             },
             accountinfo: {
-                label: 'Account', hide: false, state: 8,
+                label: 'Account', hide: false, state: 4,
             },
             bookmark: {
-                label: 'Bookmarks', hide: false, enable: false, state: 4
+                label: 'Bookmarks', hide: false, enable: false, state: 5
             },
+            // scoresetting: {
+            //     label: 'Score Setting', hide: false, enable: true, state: 10,
+            // },
             filter: {
-                label: 'Filters', hide: false, enable: true, state: 5
+                label: 'Filters', hide: false, enable: true, state: 6
             },
             logout: {
-                label: 'Log out', hide: false, enable: false, state: 7
+                label: 'Log out', hide: false, enable: false, state: 9
             }
         }
     

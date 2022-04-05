@@ -37,7 +37,7 @@ const LightboxWrapper = props => {
 
   return (
     <div title={isHoverOnClose ? 'Click outside to close the panel.' : ''}
-      className={`lightbox-wrapper ${props.isOpen ? 'open' : ''} ${isHoverOnClose ? 'inclose' : ''}`}
+      className={`lightbox-wrapper ${props.isOpen ? 'open' : ''} ${isHoverOnClose ? 'inclose' : ''} ` + (props.className || '')}
       onClick={onWrapperClick} onMouseOver={onHoverOnCloseRegion}>
       <div className="lightbox-container">
         {props.hideCloseButton ? "" : <span className="close-button" onClick={onClose}></span>}

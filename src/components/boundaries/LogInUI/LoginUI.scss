@@ -2,46 +2,8 @@
     padding: 10px;
     background-color: #B9D0E6;
 
-    .register-ui-entry-button {
-        padding-left: 2px;
-        pointer-events: all;
-    }
-
     & > div {
         background-color: #FFFFFF;
 
-        .input-field {
-            font-size: 13px;
-            margin-bottom: 12px;
-
-            .sub-input-field {
-                margin-bottom: 5px;
-            }
-            span {
-                vertical-align: bottom;
-                padding-right: 5px;
-            }
-            input[type=text] {
-                display: inline-block;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                box-sizing: border-box;
-            }
-
-            p {
-                margin: 0;
-                line-height: 1;
-                font-size: 12px;
-                &.warning {color: red};
-                &.approve {color: green};
-            }
-        }
-    }
-
-    .register-content {
-        .register-via-google-button {
-            margin-bottom: 10px;
-        }
-        
     }
 }

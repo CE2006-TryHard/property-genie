@@ -28,18 +28,19 @@ class DatabaseMgr {
    * @param  {String} email
    * @param  {function} onFetchEnd
    */
-  initActiveUser(name, email, onFetchEnd) {
-    const newUser = new User(name, email)
+  initActiveUser(authUserInfo, onFetchEnd) {
+    const {name, email, emailVerified, isGoogleAuth} = authUserInfo
+    const newUser = new User(name, email, isGoogleAuth)
     const dbRef = ref(getDatabase())
     get(child(dbRef, `account/${newUser.id}`)).then(snapshot => {
       if (snapshot.exists()) {
-        const {recentSearches, bookmarks, isVerified, registerViaGoogle} = snapshot.val()
-        newUser.isVerified = isVerified
-        newUser.registerViaGoogle = registerViaGoogle || false
+        const {recentSearches, bookmarks} = snapshot.val()
+        newUser.isVerified = emailVerified
+        newUser.isGoogleAuth = isGoogleAuth
         newUser.recentSearches = recentSearches || []
         newUser.bookmarks = bookmarks || []
       } else {
-        console.log('no data available. Initialise user with name, email, and default value.')
+        console.log('no user data record')
       }
       onFetchEnd(newUser)
     })
@@ -56,11 +57,10 @@ class DatabaseMgr {
 
   /**
    * 
-   * @param {String} email 
+   * @param {String} id 
    * @param {function} onFetchEnd 
    */
-  getUserDataDB(email, onFetchEnd) {
-    const id = email.split('.')[0]
+  getUserDataDB(id, onFetchEnd) {
     const dbRef = ref(getDatabase())
     get(child(dbRef, `account/${id}`)).then(snapshot => {
       if (snapshot.exists()) {
@@ -158,13 +158,6 @@ class DatabaseMgr {
     update(ref(db), updates)
   }
 
-  // fetchFilterData (onFetchEnd) {
-  //   const db = getDatabase()
-  //   onValue(ref(db, `filterOptions`), snapshot => {
-  //     onFetchEnd(snapshot.val())
-  //   })
-  // }
-
   /**
    * fetch all properties data from local csv
    */
@@ -186,7 +179,9 @@ class DatabaseMgr {
             d['lng'] = parseFloat(d['lng'])
   
             const distToMrts = d['distToMrt'].split(',').map(distStr => parseFloat(distStr))
-            d['mrts'] = d['mrtID'].split(',').map((mID, i) => ({...STATIONS[mID], dist: distToMrts[i]}) )
+            d['mrts'] = d['mrtID'].split(',').map((mID, i) => {
+              return {...STATIONS[mID], dist: distToMrts[i]}
+            })
             d['avgMrtDist'] = Math.min(...distToMrts)
             
 

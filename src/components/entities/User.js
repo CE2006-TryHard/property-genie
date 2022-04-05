@@ -1,16 +1,19 @@
+
+
 /**
  * An entity class representing a User
  */
 class User {
-    constructor(name, email, registerViaGoogle) {
+    constructor(name, email, loginViaGoogle) {
         /** @public */
         this.email = email
         /** @public */
         this.name = name
         /** @public */
-        this.id = email.split('.')[0]
+        this.id = this.setUserIDByEmail(email, loginViaGoogle)
         /** @public */
-        this.registerViaGoogle = registerViaGoogle
+        // this.registerViaGoogle = registerViaGoogle
+        this.loginViaGoogle = loginViaGoogle
         /** @public */
         this.password = ''
         /** @public */
@@ -20,11 +23,9 @@ class User {
         /** @public */
         this.recentSearches = []
     }
-    /**
-     * @param {Boolean} val set if user is verified
-     */
-    setIsVerified(val) {
-        this.isVerified = this.registerViaGoogle || val
+
+    setUserIDByEmail(email, loginViaGoogle) {
+        return (loginViaGoogle ? 'google-' : '') + email.replace('.', '-')
     }
 }
 

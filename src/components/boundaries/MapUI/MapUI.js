@@ -31,6 +31,8 @@ export {gService}
 
 const markers = {}
 
+let InfoWindowEventRef = null
+
 /**
  * @namespace MapUI
  * @description boundary module
@@ -39,7 +41,7 @@ const markers = {}
  * @property {Property} curHoverP
  */
 const MapUI = props => {
-    const {filterOptions, curConstituency, locatedProperty, onRemoveLocatedProperty, triggerReset, onPropertySelect, onConstituencySelect} = props
+    const {filterOptions, curConstituency, curProperty, triggerReset, onPropertySelect, onConstituencySelect} = props
     const [overlayPos, setOverlayPos] = useState({left: 0, top: 0})
     const [curHoverC, setCurHoverC] = useState(null)
     const [curHoverP, setCurHoverP] = useState(null)
@@ -83,6 +85,16 @@ const MapUI = props => {
         return rgbToHex(r,g,b)
       }
 
+      const getInfoWindowContent = p => {
+        const score = p.getScore()
+        return `
+          <div class="info-window-content">
+            <b>${p.name}</b><br />
+            Score: <b style="color:${MARKER_COLOR_SCHEME[Math.floor(score * 10)]};">${(score * 100).toFixed(0)}%</b>
+          </div>
+        `
+      }
+
     /**
      * @memberof MapUI
      * @typedef {function} showMarkerFromConstituency update map display based on current selected constituency
@@ -97,24 +109,6 @@ const MapUI = props => {
         })
         return
       }
-  
-      if (!markers[c.name]) markers[c.name] = {}
-      c.properties.forEach(p => {
-        // initialise marker if had not done so
-        if (!markers[c.name][p.name]) {
-          markers[c.name][p.name] = new googleRef.maps.Marker({
-            icon: marker_image[99],
-            position: {lat: p.lat, lng: p.lng},
-            opacity: 0.6,
-            map: mapRef,
-            editable: false
-          })
-  
-          googleRef.maps.event.addListener(markers[c.name][p.name], 'click', () => onPropertySelect(p))
-          googleRef.maps.event.addListener(markers[c.name][p.name], 'mouseover', () => setCurHoverP(p))
-          googleRef.maps.event.addListener(markers[c.name][p.name], 'mouseout', () => setCurHoverP(null))
-        }
-      })
 
       Object.keys(markers).forEach(cName => {
         Object.keys(markers[cName]).forEach(pName => {
@@ -122,30 +116,24 @@ const MapUI = props => {
           if (cName === c.name) {
             markers[cName][pName].setZIndex(0)
             markers[cName][pName].setOpacity(MARKER_OPACITY_0)
-            // markers[cName][pName].setIcon(marker_image[99])
-            // const val = Math.floor(dbMgr.getPrp.getPropertyValue(filterOptions) * 10)
-            // markers[cName][pName].setIcon(marker_image[val])
           }
         })
       })
 
       c.getProperties().forEach(p => {
-        // const val = Math.floor(p.getPropertyValue(filterOptions) * 10)
         const val = Math.floor(p.getScore() * 10)
         markers[c.name][p.name].setIcon(marker_image[val])
         markers[c.name][p.name].setVisible(true)
       })
 
-      if (locatedProperty) {
-        markers[locatedProperty.constituency.name][locatedProperty.name].setZIndex(1)
-        markers[locatedProperty.constituency.name][locatedProperty.name].setOpacity(1)
+      if (curProperty) {
+        markers[curProperty.constituency.name][curProperty.name].setZIndex(1)
+        markers[curProperty.constituency.name][curProperty.name].setOpacity(1)
       } else {
         c.getFilteredProperties(filterOptions).forEach(p => {
-          // const val = Math.floor(p.getPropertyValue(filterOptions) * 10)
           const val = Math.floor(p.getScore() * 10)
           markers[c.name][p.name].setOpacity(MARKER_OPACITY_1)
           markers[c.name][p.name].setZIndex(1)
-          // markers[c.name][p.name].setIcon(marker_image[val])
         })
       } 
       
@@ -211,6 +199,7 @@ const MapUI = props => {
         }, {})
         
         googleRef = google
+        // initialize map
         mapRef = new google.maps.Map(document.querySelector(".map-content"), {
           center: MAP_CENTER,
           zoom: MAP_ZOOM,
@@ -223,17 +212,16 @@ const MapUI = props => {
           disableDoubleClickZoom: true,
           styles: MAP_STYLES
         })
-
         console.log('google map api loaded')
 
+        // initialize info window
         markerInfoWindow = new google.maps.InfoWindow({content: 'dummy'})
-        googleRef.maps.event.addListener(markerInfoWindow, 'closeclick', () => {
-          onRemoveLocatedProperty()
-        })
+        googleRef.maps.event.addListener(markerInfoWindow, 'closeclick', () => onPropertySelect(null))
+
+        // initialize place service
         gService = new google.maps.places.PlacesService(mapRef)
 
         mapRef.data.loadGeoJson('data/constituencies.geojson')
-        
         
         mapRef.data.setStyle(feature => {
           return {
@@ -259,6 +247,27 @@ const MapUI = props => {
         mapRef.data.addListener('click', e => {
           const c = constituencies[e.feature.getProperty('Name')]
           onConstituencySelect(c)
+        })
+
+        // initialize marker
+        Object.keys(constituencies).forEach(cName => {
+          if (!markers[cName]) markers[cName] = {}
+          constituencies[cName].properties.forEach(p => {
+            if (!markers[cName][p.name]) {
+              markers[cName][p.name] = new googleRef.maps.Marker({
+                icon: marker_image[99],
+                position: {lat: p.lat, lng: p.lng},
+                opacity: 0.6,
+                map: mapRef,
+                editable: false
+              })
+              markers[cName][p.name].setVisible(false)
+
+              googleRef.maps.event.addListener(markers[cName][p.name], 'click', () => onPropertySelect(p))
+              googleRef.maps.event.addListener(markers[cName][p.name], 'mouseover', () => setCurHoverP(p))
+              googleRef.maps.event.addListener(markers[cName][p.name], 'mouseout', () => setCurHoverP(null))
+            }
+          })
         })
 
         registerPolygonMouseOverEvent()
@@ -292,7 +301,8 @@ const MapUI = props => {
           zIndex: isTargetConstituency ? 1 : 0
         }
       })
-      console.log('filter option changed')
+      if (curProperty) markerInfoWindow.setContent(getInfoWindowContent(curProperty))
+      // console.log('filter option changed')
     }, [curConstituency, filterOptions])
 
     /**
@@ -307,33 +317,30 @@ const MapUI = props => {
 
     /**
      * @memberof MapUI
-     * @typedef {function} useEffect4 update map display when current located property changed
+     * @typedef {function} useEffect4 update map display when current selected property is changed
      * @param {function} callback
-     * @param {Array} watchList [locatedProperty]
+     * @param {Array} watchList [curProperty]
      */
     useEffect(() => {
-      if (locatedProperty) {
-        if (curConstituency) {
-          curConstituency.getProperties().forEach(p => {
-            markers[curConstituency.name][p.name].setOpacity(MARKER_OPACITY_0)
-            markers[curConstituency.name][p.name].setZIndex(0)
+      if (curProperty) {
+          curProperty.constituency.getProperties().forEach(p => {
+            markers[curProperty.constituency.name][p.name].setOpacity(MARKER_OPACITY_0)
+            markers[curProperty.constituency.name][p.name].setZIndex(0)
           })
   
-          const {lat, lng} = locatedProperty
+          const {lat, lng} = curProperty
           mapRef.setCenter({lat: lat, lng: lng})
-          markerInfoWindow.open(mapRef, markers[curConstituency.name][locatedProperty.name])
-          markerInfoWindow.setContent(locatedProperty.name)
-
-          markers[curConstituency.name][locatedProperty.name].setOpacity(1)
-          markers[curConstituency.name][locatedProperty.name].setZIndex(1)
-        }
+          markerInfoWindow.open(mapRef, markers[curProperty.constituency.name][curProperty.name])
+          markerInfoWindow.setContent(getInfoWindowContent(curProperty))
+          
+          mapRef.setZoom(14)
+          markers[curProperty.constituency.name][curProperty.name].setOpacity(1)
+          markers[curProperty.constituency.name][curProperty.name].setZIndex(1)
       } else {
         if (markerInfoWindow) markerInfoWindow.close()
-        
         if (curConstituency) showMarkerFromConstituency(curConstituency)
-        
       }
-    }, [locatedProperty])
+    }, [curProperty])
     
     /**
      * @memberof MapUI
@@ -346,36 +353,27 @@ const MapUI = props => {
         setMapZoom(null, mapRef)
     }, [triggerReset])
 
-    // /**
-    //  * @memberof MapUI
-    //  * @typedef {function} useEffect7 update map display when hover on a marker
-    //  * @param {function} callback
-    //  * @param {Array} watchList [curHoverP]
-    //  */
-    // useEffect(() => {
-    //   if (!curConstituency) return
+    /**
+     * @memberof MapUI
+     * @typedef {function} useEffect6 update map display when hover on a marker
+     * @param {function} callback
+     * @param {Array} watchList [curHoverP]
+     */
+    useEffect(() => {
+      if (!curProperty) return
 
-    //   curConstituency.getProperties().forEach(p => {
-    //     markers[curConstituency.name][p.name].setZIndex(0)
-    //   })
-
-    //   if (curHoverP) {
-    //     markers[curConstituency.name][curHoverP.name].setOpacity(1)
-    //     markers[curConstituency.name][curHoverP.name].setZIndex(1)
-    //   } else {
-    //     curConstituency.getProperties().forEach(p => {
-    //       markers[curConstituency.name][p.name].setOpacity(MARKER_OPACITY_0)
-    //     })  
-    //     curConstituency.getFilteredProperties(filterOptions).forEach(p => {
-    //       markers[curConstituency.name][p.name].setOpacity(MARKER_OPACITY_1)
-    //       markers[curConstituency.name][p.name].setZIndex(1)
-    //     })
-    //   }
-    // }, [curHoverP])
+      if (curHoverP) {
+          markers[curConstituency.name][curHoverP.name].setOpacity(1)
+          markers[curConstituency.name][curHoverP.name].setZIndex(1)
+        // }
+      } else {
+        showMarkerFromConstituency(curConstituency)
+      }
+    }, [curHoverP])
 
     /**
      * @memberof MapUI
-     * @typedef {function} useEffect6 update map display when hover on a constituency polygon
+     * @typedef {function} useEffect7 update map display when hover on a constituency polygon
      * @param {function} callback
      * @param {Array} watchList [curHoverC]
      */
@@ -401,7 +399,11 @@ const MapUI = props => {
     const curHoverCCopy = curHoverC && curHoverC !== curConstituency && curHoverC
     return (
       <div className="map-container">
-        {(curHoverP || curHoverCCopy) ?
+        {curProperty ? <div className="marker-info-bubble">
+          <b>{curProperty.name}</b>
+          Score: <b style={{color: MARKER_COLOR_SCHEME[Math.floor(curProperty.getScore()) * 10]}}>{(curProperty.getScore()).toFixed(0)}%</b>
+        </div> : ''}
+        {((curHoverP && curHoverP !== curProperty) || curHoverCCopy) ?
         <div className="info-bubble" style={overlayPos}>
           {curHoverP ?
           <div className="hover-property-text">

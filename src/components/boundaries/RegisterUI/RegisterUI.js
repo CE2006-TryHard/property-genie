@@ -1,5 +1,7 @@
 import {useState } from "react"
 import { userAuthMgr } from "../../controls/Mgr"
+import {GoogleSignInButton} from './../MiscUI'
+import './RegisterUI.scss'
 
 /**
  * @namespace RegisterUI
@@ -23,8 +25,7 @@ const RegisterUI = props => {
     const [pwWarningMsg, setPWWarningMsg] = useState('')
     const [nameWarningMsg, setNameWarningMsg] = useState('')
 
-    const {checkIsEmptyString, checkIsValidEmailFormat, validateAccountAvailability} = userAuthMgr
-
+    const {checkIsEmptyString, checkIsValidEmailFormat, sendRegisterEmail, googleSignIn} = userAuthMgr
     /**
      * @memberof RegisterUI
      * @typedef {function} verifyEmail
@@ -44,8 +45,11 @@ const RegisterUI = props => {
      * @return {Boolean}
      */
     const verifyPW = () => {
+        console.log('verify passwork')
         if (pw !== confirmPW) setPWWarningMsg('Passwords do not match! Please reenter password.')
-        else if (pw === '' || confirmPW === '') setPWWarningMsg('Please enter your password!')
+        else if (pw === '' || confirmPW === '') {
+            console.log('empty ps')
+            setPWWarningMsg('Please enter your password!')}
 
         return (pw === confirmPW && pw !== '')
     }
@@ -65,42 +69,59 @@ const RegisterUI = props => {
 
     /**
      * @memberof RegisterUI
-     * @typedef {function} onRegisterManual
+     * @typedef {function} onVerifyManualRegister
      */
-    const onRegisterManual = () => {
+    const onVerifyManualRegister = () => {
         if (verifyEmail()) {
+            
             setEmailWarningMsg('')
-            validateAccountAvailability(email, userExist => {
-                if (userExist) {
-                    setEmailWarningMsg('Email already exists! Please enter a different email.')
-                    return
-                }
+            // validateAccountAvailability(email, userExist => {
+                // if (userExist) {
+                //     setEmailWarningMsg('Email already exists! Please enter a different email.')
+                //     return
+                // }
 
-                if (verifyPW() && verifyName()) {
-                    props.onRegisterManual({
-                        name: firstName + ' ' + lastName,
-                        email: email,
-                        password: pw
-                    })
-                } else {
-                    verifyPW()
-                    verifyName()
-                }
-            })
+            if (verifyName() && verifyPW()) {
+                // onRegisterManual({
+                //     name: firstName + ' ' + lastName,
+                //     email: email,
+                //     password: pw
+                // })
+                sendRegisterEmail({email, password: pw}, (sent, err) => {
+                    if (sent) {
+                        console.log('sign up link successfully sent')
+                    } else {
+                        console.log(err)
+                        switch (err.code) {
+                            case 'auth/email-already-in-use':
+                                console.log('account exist!')
+                                break;
+                            case 'auth/weak-password':
+                                console.log('Please set a password at least 6 characters long!.')
+                                break
+                        }
+                        
+                    }
+                })
+            } else {
+                verifyName()
+                verifyPW()
+            }
+            // })
         } else {
-            verifyPW()
             verifyName()
+            verifyPW()
         }
         
     }
 
-    /**
-     * @memberof RegisterUI
-     * @typedef {function} onRegisterGoogle
-     */
-    const onRegisterGoogle = () => {
-        props.onRegisterGoogle()
-    }
+    // /**
+    //  * @memberof RegisterUI
+    //  * @typedef {function} onRegisterGoogle
+    //  */
+    // const onRegisterGoogle = () => {
+    //     props.onRegisterGoogle()
+    // }
 
     /**
      * @memberof RegisterUI
@@ -152,13 +173,12 @@ const RegisterUI = props => {
         setPWWarningMsg('')
     }
 
-    return (<div className="register-content">
-            <button className="register-via-google-button" onClick={onRegisterGoogle}>Register via Google</button>
+    return (<div className="register-container">
+        <GoogleSignInButton onClick={googleSignIn} label="Sign Up with Google"></GoogleSignInButton>
             <div>Or</div>
             <div className="input-field input-email">
                 <span>Email: </span><input type="text" value={email} onChange={onEmailChange}/>
                 <p className="warning">{emailWarningMsg}</p>
-                {!checkIsEmptyString(email) && checkIsValidEmailFormat(email) ? <p className="approve">Email format is valid.</p> : ''}
             </div>
             <div className="input-field input-name">
                 <div className="sub-input-field">
@@ -178,7 +198,7 @@ const RegisterUI = props => {
                 </div>
                 <p className="warning">{pwWarningMsg}</p>
             </div>
-            <button onClick={onRegisterManual}>Register</button>
+            <button onClick={onVerifyManualRegister}>Register</button>
             <button onClick={props.onBack}>Back</button>
         </div>)
 }

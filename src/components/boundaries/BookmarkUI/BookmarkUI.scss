@@ -4,7 +4,7 @@
     left: 0;
     width: 100%;
     height: calc(100% - 50px);
-    background-color: #B9D0E6;
+    // background-color: #B9D0E6;
     // overflow-y: auto;
 
     .remove-all-bookmark-button {
@@ -12,11 +12,10 @@
         padding: 10px 10px 15px;
         box-sizing: border-box;
         width: calc(100% - 17px);
-        // width: 100%;
-        top: 50px;
+        top: 0;
         left: 0;
         z-index: 1;
-        background: linear-gradient(to bottom, rgba(#B9D0E6, 1) 70%, rgba(#B9D0E6, 0) 100%);
+        background: linear-gradient(to bottom, rgba(lightblue, 1) 70%, rgba(#B9D0E6, 0) 100%);
 
         span {
 
@@ -24,7 +23,7 @@
     }
 
     .bookmark-content {
-        padding: 50px 0 80px;
+        padding: 40px 0 80px;
         .bookmark-item {
             position: relative;
             padding: 10px;
