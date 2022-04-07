@@ -6,7 +6,7 @@ class SidePanelOptMgr {
         /** @public */
         this.optionItems = {
             loginsignup: {
-                label: 'Log in / Register', hide: false, state: 2
+                label: 'Sign In / Sign Up', hide: false, state: 2
             },
             accountinfo: {
                 label: 'Account', hide: false, state: 4,

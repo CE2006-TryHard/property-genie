@@ -34,30 +34,33 @@
         }
     
         .info-panel-detail-container {
-          position: relative;
+            position: relative;
             background-color: #3C73A8;
             border-top: 10px solid #3C73A8;
 
             .info-panel-detail-content {
-              padding: 0 10px 10px;
-              margin: 0 10px 10px;
+              padding: 20px;
               box-sizing: border-box;
+              margin: 0 10px 10px;
+              
               min-height: calc(100% - 10px);
               background-color: #B9D0E6;
               border-radius: 10px;
 
               &.general {
-                
                 @media (min-width: 420px) {
                   display: flex;
+                  padding: 20px;
                 }
                 
                 .profile-image-container {
                   position: relative;
-                  padding: 10px 5px 10px 0;
+                  padding-bottom: 10px;
+                  box-sizing: border-box;
                   
                   @media (min-width: 420px) {
                     max-width: 250px;
+                    padding-right: 20px;
                   }
                   h3 {
                     margin: 0;
@@ -72,7 +75,7 @@
                       margin: 0;
                       font-size: 11px;
                       line-height: 1.2;
-                      padding-bottom: 10px;
+                      padding-bottom: 15px;
                     }
                   }
 
@@ -86,7 +89,7 @@
                       font-size: 18px;
                       color: #FFFFFF;
                       line-height: 1;
-                      padding: 8px 15px;
+                      padding: 10px 15px;
                       transition: background-color 0.3s;
 
                       &:hover {
@@ -139,7 +142,7 @@
                 }
 
                 .right {
-                  padding: 10px 0 10px 10px;
+                  // padding: 0 0 10px 10px;
                   
                   & > * {
                     margin: 0;
@@ -213,9 +216,20 @@
               }
   
               &.value {
-                padding: 20px 10px 10px;
+                padding: 20px;
                 box-sizing: border-box;
+                
                 .score-summary-container {
+
+                  span.score-remark,
+                  span.enbloc-remark {
+                    line-height: 1;
+                    color: grey;
+                    font-size: 12px;
+                    white-space: normal;
+                    display: inline-block;
+                    margin-bottom: 5px;
+                  }
 
                   p.score-header {
                     margin: 0;
@@ -232,7 +246,12 @@
 
                   ul {
                     padding-left: 20px;
+                    padding: 0 0 10px 20px;
+                    margin: 0;
                     li.score-item {
+                      & > * {
+                        vertical-align: text-top;
+                      }
                       // width: 70%;
                       margin: 0;
                       white-space: nowrap;

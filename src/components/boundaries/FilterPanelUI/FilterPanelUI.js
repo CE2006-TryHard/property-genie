@@ -1,5 +1,5 @@
 import "./FilterPanelUI.scss"
-import { CheckBox, Slider } from "../MiscUI"
+import { CheckBox, Slider } from "../MiscUI/MiscUI"
 
 /**
  * @namespace FilterPanelUI
@@ -20,6 +20,10 @@ const FilterPanelUI = props => {
         if (!value) {
             newfilterOptions[key].threshold = filterOptionFormat.filter(fo => fo.key === key)[0].max
         }
+
+        if (Object.keys(newfilterOptions).filter(filterKey => filterKey !== 'score' && newfilterOptions[filterKey].checked).length === 0) {
+            newfilterOptions['score'].threshold = 0
+        }
         onFilterChange(newfilterOptions)
     }
 
@@ -29,7 +33,7 @@ const FilterPanelUI = props => {
      * @param {Number} value filter option "threshold" value 
      */
     const onSubmitSliderChange = (key, value) => {
-        console.log('after change val', value)
+        // console.log('after change val', value)
         let newFilterOptions = JSON.parse(JSON.stringify(filterOptions))
         newFilterOptions[key].threshold = value
         onFilterChange(newFilterOptions)
@@ -101,22 +105,31 @@ const FilterPanelUI = props => {
         }
     ]
 
+    
+
     const filterOptionCopy = Object.keys(filterOptions)
         .filter(filterKey => filterKey !== 'score')
         .reduce((acc, filterKey) => {
             acc[filterKey] = filterOptions[filterKey]
         return acc
     }, {})
+
+    const enableSlider = key => {
+        if (key === 'score') {
+            return Object.keys(filterOptionCopy).filter(filterKey => filterOptions[filterKey].checked).length > 0
+        }
+        return filterOptionCopy[key].checked
+    }
     return (
     <div className="filter-panel-container">
         <div className="value-section">
-            <h5 className="noselect">Calculates property score by:</h5>
+            <h5 className="noselect">Calculates property's score by:</h5>
             <CheckBox options={filterOptionCopy} onChange={onCheckboxChange}></CheckBox>
         </div>
         <div className="filter-section">
             <h5 className="noselect">Futher customize the properties you want to see</h5>
             {filterOptionFormat.map(({key,label, min, max, step, autoLabel, unit, preUnit, tickLabels}) => (
-                <Slider enabled={key === 'score' || filterOptionCopy[key].checked} key={key} title={label} min={min} max={max} step={step}
+                <Slider enabled={enableSlider(key)} key={key} title={label} min={min} max={max} step={step}
                 tickLabels={tickLabels}
                 initialVal={filterOptions[key].threshold}
                 autoLabel={autoLabel}

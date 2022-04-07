@@ -17,11 +17,10 @@ const AuthProvider = ({children}) => {
                 const {emailVerified} = user
                 const isGoogleAuth = providerId === 'google.com'
                 userAuthMgr.setAuthUserInfo(user)
-                console.log('check from firebase', user)
                 setAuthUserInfo({name, email, emailVerified: emailVerified || isGoogleAuth, isGoogleAuth})
-                
+                console.log('auth change valid user')
             } else {
-                console.log('no active user')
+                console.log('no active user on auth change')
             }
             setIsInitialized(true)
             

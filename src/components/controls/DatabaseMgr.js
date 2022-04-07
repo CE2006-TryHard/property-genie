@@ -2,7 +2,6 @@ import { initializeApp } from "firebase/app"
 import { getAnalytics } from "firebase/analytics"
 import {getDatabase, ref, child, update, get} from 'firebase/database'
 import Papa from 'papaparse'
-// import Constituency from '../entities/Constituency'
 import {Constituency, Property, User} from '../entities/index'
 import {STATIONS, SCHOOLS, CONSTITUENCY_NAME} from '../CONFIG'
 
@@ -24,19 +23,18 @@ class DatabaseMgr {
     
   }
   /**
-   * @param  {String} name
-   * @param  {String} email
+   * @param  {String} authUserInfo
    * @param  {function} onFetchEnd
    */
   initActiveUser(authUserInfo, onFetchEnd) {
     const {name, email, emailVerified, isGoogleAuth} = authUserInfo
     const newUser = new User(name, email, isGoogleAuth)
+    newUser.isVerified = emailVerified
     const dbRef = ref(getDatabase())
     get(child(dbRef, `account/${newUser.id}`)).then(snapshot => {
       if (snapshot.exists()) {
-        const {recentSearches, bookmarks} = snapshot.val()
-        newUser.isVerified = emailVerified
-        newUser.isGoogleAuth = isGoogleAuth
+        const {recentSearches, bookmarks, name: dbName} = snapshot.val()
+        newUser.name = name || dbName
         newUser.recentSearches = recentSearches || []
         newUser.bookmarks = bookmarks || []
       } else {
@@ -121,24 +119,8 @@ class DatabaseMgr {
     // Initialize Firebase
     const app = initializeApp(firebaseConfig)
     getAnalytics(app)
-    // const analytics = getAnalytics(app)
-
-    // test fetch data
-    // this.fetchUserData(userData => {
-    //   console.log('userData', userData)
-    // })
-
-    // test update data
-    // this.updateUserDataDB('recent', 'house')
   }
-
-  // fetchAllUserData(userId, onFetchEnd) {
-  //   const db = getDatabase()
-  //   onValue(ref(db, `account/${userId}`), snapshot => {
-  //     onFetchEnd(snapshot.val())
-  //   })
-  // }
-
+  
   /**
    * 
    * @param {User} user 
@@ -148,7 +130,7 @@ class DatabaseMgr {
    */
   updateUserDataDB(user, key, value) {
     if (!user) {
-      console.log("no active user")
+      console.log("no active user to update db")
       return
     }
     const updates = {}
@@ -166,6 +148,8 @@ class DatabaseMgr {
       onFetchEnd(this.properties, this.constituencies)
       return
     }
+
+    console.log('first fetch property data')
 
     fetch('data/data-all.csv')
       .then(res => res.text())

@@ -57,7 +57,6 @@ class Constituency {
         const {score: {threshold: scoreT}, enbloc: {threshold: enblocT}, distToMrt: {threshold: mrtT}, distToSchool: {threshold: schoolT}} = filterOpts
         return this.properties.filter(p => {
             const {valueProps: {enbloc}, avgMrtDist, avgSchoolDist} = p
-            // return p.getPropertyValue(filterOpts)*100 >= scoreT &&
             return p.getScore()*100 >= scoreT &&
                     enbloc <= enblocT &&
                     avgMrtDist <= mrtT &&

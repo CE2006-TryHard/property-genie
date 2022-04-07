@@ -8,7 +8,7 @@ import './AccountUI.scss'
  * @property {Boolean} showRequestCompleteMsg value to toggle the display of request complete message.
  */
 const AccountUI = props => {
-    const {user: {name, email, loginViaGoogle, isVerified}} = props
+    const {user: {name, email, isGoogleAuth, isVerified}} = props
     const [showRequestCompleteMsg, setShowRequestCompleteMsg] = useState(false)
     const [emailVerifyMsg, setEmailVerifyMsg] = useState('Email must be verified in order to access password reset feature.')
 
@@ -33,21 +33,19 @@ const AccountUI = props => {
     }
 
     return (<div className="account-ui-container">
-        <h3>User info</h3>
-        <p>Registered via {loginViaGoogle ? 'Google Account' : 'Email'}</p>
+        <h3>Account {isVerified ? <span className="verified">verified</span> : <span className="notVerified">not verified</span>}</h3>
         {name ? <p><b>Name:</b> {name}</p> : ''}
         <p className="email"><b>Email:</b> {email}</p>
+        <p className="register-via">Registered via <b>{isGoogleAuth ? 'Google Account' : 'Email'}</b></p>
         <div className="account-verify-info">
-            {isVerified ?
-                <b className="verified">Verified</b> :
-                <div>
-                    <b className="notVerified">Not Verified</b><span onClick={onVerifyEmail} className="text-button verify-email-button">Verify Email</span>
-                    <p className="account-verify-info-warning">{emailVerifyMsg}</p>
-                    
-                </div>}
+            {isVerified ? '' :
+            <div>
+                <span onClick={onVerifyEmail} className="text-button verify-email-button">Verify Email</span>
+                <p className="account-verify-info-warning">{emailVerifyMsg}</p>
+            </div>}
         </div>
         
-        {loginViaGoogle || showRequestCompleteMsg ? '' : <div title={isVerified ? '' : 'Verify email to reset password'} className={`update-password-button ${isVerified ? 'enabled' : ''}`} onClick={isVerified ? onRequestPWChange : null}>Reset password</div>}
+        {isGoogleAuth || showRequestCompleteMsg ? '' : <div title={isVerified ? '' : 'Verify email to reset password'} className={`update-password-button ${isVerified ? 'enabled' : ''}`} onClick={isVerified ? onRequestPWChange : null}>Reset password</div>}
 
         {showRequestCompleteMsg ? <p className="reset-password-msg">{`Request submitted. A password reset link will be sent to ${email}.`}</p> : ''}
     </div>)

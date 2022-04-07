@@ -1,5 +1,6 @@
 .account-ui-container {
-    padding: 10px;
+    padding: 20px;
+    box-sizing: border-box;
 
     h3, p {
         margin: 0;
@@ -8,16 +9,24 @@
     h3 {
         font-size: 20px;
         line-height: 1.1;
-        padding-bottom: 10px;
+        padding-bottom: 20px;
+
+        span.verified {
+            color: green;
+        }
+
+        span.notVerified {
+            color: red;
+        }
     }
 
     p {
         font-size: 17px;
         line-height: 1.1;
-        padding-bottom: 15px;
+        padding-bottom: 10px;
 
-        &.email {
-            padding-bottom: 2px;
+        &.register-via {
+            padding-top: 20px;
         }
     }
 
@@ -31,17 +40,7 @@
     .account-verify-info {
         padding-bottom: 15px;
 
-        b.verified {
-            color: greenyellow;
-        }
-
-        b.notVerified {
-            color: red;
-            padding-bottom: 5px;
-        }
-
         .verify-email-button {
-            padding-left: 5px;
             font-size: 16px;
             line-height: 1.1;
         }

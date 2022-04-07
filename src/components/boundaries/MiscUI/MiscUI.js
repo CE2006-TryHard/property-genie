@@ -1,7 +1,8 @@
-import {ReactComponent as HomeLogo} from './../../images/home.svg'
-import {ReactComponent as SgLogo} from './../../images/sg.svg'
+import {ReactComponent as HomeLogo} from './../../../images/home.svg'
+import {ReactComponent as SgLogo} from './../../../images/sg.svg'
 import {Scrollbars} from 'react-custom-scrollbars-2'
-import { useEffect, useState } from 'react'
+import './MiscUI.scss'
+import {useState } from 'react'
 
 /**
  * Functional Component displays greet user message after user logged in.
@@ -11,7 +12,7 @@ const GreetUserMsg = props => {
   if (props.activeUser) {
     return (
       <div className={`user-greet-msg ${props.alwaysShow ? 'show' : ''}`}>
-        Welcome,<br/> {props.activeUser.name || props.activeUser.email}
+        Welcome, {props.activeUser.name || props.activeUser.email}
       </div>
     )
   }

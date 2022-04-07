@@ -1,7 +1,7 @@
 import './styles/App.scss'
 
 import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, RegisterUI, MapUI, SearchBarUI, AccountUI} from './components/boundaries/index'
-import { GreetUserMsg, HomeLogo, SidePanelWrapper } from './components/boundaries/MiscUI'
+import { GreetUserMsg, HomeLogo, SidePanelWrapper } from './components/boundaries/MiscUI/MiscUI'
 import {dbMgr, sidePanelOptMgr, userAuthMgr} from './components/controls/Mgr'
 
 import { useFirebaseAuth } from './components/controls/FirebaseAuth'
@@ -27,7 +27,6 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  * @property {Boolean} isRegistering value records user registration activity
  * @property {integer} pageState state of the current page.
  * @property {Boolean} showLightBox value to show the lightbox
- * @property {Property[]} properties list of all properties
  * @property {SearchItem} curSearch current search item
  * @property {Property} selectedProperty selected property
  * @property {Constituency} selectedConstituency selected constituency
@@ -40,11 +39,13 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  * @property {Boolean} mapTriggerReset value to trigger a map display
  * @returns {FunctionalComponent}
  */
+
+let initCount = false
+
  function App() {
   const {authUserInfo, isInitialized} = useFirebaseAuth()
   const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
-  const [properties, setProperties] = useState([])
   const [curSearch, setCurSearch] = useState(null)
   const [selectedProperty, setSelectedProperty] = useState(null)
   const [selectedConstituency, setSelectedConstituency] = useState(null)
@@ -72,18 +73,21 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  * @param {Array} watchList [authUser]
  */
   useEffect(() => {
-    if (authUserInfo) {
-      dbMgr.initActiveUser(authUserInfo, activeUser => {
-        setActiveUser(activeUser)
-      })
-    } else if (isInitialized) {
-      console.log('check no usr')
-      // no active user session storage found
-      dbMgr.fetchPropertyData(filterOptions, (properties, constituencies) => {
-        setProperties(properties)
-        setActiveUserDataReady(true)
-      })
+    if (isInitialized) {
+      if (authUserInfo) {
+        console.log('valid auth user info')
+        dbMgr.initActiveUser(authUserInfo, activeUser => {
+          setActiveUser(activeUser)
+        })
+      } else {
+        if (!initCount) return
+        console.log('no logged in user')
+        dbMgr.fetchPropertyData(filterOptions, (properties, constituencies) => {
+          setActiveUserDataReady(true)
+        })
+      }
     }
+    initCount = true
   }, [authUserInfo, isInitialized])
 
 /**
@@ -98,8 +102,7 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
       setSubSidePanelIn(false)
 
       dbMgr.fetchPropertyData(filterOptions, (pps, ccs) => {
-        setProperties(pps)
-        // update recent search
+      // update recent search
       let tempSearches = activeUser.recentSearches
         .map(({type, id}) => {
           const searchObj = type === 'c' ? ccs[CONSTITUENCY_NAME[id].name] : pps.filter(p => p.id === id)[0]
@@ -267,13 +270,16 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
  * @typedef {function} onLogOut called when user clicks on log out button.
  */
   const onLogOut = () => {
-    setTimeout(() => {
-      userAuthMgr.generalSignOut()
-      setActiveUser(null)
-      localStorage.removeItem('activeUser')
-      setSidePanelIn(false)
-      setPageState(0)
-    }, 1000)
+    userAuthMgr.generalSignOut((success, err) => {
+      if (success) {
+        setTimeout(() => { // add a deplay during sign out
+          setActiveUser(null)
+          setSidePanelIn(false)
+          setPageState(0)
+          // localStorage.removeItem('activeUser')
+        }, 1000)
+      }
+    })
     
   }
 
@@ -301,18 +307,18 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
     setMapTriggerReset(!mapTriggerReset)
   }
 
-// /**
-//  * @memberof App
-//  * @typedef {FunctionalComponent} SidePanelSubContent a functional component rendering lightbox content based on current page state.
-//  */
+/**
+ * @memberof App
+ * @typedef {FunctionalComponent} SidePanelSubContent a functional component rendering lightbox content based on current page state.
+ */
   const SidePanelSubContent = () => {
     switch (sidePanelContent) {
       case 2:
         return (
           <LoginUI 
             activeUser={activeUser}>
-              <div className="google-login-container">
-                {"Does not have an account?"}<span className="register-ui-entry-button text-button" onClick={() => setSidePanelContent(3)}>Register</span>
+              <div className="register-info-container">
+                {"Does not have an account?"} <span className="register-ui-entry-button text-button" onClick={() => setSidePanelContent(3)}>Sign up</span>
               </div>
             </LoginUI>
             )
@@ -343,20 +349,18 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
 
   return (<div className="property-web-app">
       <MapUI
-        properties={properties}
+        filterOptions={filterOptions}
         curConstituency={selectedConstituency}
         curProperty={selectedProperty}
-        filterOptions={filterOptions}
         onPropertySelect={onPropertySelect}
         onConstituencySelect={onConstituencySelectMap}
         triggerReset={mapTriggerReset}></MapUI>
       <div className="navbar-container">
         <HomeLogo title="home" className="web-app-logo" fill='#FFFFFF' opacity={0.5} onClick={onResetView}></HomeLogo>
         <SearchBarUI
-          onSearchChange={onSearchChange}
           selectedSearch={curSearch}
           recentSearches={recentSearches}
-          properties={properties}
+          onSearchChange={onSearchChange}
           ></SearchBarUI>
         <GreetUserMsg alwaysShow={sidePanelIn} activeUser={activeUser}></GreetUserMsg>
         <SidePanelWrapper
@@ -376,10 +380,10 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
       {showLightBox && selectedProperty ? 
         <LightBoxWrapper isOpen={true} onClose={() => setSelectedProperty(null)}>
           <InfoPanelUI
-            filterOptions={filterOptions}
-            property={selectedProperty}
-            enableBookmark={!!activeUser}
             isBookmarked={bookmarks.filter(b => b === selectedProperty).length > 0}
+            enableBookmark={!!activeUser}
+            filterOptions={filterOptions}
+            selectedProperty={selectedProperty}
             onBookmark={onBookmark}
             onLocateProperty={() => setShowLightbox(false)}></InfoPanelUI>
         </LightBoxWrapper>

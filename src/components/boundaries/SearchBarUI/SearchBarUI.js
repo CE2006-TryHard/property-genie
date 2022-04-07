@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Select, { components } from 'react-select'
 import {SearchItem} from '../../entities/index'
 import { dbMgr } from '../../controls/Mgr'
-import { HomeLogo, SgLogo } from '../MiscUI'
+import { HomeLogo, SgLogo } from './../MiscUI/MiscUI'
 import "./SearchBarUI.scss"
 
 /**
@@ -11,7 +11,7 @@ import "./SearchBarUI.scss"
  * @property {Boolean} isMinLength value to determine if user input exceed minimum required length
  */
 const SearchBarUI = props => {
-  const { properties, selectedSearch, recentSearches, onSearchChange } = props
+  const { selectedSearch, recentSearches, onSearchChange } = props
   const [isMinLength, setIsMinLength] = useState(false)
 
   /**
@@ -40,6 +40,7 @@ const SearchBarUI = props => {
   const getSearchOptions = () => {
     if (isMinLength) {
       const constituencyObjs = dbMgr.getConstituencies()
+      const properties = dbMgr.getProperties()
       const c = Object.keys(constituencyObjs).map(cName => new SearchItem('c', constituencyObjs[cName]))
       const p = properties.map(p => new SearchItem('p', p))
       return [...c, ...p]

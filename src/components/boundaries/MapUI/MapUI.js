@@ -41,7 +41,7 @@ let InfoWindowEventRef = null
  * @property {Property} curHoverP
  */
 const MapUI = props => {
-    const {filterOptions, curConstituency, curProperty, triggerReset, onPropertySelect, onConstituencySelect} = props
+    const {filterOptions, curConstituency, curProperty, onPropertySelect, onConstituencySelect, triggerReset} = props
     const [overlayPos, setOverlayPos] = useState({left: 0, top: 0})
     const [curHoverC, setCurHoverC] = useState(null)
     const [curHoverP, setCurHoverP] = useState(null)

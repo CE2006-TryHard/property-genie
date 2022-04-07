@@ -1,6 +1,6 @@
 import {useState } from "react"
-import { userAuthMgr } from "../../controls/Mgr"
-import {GoogleSignInButton} from './../MiscUI'
+import { dbMgr, userAuthMgr } from "../../controls/Mgr"
+import {GoogleSignInButton} from '../MiscUI/MiscUI'
 import './RegisterUI.scss'
 
 /**
@@ -25,7 +25,7 @@ const RegisterUI = props => {
     const [pwWarningMsg, setPWWarningMsg] = useState('')
     const [nameWarningMsg, setNameWarningMsg] = useState('')
 
-    const {checkIsEmptyString, checkIsValidEmailFormat, sendRegisterEmail, googleSignIn} = userAuthMgr
+    const {checkIsEmptyString, checkIsValidEmailFormat} = userAuthMgr
     /**
      * @memberof RegisterUI
      * @typedef {function} verifyEmail
@@ -35,7 +35,7 @@ const RegisterUI = props => {
         const isEmpty = checkIsEmptyString(email)
         const invalidEmail = !checkIsValidEmailFormat(email)
         if (isEmpty) setEmailWarningMsg('Please enter your email.')
-        else if (invalidEmail) setEmailWarningMsg('You have enter an invalid email address!')
+        else if (invalidEmail) setEmailWarningMsg('Please enter a valid email.')
         return !isEmpty && !invalidEmail
     }
 
@@ -45,13 +45,14 @@ const RegisterUI = props => {
      * @return {Boolean}
      */
     const verifyPW = () => {
-        console.log('verify passwork')
-        if (pw !== confirmPW) setPWWarningMsg('Passwords do not match! Please reenter password.')
-        else if (pw === '' || confirmPW === '') {
-            console.log('empty ps')
-            setPWWarningMsg('Please enter your password!')}
-
-        return (pw === confirmPW && pw !== '')
+        if (pw.length < 6) {
+            setPWWarningMsg('Password should be at least 6 characters!')
+        }
+        else if (confirmPW === '') {
+            setPWWarningMsg('Please confirm your password!')
+        }
+        else if (pw !== confirmPW) setPWWarningMsg('Passwords do not match!')
+        return (pw === confirmPW && pw !== '' && pw.length >= 6)
     }
 
     /**
@@ -73,31 +74,23 @@ const RegisterUI = props => {
      */
     const onVerifyManualRegister = () => {
         if (verifyEmail()) {
-            
             setEmailWarningMsg('')
-            // validateAccountAvailability(email, userExist => {
-                // if (userExist) {
-                //     setEmailWarningMsg('Email already exists! Please enter a different email.')
-                //     return
-                // }
 
             if (verifyName() && verifyPW()) {
-                // onRegisterManual({
-                //     name: firstName + ' ' + lastName,
-                //     email: email,
-                //     password: pw
-                // })
-                sendRegisterEmail({email, password: pw}, (sent, err) => {
+                userAuthMgr.sendRegisterEmail(email, pw, (sent, err) => {
                     if (sent) {
                         console.log('sign up link successfully sent')
+                        const id = email.replace('.', '-')
+                        dbMgr.updateDataDB(`account/${id}/name`, firstName + ' ' + lastName)
                     } else {
                         console.log(err)
                         switch (err.code) {
                             case 'auth/email-already-in-use':
-                                console.log('account exist!')
+                                setEmailWarningMsg("Email already exists! Please enter a different email.")
+                                // console.log('account exist!')
                                 break;
                             case 'auth/weak-password':
-                                console.log('Please set a password at least 6 characters long!.')
+                                setPWWarningMsg('Password should be at least 6 characters!')
                                 break
                         }
                         
@@ -174,33 +167,40 @@ const RegisterUI = props => {
     }
 
     return (<div className="register-container">
-        <GoogleSignInButton onClick={googleSignIn} label="Sign Up with Google"></GoogleSignInButton>
-            <div>Or</div>
+        <div className="google-button-container">
+            <p className="google-sign-in-info">To skip email verification,<br />sign in/sign up with Google.</p>
+            <GoogleSignInButton onClick={userAuthMgr.googleSignIn} label="Sign up with google"></GoogleSignInButton>
+        </div>
+        <p className="or-text"><b>Or</b></p>
+        <div className="input-field-container">
             <div className="input-field input-email">
                 <span>Email: </span><input type="text" value={email} onChange={onEmailChange}/>
-                <p className="warning">{emailWarningMsg}</p>
+            </div>
+            <p className="warning">{emailWarningMsg}</p>
+
+            <div className="input-field input-name">
+                <span>First name: </span><input type="text" value={firstName} onChange={onFirstNameCange}/>   
             </div>
             <div className="input-field input-name">
-                <div className="sub-input-field">
-                    <span>First name: </span><input type="text" value={firstName} onChange={onFirstNameCange}/><br />
-                </div>
-                <div className="sub-input-field">
                 <span>Last name:</span><input type="text" value={lastName} onChange={onLastNameChange}/>
-                </div>
-                <p className="warning">{nameWarningMsg}</p>
+            </div>
+            <p className="warning">{nameWarningMsg}</p>
+
+            <div className="input-field input-password">
+                <span>Password: </span><input type="text" value={pw} onChange={onPWChange}/>
             </div>
             <div className="input-field input-password">
-                <div className="sub-input-field">
-                    <span>Password: </span><input type="text" value={pw} onChange={onPWChange}/><br />
-                </div>
-                <div className="sub-input-field">
-                    <span>Confirm Password: </span><input type="text" value={confirmPW} onChange={onConfirmPWChange}/>
-                </div>
-                <p className="warning">{pwWarningMsg}</p>
+                <span>Confirm Password: </span><input type="text" value={confirmPW} onChange={onConfirmPWChange}/>
             </div>
-            <button onClick={onVerifyManualRegister}>Register</button>
-            <button onClick={props.onBack}>Back</button>
-        </div>)
+            <p className="warning">{pwWarningMsg}</p>
+
+        </div>
+        <div className="button-container">
+            <div onClick={onVerifyManualRegister}>Sign Up</div>
+            <div onClick={props.onBack}>Back</div>
+        </div>
+        
+    </div>)
 }
 
 export default RegisterUI

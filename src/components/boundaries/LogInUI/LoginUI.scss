@@ -1,9 +1,65 @@
 .login-container {
-    padding: 10px;
-    background-color: #B9D0E6;
+    padding: 20px;
+    box-sizing: border-box;
 
-    & > div {
-        background-color: #FFFFFF;
+    .google-button-container {
+        text-align: center;
 
+        p.google-sign-in-info {
+            display: inline-block;
+            font-size: 14px;
+            color: #333333;
+            line-height: 1.1;
+            padding-bottom: 10px;
+            max-width: 200px;
+        }
+
+        .google-btn {
+            text-align: left;
+            display: inline-block;
+        }
     }
+
+    
+    .or-text {
+        text-align: center;
+        margin: 20px 0;
+        font-size: 15px;
+        line-height: 1;
+    }
+
+    .input-field-container {
+        .warning-text {
+            color: red;
+            font-size: 15px;
+            line-height: 1.1;
+        }
+    }
+
+    .login-button-container {
+        text-align: center;
+        margin: 10px 0 20px;
+        .login-button {
+            display: inline-block;
+            background-color: #444444;
+            color: #FFFFFF;
+            line-height: 1;
+            padding: 10px 20px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+            pointer-events: all;
+            
+            &:hover {
+                background-color: #555555;
+            }
+        }
+    }
+
+    .register-info-container {
+        color: #333333;
+        font-size: 15px;
+        line-height: 1.1;
+    }
+    
+    
 }

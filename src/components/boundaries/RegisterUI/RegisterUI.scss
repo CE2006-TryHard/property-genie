@@ -1,28 +1,76 @@
 .register-container {
-    .input-field {
-        font-size: 13px;
-        margin-bottom: 12px;
+    padding: 20px;
+    box-sizing: border-box;
 
-        .sub-input-field {
-            margin-bottom: 5px;
-        }
-        span {
-            vertical-align: bottom;
-            padding-right: 5px;
-        }
-        input[type=text] {
+    .google-button-container {
+        text-align: center;
+
+        p.google-sign-in-info {
             display: inline-block;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+            font-size: 14px;
+            color: #333333;
+            line-height: 1.1;
+            padding-bottom: 10px;
+            max-width: 200px;
         }
 
-        p {
-            margin: 0;
-            line-height: 1;
-            font-size: 12px;
-            &.warning {color: red};
-            &.approve {color: green};
+        .google-btn {
+            text-align: left;
+            display: inline-block;
         }
     }
+
+    .or-text {
+        text-align: center;
+        margin: 20px 0;
+        font-size: 15px;
+        line-height: 1;
+    }
+
+
+    .input-field-container {
+        .input-field {
+            &.input-password {
+                span {
+                    width: 80px;
+                }
+            }
+            // p {
+            //     margin: 0;
+            //     line-height: 1;
+            //     font-size: 12px;
+            //     &.warning {color: red};
+            //     &.approve {color: green};
+            // }
+        }
+
+        .warning {
+            color: red;
+            font-size: 14px;
+            line-height: 1.1;
+            padding-bottom: 10px;
+        };
+    }
+
+    .button-container {
+        text-align: center;
+        margin: 10px 0 20px;
+
+        & > div {
+            display: inline-block;
+            background-color: #444444;
+            color: #FFFFFF;
+            line-height: 1;
+            padding: 10px 20px;
+            margin-right: 5px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+            pointer-events: all;
+            
+            &:hover {
+                background-color: #555555;
+            }
+        }
+    }
+    
 }

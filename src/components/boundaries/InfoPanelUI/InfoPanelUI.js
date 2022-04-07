@@ -1,6 +1,6 @@
 import "./InfoPanelUI.scss"
 import {Scrollbars} from 'react-custom-scrollbars-2'
-import { TabButton } from "../MiscUI"
+import { TabButton } from "../MiscUI/MiscUI"
 import React, { useEffect, useState } from 'react'
 import { LINES } from "../../CONFIG"
 import { MARKER_COLOR_SCHEME } from "../MapUI/MAP_CONFIG"
@@ -14,7 +14,7 @@ const views = ["General", "Evaluation"]
  * @property {Object[]} localReviews
  */
 const InfoPanelUI = props => {
-    const {isBookmarked, enableBookmark, filterOptions, property, onBookmark, onLocateProperty} = props
+    const {isBookmarked, enableBookmark, filterOptions, selectedProperty, onBookmark, onLocateProperty} = props
     const [currentView, setCurrentView] = useState('General')
     const [localReview, setLocalReviews] = useState(null)
     const [localAddress, setLocalAddress] = useState(null)
@@ -34,42 +34,47 @@ const InfoPanelUI = props => {
   * @typedef {function} onBookmarkClick called when user click on bookmark star icon
   */
   const onBookmarkClick = () => {
-    onBookmark(property, !isBookmarked)
+    onBookmark(selectedProperty, !isBookmarked)
   }
 
   /**
    * @memberof InfoPanelUI
-  * @typedef {function} useEffect called when InfoPanelUI first mounted
+  * @typedef {function} useEffect called when info panel's view is changed
   * @param {function} callback
-  * @param {watchlist} watchList []
+  * @param {watchlist} watchList [currentView]
   */
   useEffect(() => {
     if (currentView === 'Evaluation') {
-      property.fetchReview(reviews => {
+      selectedProperty.fetchReview(reviews => {
         setLocalReviews(reviews)
       })
     }
 }, [currentView])
 
+  /**
+   * @memberof InfoPanelUI
+  * @typedef {function} useEffect called when current selected/searched property changed
+  * @param {function} callback
+  * @param {watchlist} watchList [selectedProperty]
+  */
 useEffect(() => {
-  if (property) {
-    property.fetchGeneralInfo((address, img) => {
+  if (selectedProperty) {
+    selectedProperty.fetchGeneralInfo((address, img) => {
       setLocalAddress(address)
       setLocalImg(img)
     })
     setCurrentView('General')
   }
-}, [property])
+}, [selectedProperty])
 
-  const {id, name, mrts, schools, avgMrtDist, avgSchoolDist, enblocStr, valueProps: {enbloc, distToMrt, distToSchool}} = property
+  const {id, name, mrts, schools, avgMrtDist, avgSchoolDist, enblocStr, valueProps: {enbloc, distToMrt, distToSchool}} = selectedProperty
   
   /**
    * @memberof InfoPanelUI
   * @typedef {function} generalView Functional Component rendering "General" view
   */
   const generalView = () => {
-    // const score = property.getPropertyValue(filterOptions)
-    const score = property.getScore()
+    const score = selectedProperty.getScore()
       return (
         
       <div className="info-panel-detail-content general">
@@ -90,7 +95,6 @@ useEffect(() => {
           </div>
           </div>
           <div className="right">
-          
           <p className="score">Score: <b style={{color: MARKER_COLOR_SCHEME[Math.floor(score*10)]}}>{(score*100).toFixed(0)}%</b></p>
           <div className="school">
               <b>Nearby schools:</b>
@@ -126,15 +130,14 @@ useEffect(() => {
   * @typedef {function} valueView Functional Component rendering "Evaluation" view
   */
   const valueView = () => {
-    // const score = property.getPropertyValue(filterOptions)
-    const score = property.getScore()
+    const score = selectedProperty.getScore()
     return (
       <div className="info-panel-detail-content value">
         <div className="score-summary-container">
-        <p className="score-header"><b style={{color: MARKER_COLOR_SCHEME[Math.floor(score*10)]}}>{(score*100).toFixed(0)}%</b> calculated by:</p>
+        <p className="score-header">*Score <b style={{color: MARKER_COLOR_SCHEME[Math.floor(score*10)]}}>{(score*100).toFixed(0)}%</b> is calculated by:</p>
           <ul>
             <li style={{opacity: filterOptions['enbloc'].checked ? 1 : 0.3}} className="score-item">
-              <p>En Bloc probability:</p>
+              <p>*En Bloc probability:</p>
               <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(enbloc * 10)]}}><b>{enblocStr}</b></span>
             </li>
             <li style={{opacity: filterOptions['distToMrt'].checked ? 1 : 0.3}}className="score-item">
@@ -146,7 +149,8 @@ useEffect(() => {
               <span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(distToSchool * 10)]}}><b>{avgSchoolDist}km</b></span>
             </li>
           </ul>
-          
+          <span className="score-remark"><b>Score:</b> A special formula is applied to evaluate the score of the property based on the filters selected.</span>
+          <span className="enbloc-remark"><b>En Bloc:</b> Potential to make money by a collect sale of the whole condo at prices higher than the resale value.</span>
         </div>
         <div className="google-review-container">
           <h3>Google Reviews</h3>
