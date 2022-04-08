@@ -16,6 +16,7 @@ provider.setCustomParameters({
 })
 
 const URL_PREFIX = process.env.NODE_ENV === 'production' ? 'https://tryhard-web-app.web.app/' : `http://localhost:3000`
+
 /**
  * A control class manage operation related to user account authentication
  */
@@ -77,7 +78,8 @@ class UserAuthMgr {
         const actionCodeSettings = {
             // URL you want to redirect back to. The domain (www.example.com) for this
             // URL must be in the authorized domains list in the Firebase Console.
-            url: URL_PREFIX + '/sign-in',
+            url: URL_PREFIX,
+            // url: URL_PREFIX + '/sign-in',
             // This must be true.
             handleCodeInApp: true
           }

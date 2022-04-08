@@ -1,9 +1,21 @@
-import { useState } from 'react'
+import "./SearchBarUI.scss"
+import { useEffect, useState } from 'react'
+import {useDispatch} from 'react-redux'
+import { selectProperty, selectConstituency, setPageState } from '../../../features'
+
 import Select, { components } from 'react-select'
-import {SearchItem} from '../../entities/index'
+import {SearchItem} from '../../entities'
 import { dbMgr } from '../../controls/Mgr'
 import { HomeLogo, SgLogo } from './../MiscUI/MiscUI'
-import "./SearchBarUI.scss"
+import { CONSTITUENCY_NAME } from '../../CONFIG'
+
+
+const addRecentSearch = (recentSearch, newSearch) => {
+  recentSearch = recentSearch.filter(rs => rs.value.id !== newSearch.value.id)
+  recentSearch.unshift(newSearch)
+  if (recentSearch.length > 10) recentSearch.splice(10 - recentSearch.length)
+  return recentSearch
+}
 
 /**
  * @namespace SearchBarUI
@@ -11,8 +23,11 @@ import "./SearchBarUI.scss"
  * @property {Boolean} isMinLength value to determine if user input exceed minimum required length
  */
 const SearchBarUI = props => {
-  const { selectedSearch, recentSearches, onSearchChange } = props
+  const dispatch = useDispatch()
+  const { activeUser } = props
   const [isMinLength, setIsMinLength] = useState(false)
+  const [currentSearch, setCurrentSearch] = useState(null)
+  const [recentSearches, setRecentSearches] = useState([])
 
   /**
    * @memberof SearchBarUI
@@ -20,7 +35,26 @@ const SearchBarUI = props => {
    * @param {SearchItem} newSearch new search
    */
   const onChange = newSearch => {
-    onSearchChange(newSearch)
+    const {type, value} = newSearch
+    if (type === 'c') {
+      dispatch(selectConstituency(value))
+      dispatch(setPageState(0))
+    }
+    else if (type === 'p') {
+      dispatch(selectProperty(value))
+      dispatch(setPageState(7))
+    }
+    setCurrentSearch(newSearch)
+
+    let tempSearches = [...recentSearches]
+    tempSearches = addRecentSearch(tempSearches, newSearch)
+    setRecentSearches(tempSearches)
+    
+    tempSearches = tempSearches.map(cs => {
+      return {type: cs.type, id: cs.value.id}
+    })
+
+    dbMgr.updateUserDataDB(activeUser, 'recentSearches', tempSearches)
   }
 
   /**
@@ -48,6 +82,27 @@ const SearchBarUI = props => {
     return recentSearches
   }
 
+  useEffect(() => {
+    if (activeUser) {
+      // update recent search
+      const ccs =dbMgr.getConstituencies()
+      const pps = dbMgr.getProperties()
+      let tempSearches = activeUser.recentSearches
+        .map(({type, id}) => {
+          const searchObj = type === 'c' ? ccs[CONSTITUENCY_NAME[id].name] : pps.filter(p => p.id === id)[0]
+          return new SearchItem(type, searchObj)
+        })
+        
+      // const localRecentSearches = [...recentSearches]
+      // while (localRecentSearches.length > 0) {
+      //   tempSearches = addRecentSearch(tempSearches, localRecentSearches.pop())
+      // }
+      setRecentSearches(tempSearches)
+      // dbMgr.updateUserDataDB(activeUser, 'recentSearches', tempSearches.map(s => ({type: s.type, id: s.value.id})))
+
+    }
+  }, [activeUser])
+
   /**
    * @memberof SearchBarUI
    * @typedef {function} CustomOption FunctionalComponent rendering custom option item in search result
@@ -69,7 +124,7 @@ const SearchBarUI = props => {
     <div className="search-bar-container">
       <div className="search-bar-content">
         <Select components={{ Option: CustomOption }}
-          value={selectedSearch}
+          value={currentSearch}
           isSearchable={true}
           onChange={onChange}
           onInputChange={onInputChange}

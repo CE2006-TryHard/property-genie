@@ -1,11 +1,17 @@
 import "./InfoPanelUI.scss"
+import { useEffect, useState } from 'react'
+import {useDispatch, useSelector} from 'react-redux'
+
+import LightboxWrapper from "../MiscUI/LightboxWrapper/LightboxWrapper"
 import {Scrollbars} from 'react-custom-scrollbars-2'
 import { TabButton } from "../MiscUI/MiscUI"
-import React, { useEffect, useState } from 'react'
-import {useSelector} from 'react-redux'
+import { addBookmark, removeBookmark, setPageState, selectProperty } from "../../../features"
+
 import { LINES } from "../../CONFIG"
 import { MARKER_COLOR_SCHEME } from "../MapUI/MAP_CONFIG"
+
 const dummyProfileImg = require('./../../../images/dummy-profile.png')
+
 const views = ["General", "Evaluation"]
 
 /**
@@ -15,8 +21,14 @@ const views = ["General", "Evaluation"]
  * @property {Object[]} localReviews
  */
 const InfoPanelUI = props => {
+    const dispatch = useDispatch()
+    const selectedProperty = useSelector(state => state.selection.property)
     const filterOptions = useSelector(state => state.filterOptions)
-    const {isBookmarked, enableBookmark, selectedProperty, onBookmark, onLocateProperty} = props
+    const bookmarks = useSelector(state => state.bookmarks)
+    const isBookmarked = bookmarks.filter(b => b === selectedProperty).length > 0
+    const {activeUser} = props
+
+    const [openPanel, setOpenPanel] = useState(true)
     const [currentView, setCurrentView] = useState('General')
     const [localReview, setLocalReviews] = useState(null)
     const [localAddress, setLocalAddress] = useState(null)
@@ -24,43 +36,41 @@ const InfoPanelUI = props => {
 
   /**
    * @memberof InfoPanelUI
-  * @typedef {function} onViewChange called when user toggle between General/Evaluation view
-  * @param {String} newView new info panel view option
-  */
-  const onViewChange = newView => {
-      setCurrentView(newView)
-  }
-
-  /**
-   * @memberof InfoPanelUI
   * @typedef {function} onBookmarkClick called when user click on bookmark star icon
   */
   const onBookmarkClick = () => {
-    onBookmark(selectedProperty, !isBookmarked)
+    if (isBookmarked) {
+      dispatch(removeBookmark({activeUser, property: selectedProperty}))
+    } else {
+      dispatch(addBookmark({activeUser, property: selectedProperty}))
+    }
   }
 
   /**
    * @memberof InfoPanelUI
-  * @typedef {function} useEffect called when info panel's view is changed
+  * @typedef {function} useEffect called when info panel's view or selected property is changed
   * @param {function} callback
-  * @param {watchlist} watchList [currentView]
+  * @param {watchlist} watchList [currentView, selectedProperty]
   */
   useEffect(() => {
+    if (!selectedProperty) return
     if (currentView === 'Evaluation') {
       selectedProperty.fetchReview(reviews => {
         setLocalReviews(reviews)
       })
     }
-}, [currentView])
+}, [currentView, selectedProperty])
 
   /**
    * @memberof InfoPanelUI
-  * @typedef {function} useEffect called when current selected/searched property changed
+  * @typedef {function} useEffect called when current selected property changed
   * @param {function} callback
   * @param {watchlist} watchList [selectedProperty]
   */
 useEffect(() => {
   if (selectedProperty) {
+    setOpenPanel(true)
+    dispatch(setPageState(7))
     selectedProperty.fetchGeneralInfo((address, img) => {
       setLocalAddress(address)
       setLocalImg(img)
@@ -68,8 +78,6 @@ useEffect(() => {
     setCurrentView('General')
   }
 }, [selectedProperty])
-
-  const {id, name, mrts, schools, avgMrtDist, avgSchoolDist, enblocStr, valueProps: {enbloc, distToMrt, distToSchool}} = selectedProperty
   
   /**
    * @memberof InfoPanelUI
@@ -77,13 +85,14 @@ useEffect(() => {
   */
   const generalView = () => {
     const score = selectedProperty.getScore()
+    const {id, name, mrts, schools} = selectedProperty
       return (
         
       <div className="info-panel-detail-content general">
           <div className="profile-image-container">
           <h3>{name}</h3>
           <div className="profile-image-content">
-          {enableBookmark && currentView === 'General' ? 
+          {activeUser && currentView === 'General' ? 
             <svg className="bookmark-button" width="40" height="40" viewBox="0 0 51 48" onClick={onBookmarkClick}>
               <title>{isBookmarked ? 'Unbookmark the property' : 'Bookmark the property'}</title>
               <path fill={isBookmarked ? 'gold' : '#FFFFFF'} stroke="#000" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/>
@@ -93,7 +102,7 @@ useEffect(() => {
           </div>
           <p className="address">{localAddress}</p>
           <div className="view-on-map-button">
-          <div onClick={onLocateProperty}>View on map</div>
+          <div onClick={() => setOpenPanel(false)}>View on map</div>
           </div>
           </div>
           <div className="right">
@@ -133,6 +142,7 @@ useEffect(() => {
   */
   const valueView = () => {
     const score = selectedProperty.getScore()
+    const {avgMrtDist, avgSchoolDist, enblocStr, valueProps: {enbloc, distToMrt, distToSchool}} = selectedProperty
     return (
       <div className="info-panel-detail-content value">
         <div className="score-summary-container">
@@ -180,18 +190,21 @@ useEffect(() => {
       </div>
     )
   }
+
+  if (!selectedProperty) return ''
   
     return (
-    <div className="info-panel-container">
-      <div className="info-panel-content">
-        <TabButton options={views} current={currentView} onChange={onViewChange}></TabButton>
-        {/* <div className="info-panel-detail-container"> */}
-          <Scrollbars className="info-panel-detail-container">
-          {currentView === 'General' ? generalView() : valueView()}
-        {/* </div> */}
-        </Scrollbars>
-      </div>
-    </div>)
+      <LightboxWrapper isOpen={selectedProperty && openPanel} onClose={() => dispatch(selectProperty(null))}>
+        <div className="info-panel-container">
+          <div className="info-panel-content">
+            <TabButton options={views} current={currentView} onChange={setCurrentView}></TabButton>
+              <Scrollbars className="info-panel-detail-container">
+                {currentView === 'General' ? generalView() : valueView()}
+            </Scrollbars>
+          </div>
+        </div>
+      </LightboxWrapper>
+    )
 }
 
 export default InfoPanelUI

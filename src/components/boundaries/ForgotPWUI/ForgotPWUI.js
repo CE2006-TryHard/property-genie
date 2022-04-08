@@ -1,10 +1,11 @@
 import './ForgotPWUI.scss'
 import { useState } from "react"
-import { userAuthMgr } from "../../controls/Mgr"
 import {useDispatch} from 'react-redux'
-import { setLoadingState } from '../../../features/loadingStateSlice'
+import { setLoadingState } from '../../../features'
+import { userAuthMgr } from "../../controls/Mgr"
 
 const ForgotPasswordUI = props => {
+    console.log('render forgot password ui')
     const dispatch = useDispatch()
 
     const [email, setEmail] = useState('')
@@ -25,7 +26,6 @@ const ForgotPasswordUI = props => {
                 if (success) {
                     setShowSuccessText(true)
                 } else {
-                    console.log('error on sent reset password link', errCode)
                     switch(errCode) {
                         case 'auth/user-not-found':
                             setErrorMsg('Email does not exist!')

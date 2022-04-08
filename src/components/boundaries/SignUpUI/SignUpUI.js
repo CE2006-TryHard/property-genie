@@ -3,8 +3,7 @@ import {useState } from "react"
 import { dbMgr, userAuthMgr } from "../../controls/Mgr"
 import {GoogleSignInButton} from '../MiscUI/MiscUI'
 import {useDispatch} from 'react-redux'
-import { setLoadingState } from '../../../features/loadingStateSlice'
-
+import { setLoadingState, setPageState } from '../../../features'
 /**
  * @namespace SignUpUI
  * @description boundary module
@@ -84,6 +83,7 @@ const SignUpUI = props => {
             userAuthMgr.sendRegisterEmail(email, pw, (success, err) => {
                 dispatch(setLoadingState(0))
                 if (success) {
+                    dispatch(setPageState(0))
                     console.log('sign up link successfully sent')
                     const id = email.replace('.', '-')
                     dbMgr.updateDataDB(`account/${id}/name`, firstName + ' ' + lastName)

@@ -1,9 +1,8 @@
 import './AccountUI.scss'
 import { useState } from "react"
 import { userAuthMgr } from "../../controls/Mgr"
-
 import {useDispatch} from 'react-redux'
-import { setLoadingState } from '../../../features/loadingStateSlice'
+import { setLoadingState } from '../../../features'
 
 /**
  * @namespace AccountUI

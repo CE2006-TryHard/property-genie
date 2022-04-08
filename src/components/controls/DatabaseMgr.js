@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app"
 import { getAnalytics } from "firebase/analytics"
 import {getDatabase, ref, child, update, get} from 'firebase/database'
 import Papa from 'papaparse'
-import {Constituency, Property, User} from '../entities/index'
+import {Constituency, Property, User} from '../entities'
 import {STATIONS, SCHOOLS, CONSTITUENCY_NAME} from '../CONFIG'
 import {INIT_FILTER_OPTIONS} from './../../features/filterSlice'
 
@@ -78,7 +78,7 @@ class DatabaseMgr {
    */
   fetchDataDB(key, onFetchEnd) {
     const dbRef = ref(getDatabase())
-    return get(child(dbRef, key)).then(snapshot => {
+     get(child(dbRef, key)).then(snapshot => {
       if (snapshot.exists()) {
         onFetchEnd(snapshot.val())
       } else {
@@ -143,6 +143,7 @@ class DatabaseMgr {
 
   /**
    * fetch all properties data from local csv
+   * @param {function} callback 
    */
   fetchPropertyData (onFetchEnd) {
     if (this.properties && this.constituencies) {
@@ -199,6 +200,10 @@ class DatabaseMgr {
       })
   }
 
+  /**
+   * update variable values that depends on filter options
+   * @param {Object} filterOptions 
+   */
   updateFilterDependVals (filterOptions) {
     // needed by getConsituencyValue()
     this.properties.forEach(p => p.updatePropertyScore(filterOptions))

@@ -1,7 +1,7 @@
 import "./FilterPanelUI.scss"
 import { CheckBox, Slider } from "../MiscUI/MiscUI"
 import {useDispatch, useSelector} from 'react-redux'
-import { setFilterCheckBox, setFilterSlider, resetFilters } from "../../../features/filterSlice"
+import { setFilterCheckBox, setFilterSlider, resetFilters } from "../../../features"
 /**
  * @namespace FilterPanelUI
  * @description boundary module

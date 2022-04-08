@@ -1,9 +1,11 @@
 import "./MapUI.scss"
 import { useEffect, useState } from 'react'
-import {useSelector} from 'react-redux'
+import {useSelector, useDispatch} from 'react-redux'
+import { selectProperty, selectConstituency } from "../../../features"
 
 import {Loader} from "@googlemaps/js-api-loader"
 import { dbMgr } from '../../controls/Mgr'
+
 import { CONSTITUENCY_MAP_CONFIG, MAP_STYLES, MARKER_COLOR_SCHEME } from './MAP_CONFIG'
 
 
@@ -42,8 +44,12 @@ const markers = {}
  * @property {Property} curHoverP
  */
 const MapUI = props => {
-  const filterOptions = useSelector(state => state.filterOptions)
-    const {curConstituency, curProperty, onPropertySelect, onConstituencySelect, triggerReset} = props
+    const dispatch = useDispatch()
+    const filterOptions = useSelector(state => state.filterOptions)
+    const curConstituency = useSelector(state => state.selection.constituency)
+    const curProperty = useSelector(state => state.selection.property)
+    const triggerReset = useSelector(state => state.triggerReset)
+  
     const [overlayPos, setOverlayPos] = useState({left: 0, top: 0})
     const [curHoverC, setCurHoverC] = useState(null)
     const [curHoverP, setCurHoverP] = useState(null)
@@ -146,7 +152,7 @@ const MapUI = props => {
 
     /**
      * @memberof MapUI
-     * @typedef {function} setMapZoom set map zoom level
+     * @typedef {function} setMapZoom set map zoom location and level by given constituency
      * @param {Constituency} c
      * @param {Object} mapRef reference to Google Map object
      * @return {String} hex color code in string
@@ -162,21 +168,6 @@ const MapUI = props => {
         mapRef.setCenter(MAP_CENTER)
         mapRef.setZoom(MAP_ZOOM)
       }
-      
-    }
-
-    const registerPolygonMouseOverEvent = () => {
-      const constituencies = dbMgr.getConstituencies()
-      mapRef.data.addListener('mouseover', e => {
-        const c = constituencies[e.feature.getProperty('Name')]
-        if (!c.mapFeature) c.mapFeature = e.feature
-        setCurHoverC(c)
-      })
-    }
-
-    const registerPolygonMouseOutEvent = () => {
-      // initialise polygon mouse out event
-      mapRef.data.addListener('mouseout', () => setCurHoverC(null))
     }
 
     /**
@@ -214,11 +205,11 @@ const MapUI = props => {
           disableDoubleClickZoom: true,
           styles: MAP_STYLES
         })
-        console.log('google map api loaded')
+        // console.log('google map api loaded')
 
         // initialize info window
         markerInfoWindow = new google.maps.InfoWindow({content: 'dummy'})
-        googleRef.maps.event.addListener(markerInfoWindow, 'closeclick', () => onPropertySelect(null))
+        googleRef.maps.event.addListener(markerInfoWindow, 'closeclick', () => dispatch(selectProperty(null)))
 
         // initialize place service
         gService = new google.maps.places.PlacesService(mapRef)
@@ -248,10 +239,11 @@ const MapUI = props => {
         // intialise polygon click event
         mapRef.data.addListener('click', e => {
           const c = constituencies[e.feature.getProperty('Name')]
-          onConstituencySelect(c)
+          // onConstituencySelect(c)
+          dispatch(selectConstituency(c))
         })
 
-        // initialize marker
+        // initialize markers
         Object.keys(constituencies).forEach(cName => {
           if (!markers[cName]) markers[cName] = {}
           constituencies[cName].properties.forEach(p => {
@@ -265,15 +257,25 @@ const MapUI = props => {
               })
               markers[cName][p.name].setVisible(false)
 
-              googleRef.maps.event.addListener(markers[cName][p.name], 'click', () => onPropertySelect(p))
+              googleRef.maps.event.addListener(markers[cName][p.name], 'click', () => {
+                dispatch(selectProperty(null))
+                dispatch(selectProperty(p))
+              })
               googleRef.maps.event.addListener(markers[cName][p.name], 'mouseover', () => setCurHoverP(p))
               googleRef.maps.event.addListener(markers[cName][p.name], 'mouseout', () => setCurHoverP(null))
             }
           })
         })
 
-        registerPolygonMouseOverEvent()
-        registerPolygonMouseOutEvent()
+        // register mouse over event on constituency polygon
+        mapRef.data.addListener('mouseover', e => {
+          const c = constituencies[e.feature.getProperty('Name')]
+          if (!c.mapFeature) c.mapFeature = e.feature
+          setCurHoverC(c)
+        })
+
+        // register mouse out event on constituency polygon
+        mapRef.data.addListener('mouseout', () => setCurHoverC(null))
         
       })
     }, [])
@@ -286,7 +288,7 @@ const MapUI = props => {
      */
     useEffect(() => {
       if (!mapRef) return
-      // console.log('use effect triggered', filterOptions)
+
       const constituencies = dbMgr.getConstituencies()
       showMarkerFromConstituency(curConstituency)
       
@@ -304,7 +306,6 @@ const MapUI = props => {
         }
       })
       if (curProperty) markerInfoWindow.setContent(getInfoWindowContent(curProperty))
-      // console.log('filter option changed')
     }, [curConstituency, filterOptions])
 
     /**
@@ -319,7 +320,7 @@ const MapUI = props => {
 
     /**
      * @memberof MapUI
-     * @typedef {function} useEffect4 update map display when current selected property is changed
+     * @typedef {function} useEffect4 update map display when the selected property is changed
      * @param {function} callback
      * @param {Array} watchList [curProperty]
      */
@@ -399,6 +400,7 @@ const MapUI = props => {
     const cScore = c => c && (c.getScore() * 100).toFixed(0)
     const curHoverPVal = p => p && p.getScore()
     const curHoverCCopy = curHoverC && curHoverC !== curConstituency && curHoverC
+
     return (
       <div className="map-container">
         {curProperty ? <div className="marker-info-bubble">

@@ -1,5 +1,9 @@
-import { useState } from "react"
 import './BookmarkUI.scss'
+import { useState } from "react"
+import {useSelector, useDispatch} from 'react-redux'
+
+import { removeBookmark, removeAllBookmarks, setPageState, selectProperty } from "../../../features"
+
 
 /**
  * @namespace BookmarkUI
@@ -8,16 +12,20 @@ import './BookmarkUI.scss'
  * @property {Boolean} removeAllBookmarks a boolean value to determine if all bookmarks are to be removed
  */
 const BookmarkUI = props => {
-    const { bookmarks, onPropertySelect, onBookmarkRemove, onBookmarkRemoveAll } = props
+    const dispatch = useDispatch()
+    const bookmarks = useSelector(state => state.bookmarks)
+    const {activeUser} = props
     const [bookmarkToBeRemoved, setBookmarkToBeRemoved] = useState(null)
-    const [removeAllBookmarks, setRemoveAllBookmarks] = useState(false)
+    const [removeAll, setRemoveAll] = useState(false)
+
     /**
      * @memberof BookmarkUI
     * @typedef {function} onViewPropertyDetail called when user click on one of the property on bookmark panel
     * @param {Property} property property to be viewed
     */
     const onViewPropertyDetail = property => {
-        onPropertySelect(property)
+        dispatch(selectProperty(property))
+        dispatch(setPageState(7))
     }
 
     /**
@@ -35,7 +43,7 @@ const BookmarkUI = props => {
     * @param {Property} property property to be removed
     */
     const onVerifyRemoveAllBookmarks = () => {
-        setRemoveAllBookmarks(true)
+        setRemoveAll(true)
     }
 
     /**
@@ -43,13 +51,13 @@ const BookmarkUI = props => {
     * @typedef {function} onConfirmRemoveBookmark called when user click on "Confirm" button to execute bookmark removal.
     */
     const onConfirmRemoveBookmark = () => {
-        if (removeAllBookmarks) {
-            onBookmarkRemoveAll()
-            setBookmarkToBeRemoved(null)
-        } else {
-            onBookmarkRemove(bookmarkToBeRemoved, false)
-            setRemoveAllBookmarks(false)
-        }
+        dispatch(removeBookmark({activeUser, property: bookmarkToBeRemoved}))
+        setBookmarkToBeRemoved(null)
+    }
+
+    const onConfirmRemoveAllBookmark = () => {
+        dispatch(removeAllBookmarks({activeUser}))
+        setRemoveAll(false)
     }
 
     /**
@@ -58,7 +66,7 @@ const BookmarkUI = props => {
     */
     const onCancelRemoveBookmark = () => {
         setBookmarkToBeRemoved(null)
-        setRemoveAllBookmarks(false)
+        setRemoveAll(false)
     }
 
     return (
@@ -90,12 +98,12 @@ const BookmarkUI = props => {
                 : <div className="no-bookmark-msg">You have not added any bookmark.</div>}
         </div>
 
-        {removeAllBookmarks ?
+        {removeAll ?
             <div className="remove-bookmark-all-container">
                 <div className="remove-bookmark-all-content">
                     <p>Are you sure you want to delete <b>ALL bookmark(s)</b>?</p>
                     <div>
-                        <div className="confirm-button" onClick={onConfirmRemoveBookmark}>Confirm</div>
+                        <div className="confirm-button" onClick={onConfirmRemoveAllBookmark}>Confirm</div>
                         <div className="cancel-button" onClick={onCancelRemoveBookmark}>Cancel</div>
                     </div>
                 </div>

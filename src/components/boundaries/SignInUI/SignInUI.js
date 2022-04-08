@@ -1,9 +1,9 @@
 import './SignInUI.scss'
-import React, { useState } from "react";
+import { useState } from "react"
 import {GoogleSignInButton} from '../MiscUI/MiscUI'
 import { userAuthMgr } from '../../controls/Mgr'
 import {useDispatch} from 'react-redux'
-import { setLoadingState } from '../../../features/loadingStateSlice'
+import { setLoadingState, setPageState } from '../../../features'
 
 /**
  * @namespace SignInUI
@@ -24,7 +24,9 @@ const SignInUI = props => {
         dispatch(setLoadingState(1))
         googleSignIn((success, errCode) => {
             dispatch(setLoadingState(0))
-            if (!success) {
+            if (success) {
+                dispatch(setPageState(0))
+            } else {
                 switch (errCode) {
                     case '':
                         break
@@ -32,16 +34,14 @@ const SignInUI = props => {
                         console.log('error on google sign in', errCode)
                         break
                 }
-                
             }
-            
         })
     }
     /**
-     * @typedef {function} onVerifyManualLogIn
+     * @typedef {function} onVerifyManualSignIn
      * @memberof SignInUI
      */
-    const onVerifyManualLogIn = () => {
+    const onVerifyManualSignIn = () => {
         setErrorMsg('')
         if (!checkIsValidEmailFormat(email) || checkIsEmptyString(email)) {
             setErrorMsg('Please enter a valid email!')
@@ -56,7 +56,9 @@ const SignInUI = props => {
         dispatch(setLoadingState(1))
         emailPasswordSignIn(email, pw, (success, errCode) => {
             dispatch(setLoadingState(0))
-            if (!success) {
+            if (success) {
+                dispatch(setPageState(0))
+            } else {
                 switch(errCode) {
                     case 'auth/invalid-email':
                         setErrorMsg('Invalid email. Please try again.')
@@ -96,8 +98,8 @@ const SignInUI = props => {
     }
 
     return (
-        <div className="login-container">
-            <div className="login-main-content">
+        <div className="signin-container">
+            <div className="signin-main-content">
                 <div className="google-button-container">
                 <p className="google-sign-in-info">To skip email verification,<br />sign in/sign up with Google.</p>
                     <GoogleSignInButton onClick={onGoogleSignIn}></GoogleSignInButton>
@@ -114,7 +116,7 @@ const SignInUI = props => {
                     <p className="warning-text">{errorMsg}</p>
                 </div>
                 <div className="button-container">
-                    <div className="default-button" onClick={onVerifyManualLogIn}>Sign In</div>
+                    <div className="default-button" onClick={onVerifyManualSignIn}>Sign In</div>
                 </div>
             </div>
             {props.children}
