@@ -116,7 +116,7 @@ class Property {
      * @param {function} onFetchEnd callback function
      */
     fetchGeneralInfo(onFetchEnd) {
-        if (this.address && this.img) {
+        if (this.address && this.img && this.placeID) {
             if (onFetchEnd) onFetchEnd(this.address, this.img)
         } else {
             dbMgr.fetchDataDB(`properties/${this.id}`, propertyData => {

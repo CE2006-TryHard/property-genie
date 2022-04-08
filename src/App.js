@@ -1,19 +1,20 @@
 import './styles/App.scss'
 
-import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, RegisterUI, MapUI, SearchBarUI, AccountUI} from './components/boundaries/index'
+import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, RegisterUI, MapUI, SearchBarUI, AccountUI, ForgotPWUI, LoadingUI} from './components/boundaries/index'
 import { GreetUserMsg, HomeLogo, SidePanelWrapper } from './components/boundaries/MiscUI/MiscUI'
 import {dbMgr, sidePanelOptMgr, userAuthMgr} from './components/controls/Mgr'
-
-import { useFirebaseAuth } from './components/controls/FirebaseAuth'
+import {getAuth} from "firebase/auth"
 import {useEffect, useState} from 'react'
 import {SearchItem} from './components/entities/index'
 import { CONSTITUENCY_NAME } from './components/CONFIG'
-
+import {useDispatch} from 'react-redux'
+import {setLoadingState} from './features/loadingStateSlice'
 
 // page state
 // HOME         0
 // LOGIN        2
 // REGISTER     3
+// FORGOT PASSWORD 10
 // ACCOUNT INFO 4
 // BOOKMARK     5
 // FILTER       6
@@ -43,7 +44,8 @@ import { CONSTITUENCY_NAME } from './components/CONFIG'
 let initCount = false
 
  function App() {
-  const {authUserInfo, isInitialized} = useFirebaseAuth()
+   console.log('render App')
+  const dispatch = useDispatch()
   const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
   const [curSearch, setCurSearch] = useState(null)
@@ -65,30 +67,40 @@ let initCount = false
   const [sidePanelContent, setSidePanelContent] = useState(0)
   const [mapTriggerReset, setMapTriggerReset] = useState(false)
 
-
-  /**
-   * @memberof App
- * @typedef {function} useEffect1 fetch google auth session from previous login.
- * @param {function} callback Anonymous function invoked when value of states from watchlist is updated.
- * @param {Array} watchList [authUser]
- */
+    /**
+    * @memberof App
+    * @typedef {function} useEffect fetch google auth session if exist.
+    * @param {function} callback Anonymous function invoked when the app first loaded.
+    * @param {Array} watchList []
+    */
   useEffect(() => {
-    if (isInitialized) {
-      if (authUserInfo) {
-        console.log('valid auth user info')
-        dbMgr.initActiveUser(authUserInfo, activeUser => {
-          setActiveUser(activeUser)
+    const auth = getAuth()
+        // signOut(auth)
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                const {email, displayName: name, providerId} = user.providerData[0]
+                const {emailVerified} = user
+                const isGoogleAuth = providerId === 'google.com'
+                userAuthMgr.setAuthUserInfo(user)
+                console.log('auth change valid user')
+                dbMgr.initActiveUser({
+                  name,
+                  email,
+                  emailVerified: emailVerified || isGoogleAuth,
+                  isGoogleAuth
+                }, activeUser => {
+                  setActiveUser(activeUser)
+                })
+            } else {
+                console.log('no active user on auth change')
+                dbMgr.fetchPropertyData(filterOptions, (properties, constituencies) => {
+                  setActiveUserDataReady(true)
+                })
+            }
+            
+            // console.log('auth state change check', user)
         })
-      } else {
-        if (!initCount) return
-        console.log('no logged in user')
-        dbMgr.fetchPropertyData(filterOptions, (properties, constituencies) => {
-          setActiveUserDataReady(true)
-        })
-      }
-    }
-    initCount = true
-  }, [authUserInfo, isInitialized])
+  }, [])
 
 /**
  * @memberof App
@@ -270,12 +282,14 @@ let initCount = false
  * @typedef {function} onLogOut called when user clicks on log out button.
  */
   const onLogOut = () => {
+    dispatch(setLoadingState(2))
     userAuthMgr.generalSignOut((success, err) => {
       if (success) {
         setTimeout(() => { // add a deplay during sign out
           setActiveUser(null)
           setSidePanelIn(false)
           setPageState(0)
+          dispatch(setLoadingState(0))
           // localStorage.removeItem('activeUser')
         }, 1000)
       }
@@ -317,8 +331,11 @@ let initCount = false
         return (
           <LoginUI 
             activeUser={activeUser}>
+              <div className="forgot-password-info-container">
+                Forgot password? <span className="text-button" onClick={() => setSidePanelContent(10)}>Reset password</span>
+              </div>
               <div className="register-info-container">
-                {"Does not have an account?"} <span className="register-ui-entry-button text-button" onClick={() => setSidePanelContent(3)}>Sign up</span>
+                Does not have an account? <span className="register-ui-entry-button text-button" onClick={() => setSidePanelContent(3)}>Sign up</span>
               </div>
             </LoginUI>
             )
@@ -327,7 +344,7 @@ let initCount = false
             <RegisterUI 
               onBack={() => {
                 setSidePanelContent(2)
-                setPageState(2)
+                // setPageState(2)
               }}></RegisterUI>
           )
       case 4:
@@ -341,6 +358,11 @@ let initCount = false
             onBookmarkRemoveAll={removeAllBookmarks}></BookmarkUI>)
       case 6:
         return (<FilterPanelUI filterOptions={filterOptions} onFilterChange={onFilterChange}></FilterPanelUI>)
+      case 10:
+        return (<ForgotPWUI onBack={() => {
+          setSidePanelContent(2)
+          // setPageState(2)
+        }}></ForgotPWUI>)
       }
     return ''
   }
@@ -396,14 +418,9 @@ let initCount = false
         onClose={() => setSubSidePanelIn(false)}>
           <SidePanelSubContent></SidePanelSubContent>
       </SidePanelWrapper>
-
+        
       {/* Log out in progress message */}
-      {pageState === 9 ?
-        <LightBoxWrapper className="logout-lightbox" isOpen={true} hideCloseButton={true} disableClose={true}>
-          <div className="loader"></div>
-          <div className="logout-container">Log out...</div>
-        </LightBoxWrapper>
-      : ""}
+      <LoadingUI></LoadingUI>
     </div>);
 }
 

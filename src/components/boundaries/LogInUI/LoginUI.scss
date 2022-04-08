@@ -36,10 +36,11 @@
         }
     }
 
-    .login-button-container {
+    .button-container {
         text-align: center;
         margin: 10px 0 20px;
-        .login-button {
+        
+        & > div {
             display: inline-block;
             background-color: #444444;
             color: #FFFFFF;
@@ -55,11 +56,13 @@
         }
     }
 
+    .forgot-password-info-container,
     .register-info-container {
-        color: #333333;
-        font-size: 15px;
-        line-height: 1.1;
+        font-size: 16px;
+        padding-bottom: 5px;
+
+        span.text-button {
+            font-size: 16px;
+        }
     }
-    
-    
 }

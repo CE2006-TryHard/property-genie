@@ -2,47 +2,70 @@ import './LoginUI.scss'
 import React, { useState } from "react";
 import {GoogleSignInButton} from '../MiscUI/MiscUI'
 import { userAuthMgr } from '../../controls/Mgr'
+import {useDispatch} from 'react-redux'
+import { setLoadingState } from '../../../features/loadingStateSlice'
 
 /**
  * @namespace LogInUI
  * @description boundary module
  * @property {String} email
  * @property {String} pw
- * @property {String} loginErrorMsg
+ * @property {String} errorMsg
  */
 const LogInUI = props => {
+    const dispatch = useDispatch()
     const [email, setEmail] = useState('')
     const [pw, setPW] = useState('')
-    const [loginErrorMsg, setLoginErrorMsg] = useState('')
+    const [errorMsg, setErrorMsg] = useState('')
 
     const {googleSignIn, emailPasswordSignIn, checkIsValidEmailFormat, checkIsEmptyString} = userAuthMgr
+
+    const onGoogleSignIn = () => {
+        dispatch(setLoadingState(1))
+        googleSignIn((success, errCode) => {
+            dispatch(setLoadingState(0))
+            if (!success) {
+                switch (errCode) {
+                    case '':
+                        break
+                    default:
+                        console.log('error on google sign in', errCode)
+                        break
+                }
+                
+            }
+            
+        })
+    }
     /**
      * @typedef {function} onVerifyManualLogIn
      * @memberof LogInUI
      */
     const onVerifyManualLogIn = () => {
-        setLoginErrorMsg('')
+        setErrorMsg('')
         if (!checkIsValidEmailFormat(email) || checkIsEmptyString(email)) {
-            setLoginErrorMsg('Please enter a valid email!')
+            setErrorMsg('Please enter a valid email!')
             return
         }
 
         if (checkIsEmptyString(pw)) {
-            setLoginErrorMsg('Please enter your password.')
+            setErrorMsg('Please enter your password.')
             return
         }
 
+        dispatch(setLoadingState(1))
         emailPasswordSignIn(email, pw, (success, errCode) => {
+            dispatch(setLoadingState(0))
             if (!success) {
                 switch(errCode) {
                     case 'auth/invalid-email':
-                        setLoginErrorMsg('Invalid email. Please try again.')
+                        setErrorMsg('Invalid email. Please try again.')
                         break
                     case 'auth/user-not-found':
-                        setLoginErrorMsg('Email does not exist!')
+                        setErrorMsg('Email does not exist!')
                         break
                     case 'auth/wrong-password':
-                        setLoginErrorMsg('Wrong password! Please try again.')
+                        setErrorMsg('Wrong password! Please try again.')
                         break
                         default:
                         console.log('error on manual sign in', errCode)
@@ -59,7 +82,7 @@ const LogInUI = props => {
      */
      const onEmailChange = e => {
         setEmail(e.target.value)
-        setLoginErrorMsg('')
+        setErrorMsg('')
     }
 
     /**
@@ -69,7 +92,7 @@ const LogInUI = props => {
      */
      const onPWChange = e => {
         setPW(e.target.value)
-        setLoginErrorMsg('')
+        setErrorMsg('')
     }
 
     return (
@@ -77,7 +100,7 @@ const LogInUI = props => {
             <div className="login-main-content">
                 <div className="google-button-container">
                 <p className="google-sign-in-info">To skip email verification,<br />sign in/sign up with Google.</p>
-                    <GoogleSignInButton onClick={googleSignIn}></GoogleSignInButton>
+                    <GoogleSignInButton onClick={onGoogleSignIn}></GoogleSignInButton>
                 </div>
                 
                 <p className="or-text"><b>Or</b></p>
@@ -86,12 +109,12 @@ const LogInUI = props => {
                         <span>Email: </span><input type="text" onChange={onEmailChange}/>
                     </div>
                     <div className="input-field input-password">
-                        <span>Password: </span><input type="text" onChange={onPWChange}/>
+                        <span>Password: </span><input type="password" onChange={onPWChange}/>
                     </div>
-                    <p className="warning-text">{loginErrorMsg}</p>
+                    <p className="warning-text">{errorMsg}</p>
                 </div>
-                <div className="login-button-container">
-                    <div className="login-button" onClick={onVerifyManualLogIn}>Sign In</div>
+                <div className="button-container">
+                    <div className="default-button" onClick={onVerifyManualLogIn}>Sign In</div>
                 </div>
             </div>
             {props.children}

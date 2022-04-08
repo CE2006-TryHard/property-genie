@@ -63,7 +63,6 @@
                     padding-right: 20px;
                   }
                   h3 {
-                    margin: 0;
                     font-size: 22px;
                     line-height: 1.1;
                     padding-bottom: 10px;
@@ -72,7 +71,6 @@
                   p {
                     &.address {
                       color: #555555;
-                      margin: 0;
                       font-size: 11px;
                       line-height: 1.2;
                       padding-bottom: 15px;
@@ -142,12 +140,6 @@
                 }
 
                 .right {
-                  // padding: 0 0 10px 10px;
-                  
-                  & > * {
-                    margin: 0;
-                  }
-
                   p.score {
                     font-weight: bold;
                     font-size: 18px;
@@ -171,8 +163,6 @@
                     }
 
                     ul {
-                      margin: 0;
-                      padding: 0;
                       padding-left: 17px;
 
                       li {
@@ -232,7 +222,6 @@
                   }
 
                   p.score-header {
-                    margin: 0;
                     font-weight: bold;
                     font-size: 17px;
                     padding-bottom: 10px;
@@ -247,13 +236,11 @@
                   ul {
                     padding-left: 20px;
                     padding: 0 0 10px 20px;
-                    margin: 0;
                     li.score-item {
                       & > * {
                         vertical-align: text-top;
                       }
-                      // width: 70%;
-                      margin: 0;
+                      
                       white-space: nowrap;
                       padding-bottom: 10px;
   
@@ -271,7 +258,6 @@
                         padding-right: 20px;
                         box-sizing: border-box;
                         white-space: normal;
-                        margin: 0;
                         font-size: 17px;
                         line-height: 1.2;
                       }
@@ -293,8 +279,10 @@
                 }
 
                 .google-review-container {
+                  margin: 20px 0;
                   h3 {
                     font-size: 25px;
+                    margin-bottom: 20px;
                   }
 
                   .review-item {
@@ -335,7 +323,6 @@
                     } // profile
                     p {
                       font-size: 14px;
-                      margin: 0;
                     }
                   }
                   

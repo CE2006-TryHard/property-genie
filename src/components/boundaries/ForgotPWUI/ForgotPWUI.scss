@@ -1,0 +1,26 @@
+.forgot-password-container {
+    padding: 20px;
+    box-sizing: border-box;
+
+    h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    .input-field-container .input-field input {
+        width: 70%;
+    }
+    .warning-text {
+        color: red;
+        font-size: 15px;
+        line-height: 1.1;
+    }
+
+    .button-container {
+        text-align: center;
+        padding-top: 10px;
+        & > div {
+            margin-right: 5px;
+        }
+    }
+}

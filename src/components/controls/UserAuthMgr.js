@@ -82,20 +82,28 @@ class UserAuthMgr {
         const auth = getAuth()
         sendPasswordResetEmail(auth, email, actionCodeSettings)
             .then(() => {
-                onFetchEnd(true)
+                if (onFetchEnd) onFetchEnd(true)
+                console.log('reset password sent')
             })
-            .catch(err => console.log('error on request password change', err))
+            .catch(err => {
+                if (onFetchEnd) onFetchEnd(false, err.code)
+                // console.log('error on request password change', err)
+            })
     }
 
     /**
      * invoke pop up panel contain google sign in option
      */
-    googleSignIn () {
+    googleSignIn (onFetchEnd) {
         const auth = getAuth()
         signInWithPopup(auth, provider)
         .then(userCredential => {
+            if (onFetchEnd) onFetchEnd(true)
             console.log('google sign in successfully', userCredential)
-        }).catch(err => console.log('error on sign in', err))
+        }).catch(err => {
+            if (onFetchEnd) onFetchEnd(false, err.code)
+            console.log('error on sign in', err)
+        })
     }
 
     /**

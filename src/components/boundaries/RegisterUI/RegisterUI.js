@@ -1,7 +1,9 @@
+import './RegisterUI.scss'
 import {useState } from "react"
 import { dbMgr, userAuthMgr } from "../../controls/Mgr"
 import {GoogleSignInButton} from '../MiscUI/MiscUI'
-import './RegisterUI.scss'
+import {useDispatch} from 'react-redux'
+import { setLoadingState } from '../../../features/loadingStateSlice'
 
 /**
  * @namespace RegisterUI
@@ -16,6 +18,7 @@ import './RegisterUI.scss'
  * @property {String} nameWarningMsg
  */
 const RegisterUI = props => {
+    const dispatch = useDispatch()
     const [pw, setPW] = useState('')
     const [confirmPW, setConfirmPW] = useState('')
     const [email, setEmail] = useState('')
@@ -73,48 +76,56 @@ const RegisterUI = props => {
      * @typedef {function} onVerifyManualRegister
      */
     const onVerifyManualRegister = () => {
-        if (verifyEmail()) {
-            setEmailWarningMsg('')
-
-            if (verifyName() && verifyPW()) {
-                userAuthMgr.sendRegisterEmail(email, pw, (sent, err) => {
-                    if (sent) {
-                        console.log('sign up link successfully sent')
-                        const id = email.replace('.', '-')
-                        dbMgr.updateDataDB(`account/${id}/name`, firstName + ' ' + lastName)
-                    } else {
-                        console.log(err)
-                        switch (err.code) {
-                            case 'auth/email-already-in-use':
-                                setEmailWarningMsg("Email already exists! Please enter a different email.")
-                                // console.log('account exist!')
-                                break;
-                            case 'auth/weak-password':
-                                setPWWarningMsg('Password should be at least 6 characters!')
-                                break
-                        }
-                        
+        setEmailWarningMsg('')
+        if (!verifyEmail()) return
+            
+        if (verifyName() && verifyPW()) {
+            dispatch(setLoadingState(3))
+            userAuthMgr.sendRegisterEmail(email, pw, (success, err) => {
+                dispatch(setLoadingState(0))
+                if (success) {
+                    console.log('sign up link successfully sent')
+                    const id = email.replace('.', '-')
+                    dbMgr.updateDataDB(`account/${id}/name`, firstName + ' ' + lastName)
+                } else {
+                    switch (err.code) {
+                        case 'auth/email-already-in-use':
+                            setEmailWarningMsg("Email already exists! Please enter a different email.")
+                            // console.log('account exist!')
+                            break;
+                        case 'auth/weak-password':
+                            setPWWarningMsg('Password should be at least 6 characters!')
+                            break
+                        default:
+                            console.log('error on manual sign up', err)
+                            break
                     }
-                })
-            } else {
-                verifyName()
-                verifyPW()
-            }
-            // })
-        } else {
-            verifyName()
-            verifyPW()
+                    
+                }
+            })
         }
         
     }
 
-    // /**
-    //  * @memberof RegisterUI
-    //  * @typedef {function} onRegisterGoogle
-    //  */
-    // const onRegisterGoogle = () => {
-    //     props.onRegisterGoogle()
-    // }
+    /**
+     * @memberof RegisterUI
+     * @typedef {function} onGoogleSignUp
+     */
+    const onGoogleSignUp = () => {
+        dispatch(setLoadingState(3))
+        userAuthMgr.googleSignIn((success, errCode) => {
+            dispatch(setLoadingState(0))
+            if (!success) {
+                switch (errCode) {
+                    case 'auth/popup-closed-by-user':
+                        break
+                    default:
+                        console.log(errCode)
+                        break
+                }
+            }
+        })
+    }
 
     /**
      * @memberof RegisterUI
@@ -169,7 +180,7 @@ const RegisterUI = props => {
     return (<div className="register-container">
         <div className="google-button-container">
             <p className="google-sign-in-info">To skip email verification,<br />sign in/sign up with Google.</p>
-            <GoogleSignInButton onClick={userAuthMgr.googleSignIn} label="Sign up with google"></GoogleSignInButton>
+            <GoogleSignInButton onClick={onGoogleSignUp} label="Sign up with google"></GoogleSignInButton>
         </div>
         <p className="or-text"><b>Or</b></p>
         <div className="input-field-container">
@@ -187,10 +198,10 @@ const RegisterUI = props => {
             <p className="warning">{nameWarningMsg}</p>
 
             <div className="input-field input-password">
-                <span>Password: </span><input type="text" value={pw} onChange={onPWChange}/>
+                <span>Password: </span><input type="password" value={pw} onChange={onPWChange}/>
             </div>
             <div className="input-field input-password">
-                <span>Confirm Password: </span><input type="text" value={confirmPW} onChange={onConfirmPWChange}/>
+                <span>Confirm Password: </span><input type="password" value={confirmPW} onChange={onConfirmPWChange}/>
             </div>
             <p className="warning">{pwWarningMsg}</p>
 

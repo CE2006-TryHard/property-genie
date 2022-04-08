@@ -11,7 +11,7 @@
         position: fixed;
         padding: 10px 20px 15px;
         box-sizing: border-box;
-        width: calc(100% - 17px);
+        width: calc(100% - 8px);
         top: 0;
         left: 0;
         z-index: 1;
@@ -76,7 +76,6 @@
                 position: relative;
                 width: 120px;
                 height: 120px;
-                margin: 0;
                 background-color: #aaaaaa;
                 
                 img {
@@ -92,7 +91,6 @@
                 width: calc(100% - 130px);
                 & > * {
                     display: inline-block;
-                    margin: 0;
                     margin-bottom: 10px;
                 }
 
@@ -115,11 +113,6 @@
                     }
                 }
             }
-        }
-
-        .no-bookmark-msg {
-            margin: 0;
-            padding: 10px;
         }
     } // bookmark-content
 

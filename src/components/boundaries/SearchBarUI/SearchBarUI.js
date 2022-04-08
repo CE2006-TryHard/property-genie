@@ -70,6 +70,7 @@ const SearchBarUI = props => {
       <div className="search-bar-content">
         <Select components={{ Option: CustomOption }}
           value={selectedSearch}
+          isSearchable={true}
           onChange={onChange}
           onInputChange={onInputChange}
           options={getSearchOptions()}

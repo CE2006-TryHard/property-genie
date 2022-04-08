@@ -1,29 +1,16 @@
 body {
   color: #333333;
   font-size: 16px;
-  p {
+  margin: 0;
+  padding: 0;
+
+  h1, h2,h3,h4,h5, p, ul, li, b, div, span, input {
     padding: 0;
     margin: 0;
-  }
-  
-  div {
-    margin: 0;
-    padding: 0;
   }
 }
 
-.loader {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 120px;
-  height: 120px;
-  border: 16px solid #f3f3f3;
-  border-radius: 50%;
-  border-top: 16px solid #333333;
-  -webkit-animation: spin 2s linear infinite; /* Safari */
-  animation: spin 2s linear infinite;
-}
+
 
 .noselect {
   -webkit-touch-callout: none; /* iOS Safari */
@@ -35,18 +22,8 @@ body {
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
-  /* Safari */
-  @-webkit-keyframes spin {
-    0% { -webkit-transform: translate(-50%, -50%) rotate(0deg); }
-    100% { -webkit-transform: translate(-50%, -50%) rotate(360deg); }
-  }
-  
-  @keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-  }
 
-  $white: #fff;
+ $white: #fff;
 $google-blue: #4285f4;
 $button-active-blue: #1669F2;
 
@@ -143,17 +120,6 @@ $button-active-blue: #1669F2;
         }
     }
   } // navbar-container
-
-  .logout-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 10px;
-    pointer-events: none;
-    font-size: 20px;
-    color: #FFFFFF;
-  } // logout-container
 } // property-web-app
 
 // MISC styles
@@ -172,6 +138,22 @@ span.text-button {
   &.text-button-remove:hover {
     color: red;
     text-decoration: underline solid red;
+  }
+}
+
+div.default-button {
+  display: inline-block;
+  background-color: #444444;
+  color: #FFFFFF;
+  line-height: 1;
+  font-size: 16px;
+  padding: 10px 20px;
+  transition: background-color 0.3s;
+  cursor: pointer;
+  pointer-events: all;
+  
+  &:hover {
+      background-color: #555555;
   }
 }
 

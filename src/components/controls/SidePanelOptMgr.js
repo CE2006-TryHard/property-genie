@@ -14,14 +14,11 @@ class SidePanelOptMgr {
             bookmark: {
                 label: 'Bookmarks', hide: false, enable: false, state: 5
             },
-            // scoresetting: {
-            //     label: 'Score Setting', hide: false, enable: true, state: 10,
-            // },
             filter: {
                 label: 'Filters', hide: false, enable: true, state: 6
             },
             logout: {
-                label: 'Log out', hide: false, enable: false, state: 9
+                label: 'Sign out', hide: false, enable: false, state: 9
             }
         }
     
