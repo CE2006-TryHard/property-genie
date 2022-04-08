@@ -2,7 +2,7 @@ import {ReactComponent as HomeLogo} from './../../../images/home.svg'
 import {ReactComponent as SgLogo} from './../../../images/sg.svg'
 import {Scrollbars} from 'react-custom-scrollbars-2'
 import './MiscUI.scss'
-import {useState } from 'react'
+import {useEffect, useState } from 'react'
 
 /**
  * Functional Component displays greet user message after user logged in.
@@ -105,6 +105,10 @@ const SidePanelWrapper = props => {
 const Slider = props => {
   const {enabled, title, min, max, step, initialVal, tickLabels, autoLabel, autoLabelUnit, autoLabelPreUnit, onAfterChange} = props
   const [val, setVal] = useState(initialVal)
+
+  useEffect(() => {
+    setVal(initialVal)
+  }, [initialVal])
 
   return (<div className={`slider ${enabled ? '' : 'disabled'}`}>
           <p className="slider-title noselect">{title}:&nbsp; 

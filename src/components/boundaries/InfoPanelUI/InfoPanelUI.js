@@ -2,6 +2,7 @@ import "./InfoPanelUI.scss"
 import {Scrollbars} from 'react-custom-scrollbars-2'
 import { TabButton } from "../MiscUI/MiscUI"
 import React, { useEffect, useState } from 'react'
+import {useSelector} from 'react-redux'
 import { LINES } from "../../CONFIG"
 import { MARKER_COLOR_SCHEME } from "../MapUI/MAP_CONFIG"
 const dummyProfileImg = require('./../../../images/dummy-profile.png')
@@ -14,7 +15,8 @@ const views = ["General", "Evaluation"]
  * @property {Object[]} localReviews
  */
 const InfoPanelUI = props => {
-    const {isBookmarked, enableBookmark, filterOptions, selectedProperty, onBookmark, onLocateProperty} = props
+    const filterOptions = useSelector(state => state.filterOptions)
+    const {isBookmarked, enableBookmark, selectedProperty, onBookmark, onLocateProperty} = props
     const [currentView, setCurrentView] = useState('General')
     const [localReview, setLocalReviews] = useState(null)
     const [localAddress, setLocalAddress] = useState(null)

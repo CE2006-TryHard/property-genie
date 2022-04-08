@@ -1,4 +1,4 @@
-import './LoginUI.scss'
+import './SignInUI.scss'
 import React, { useState } from "react";
 import {GoogleSignInButton} from '../MiscUI/MiscUI'
 import { userAuthMgr } from '../../controls/Mgr'
@@ -6,13 +6,13 @@ import {useDispatch} from 'react-redux'
 import { setLoadingState } from '../../../features/loadingStateSlice'
 
 /**
- * @namespace LogInUI
+ * @namespace SignInUI
  * @description boundary module
  * @property {String} email
  * @property {String} pw
  * @property {String} errorMsg
  */
-const LogInUI = props => {
+const SignInUI = props => {
     const dispatch = useDispatch()
     const [email, setEmail] = useState('')
     const [pw, setPW] = useState('')
@@ -39,7 +39,7 @@ const LogInUI = props => {
     }
     /**
      * @typedef {function} onVerifyManualLogIn
-     * @memberof LogInUI
+     * @memberof SignInUI
      */
     const onVerifyManualLogIn = () => {
         setErrorMsg('')
@@ -76,7 +76,7 @@ const LogInUI = props => {
     }
 
     /**
-     * @memberof LoginUI
+     * @memberof SignInUI
      * @typedef {function} onEmailChange
      * @param {Event} e
      */
@@ -86,7 +86,7 @@ const LogInUI = props => {
     }
 
     /**
-     * @memberof LoginUI
+     * @memberof SignInUI
      * @typedef {function} onPWChange
      * @param {Event} e
      */
@@ -121,4 +121,4 @@ const LogInUI = props => {
         </div>)
 }
 
-export default LogInUI
+export default SignInUI

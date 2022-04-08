@@ -31,7 +31,8 @@ const ForgotPasswordUI = props => {
                             setErrorMsg('Email does not exist!')
                         break;
                         default:
-                            
+                            console.log(errCode)
+                            break
                     }
                 }
                 dispatch(setLoadingState(0))

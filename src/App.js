@@ -1,6 +1,6 @@
 import './styles/App.scss'
 
-import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, LoginUI, RegisterUI, MapUI, SearchBarUI, AccountUI, ForgotPWUI, LoadingUI} from './components/boundaries/index'
+import {BookmarkUI, FilterPanelUI, InfoPanelUI, LightBoxWrapper, SignInUI, SignUpUI, MapUI, SearchBarUI, AccountUI, ForgotPWUI, LoadingUI} from './components/boundaries/index'
 import { GreetUserMsg, HomeLogo, SidePanelWrapper } from './components/boundaries/MiscUI/MiscUI'
 import {dbMgr, sidePanelOptMgr, userAuthMgr} from './components/controls/Mgr'
 import {getAuth} from "firebase/auth"
@@ -12,8 +12,8 @@ import {setLoadingState} from './features/loadingStateSlice'
 
 // page state
 // HOME         0
-// LOGIN        2
-// REGISTER     3
+// Sign In        2
+// Sign Up     3
 // FORGOT PASSWORD 10
 // ACCOUNT INFO 4
 // BOOKMARK     5
@@ -26,13 +26,13 @@ import {setLoadingState} from './features/loadingStateSlice'
  * @description control module
  * @property {Boolean} isSignedOut value records user signed out activity
  * @property {Boolean} isRegistering value records user registration activity
- * @property {integer} pageState state of the current page.
+//  * @property {integer} pageState state of the current page.
  * @property {Boolean} showLightBox value to show the lightbox
  * @property {SearchItem} curSearch current search item
  * @property {Property} selectedProperty selected property
  * @property {Constituency} selectedConstituency selected constituency
  * @property {SearchItem[]} recentSearches a list of user's recent searches
- * @property {object} filterOptions filter options
+//  * @property {object} filterOptions filter options
  * @property {Property[]} bookmarks list of properties as user's bookmark
  * @property {User} activeUser current logged in user instance.
  * @property {Boolean} sidePanelIn value to show/hide side panel
@@ -41,23 +41,15 @@ import {setLoadingState} from './features/loadingStateSlice'
  * @returns {FunctionalComponent}
  */
 
-let initCount = false
-
  function App() {
    console.log('render App')
   const dispatch = useDispatch()
-  const [pageState, setPageState] = useState(0)
+  // const [pageState, setPageState] = useState(0)
   const [showLightBox, setShowLightbox] = useState(false)
   const [curSearch, setCurSearch] = useState(null)
   const [selectedProperty, setSelectedProperty] = useState(null)
   const [selectedConstituency, setSelectedConstituency] = useState(null)
   const [recentSearches, setRecentSearches] = useState([])
-  const [filterOptions, setFilterOptions] = useState({
-    score: {label: 'Score', checked: true, threshold: 0},
-    enbloc: {label: 'Enbloc', checked: true, threshold: 1},
-    distToMrt: {label: 'Distance to MRT', checked: true, threshold: 4},
-    distToSchool: {label: 'Distance to School', checked: true, threshold: 4}
-  })
 
   const [bookmarks, setBookmarks] = useState([])
   const [activeUser, setActiveUser] = useState(null)
@@ -82,7 +74,7 @@ let initCount = false
                 const {emailVerified} = user
                 const isGoogleAuth = providerId === 'google.com'
                 userAuthMgr.setAuthUserInfo(user)
-                console.log('auth change valid user')
+                console.log('auth change valid user', user)
                 dbMgr.initActiveUser({
                   name,
                   email,
@@ -93,7 +85,7 @@ let initCount = false
                 })
             } else {
                 console.log('no active user on auth change')
-                dbMgr.fetchPropertyData(filterOptions, (properties, constituencies) => {
+                dbMgr.fetchPropertyData((properties, constituencies) => {
                   setActiveUserDataReady(true)
                 })
             }
@@ -113,7 +105,7 @@ let initCount = false
       console.log('active user')
       setSubSidePanelIn(false)
 
-      dbMgr.fetchPropertyData(filterOptions, (pps, ccs) => {
+      dbMgr.fetchPropertyData((pps, ccs) => {
       // update recent search
       let tempSearches = activeUser.recentSearches
         .map(({type, id}) => {
@@ -169,7 +161,7 @@ let initCount = false
         setSubSidePanelIn(true)
         break
       case 9:
-        setPageState(newPageState)
+        // setPageState(newPageState)
         onLogOut()
       break
     }
@@ -183,7 +175,7 @@ let initCount = false
   const onConstituencySelectMap = newConstituency => {
     setSelectedProperty(null)
     setSelectedConstituency(newConstituency)
-    setPageState(0)
+    // setPageState(0)
   }
 
 /**
@@ -288,7 +280,7 @@ let initCount = false
         setTimeout(() => { // add a deplay during sign out
           setActiveUser(null)
           setSidePanelIn(false)
-          setPageState(0)
+          // setPageState(0)
           dispatch(setLoadingState(0))
           // localStorage.removeItem('activeUser')
         }, 1000)
@@ -299,22 +291,12 @@ let initCount = false
 
   /**
  * @memberof App
- * @typedef {function} onFilterChange invoked when user changes filter combination on the filter panel.
- * @param {object} newFilterOptions new filter combination
- */
-  const onFilterChange = newFilterOptions => {
-    dbMgr.updateFilterDependVals(newFilterOptions)
-    setFilterOptions(newFilterOptions)
-  }
-
-  /**
- * @memberof App
  * @typedef {function} onResetView invoked when user clicks the home button to reset the view.
  */
   const onResetView = () => {
     setSelectedProperty(null)
     setSelectedConstituency(null)
-    setPageState(0)
+    // setPageState(0)
     setShowLightbox(false)
     setSidePanelIn(false)
     setSubSidePanelIn(false)
@@ -329,7 +311,7 @@ let initCount = false
     switch (sidePanelContent) {
       case 2:
         return (
-          <LoginUI 
+          <SignInUI 
             activeUser={activeUser}>
               <div className="forgot-password-info-container">
                 Forgot password? <span className="text-button" onClick={() => setSidePanelContent(10)}>Reset password</span>
@@ -337,27 +319,26 @@ let initCount = false
               <div className="register-info-container">
                 Does not have an account? <span className="register-ui-entry-button text-button" onClick={() => setSidePanelContent(3)}>Sign up</span>
               </div>
-            </LoginUI>
+            </SignInUI>
             )
         case 3:
           return (
-            <RegisterUI 
+            <SignUpUI 
               onBack={() => {
                 setSidePanelContent(2)
                 // setPageState(2)
-              }}></RegisterUI>
+              }}></SignUpUI>
           )
       case 4:
         return activeUser ? <AccountUI user={activeUser}></AccountUI> : ''
       case 5:
         return (<BookmarkUI
             bookmarks={bookmarks}
-            filterOptions={filterOptions}
             onPropertySelect={onPropertySelect}
             onBookmarkRemove={onBookmark}
             onBookmarkRemoveAll={removeAllBookmarks}></BookmarkUI>)
       case 6:
-        return (<FilterPanelUI filterOptions={filterOptions} onFilterChange={onFilterChange}></FilterPanelUI>)
+        return (<FilterPanelUI></FilterPanelUI>)
       case 10:
         return (<ForgotPWUI onBack={() => {
           setSidePanelContent(2)
@@ -371,7 +352,6 @@ let initCount = false
 
   return (<div className="property-web-app">
       <MapUI
-        filterOptions={filterOptions}
         curConstituency={selectedConstituency}
         curProperty={selectedProperty}
         onPropertySelect={onPropertySelect}
@@ -404,7 +384,6 @@ let initCount = false
           <InfoPanelUI
             isBookmarked={bookmarks.filter(b => b === selectedProperty).length > 0}
             enableBookmark={!!activeUser}
-            filterOptions={filterOptions}
             selectedProperty={selectedProperty}
             onBookmark={onBookmark}
             onLocateProperty={() => setShowLightbox(false)}></InfoPanelUI>

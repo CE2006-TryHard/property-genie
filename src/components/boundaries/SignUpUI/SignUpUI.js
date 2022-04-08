@@ -1,4 +1,4 @@
-import './RegisterUI.scss'
+import './SignUpUI.scss'
 import {useState } from "react"
 import { dbMgr, userAuthMgr } from "../../controls/Mgr"
 import {GoogleSignInButton} from '../MiscUI/MiscUI'
@@ -6,7 +6,7 @@ import {useDispatch} from 'react-redux'
 import { setLoadingState } from '../../../features/loadingStateSlice'
 
 /**
- * @namespace RegisterUI
+ * @namespace SignUpUI
  * @description boundary module
  * @property {String} pw
  * @property {String} confirmPW
@@ -17,7 +17,7 @@ import { setLoadingState } from '../../../features/loadingStateSlice'
  * @property {String} pwWarningMsg
  * @property {String} nameWarningMsg
  */
-const RegisterUI = props => {
+const SignUpUI = props => {
     const dispatch = useDispatch()
     const [pw, setPW] = useState('')
     const [confirmPW, setConfirmPW] = useState('')
@@ -30,7 +30,7 @@ const RegisterUI = props => {
 
     const {checkIsEmptyString, checkIsValidEmailFormat} = userAuthMgr
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} verifyEmail
      * @return {Boolean}
      */
@@ -43,7 +43,7 @@ const RegisterUI = props => {
     }
 
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} verifyPW
      * @return {Boolean}
      */
@@ -59,7 +59,7 @@ const RegisterUI = props => {
     }
 
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} verifyName
      * @return {Boolean}
      */
@@ -72,7 +72,7 @@ const RegisterUI = props => {
     }
 
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} onVerifyManualRegister
      */
     const onVerifyManualRegister = () => {
@@ -108,7 +108,7 @@ const RegisterUI = props => {
     }
 
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} onGoogleSignUp
      */
     const onGoogleSignUp = () => {
@@ -128,7 +128,7 @@ const RegisterUI = props => {
     }
 
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} onEmailChange
      * @param {Event} e
      */
@@ -138,7 +138,7 @@ const RegisterUI = props => {
     }
 
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} onFirstNameCange
      * @param {Event} e
      */
@@ -148,7 +148,7 @@ const RegisterUI = props => {
     }
 
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} onLastNameChange
      * @param {Event} e
      */
@@ -158,7 +158,7 @@ const RegisterUI = props => {
     }
 
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} onPWChange
      * @param {Event} e
      */
@@ -168,7 +168,7 @@ const RegisterUI = props => {
     }
 
     /**
-     * @memberof RegisterUI
+     * @memberof SignUpUI
      * @typedef {function} onConfirmPWChange
      * @param {Event} e
      */
@@ -214,4 +214,4 @@ const RegisterUI = props => {
     </div>)
 }
 
-export default RegisterUI
+export default SignUpUI

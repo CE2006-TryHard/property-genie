@@ -4,6 +4,7 @@ import {getDatabase, ref, child, update, get} from 'firebase/database'
 import Papa from 'papaparse'
 import {Constituency, Property, User} from '../entities/index'
 import {STATIONS, SCHOOLS, CONSTITUENCY_NAME} from '../CONFIG'
+import {INIT_FILTER_OPTIONS} from './../../features/filterSlice'
 
 /**
  * A control class manage the flow of data between the application and database
@@ -143,7 +144,7 @@ class DatabaseMgr {
   /**
    * fetch all properties data from local csv
    */
-  fetchPropertyData (filterOptions, onFetchEnd) {
+  fetchPropertyData (onFetchEnd) {
     if (this.properties && this.constituencies) {
       onFetchEnd(this.properties, this.constituencies)
       return
@@ -192,7 +193,7 @@ class DatabaseMgr {
             }
           })
           
-          this.updateFilterDependVals(filterOptions)
+          this.updateFilterDependVals(INIT_FILTER_OPTIONS)
           
           onFetchEnd(this.properties, this.constituencies)
       })

@@ -1,6 +1,9 @@
+import './AccountUI.scss'
 import { useState } from "react"
 import { userAuthMgr } from "../../controls/Mgr"
-import './AccountUI.scss'
+
+import {useDispatch} from 'react-redux'
+import { setLoadingState } from '../../../features/loadingStateSlice'
 
 /**
  * @namespace AccountUI
@@ -8,26 +11,53 @@ import './AccountUI.scss'
  * @property {Boolean} showRequestCompleteMsg value to toggle the display of request complete message.
  */
 const AccountUI = props => {
+    const dispatch = useDispatch()
     const {user: {name, email, isGoogleAuth, isVerified}} = props
     const [showRequestCompleteMsg, setShowRequestCompleteMsg] = useState(false)
     const [emailVerifyMsg, setEmailVerifyMsg] = useState('Email must be verified in order to access password reset feature.')
+    const [pwResetMsg, setPWResetMsg] = useState('')
 
       /**
      * @memberof AccountUI
      * @typedef {function} onRequestPWChange called when user clicks on "Update password" button
      */
     const onRequestPWChange = () => {
-        userAuthMgr.requestPasswordChange(email, () => {
-            setShowRequestCompleteMsg(true)
+        dispatch(setLoadingState(3))
+        userAuthMgr.requestPasswordChange(email, (success, errCode) => {
+            dispatch(setLoadingState(0))
+            if (success) {
+                setShowRequestCompleteMsg(true)
+                setPWResetMsg(`Request submitted. A password reset link will be sent to ${email}.`)
+            } else {
+                switch (errCode) {
+                    case 'auth/too-many-requests':
+                    setPWResetMsg('Too many requests. Please try again later.')
+                    break
+                    default:
+                        console.log(errCode)
+                        break
+                }
+            }
+            
+            
         })
     }
 
     const onVerifyEmail = () => {
-        userAuthMgr.sendEmailVerificationRequest((success) => {
+        dispatch(setLoadingState(3))
+        userAuthMgr.sendEmailVerificationRequest((success, errCode) => {
+            dispatch(setLoadingState(0))
             if (success) {
                 setEmailVerifyMsg('Email verification link sent. Please check your email.')
             } else {
-                setEmailVerifyMsg('Email must be verified in order to access password reset feature.')
+                switch(errCode) {
+                    case 'auth/too-many-requests':
+                        setEmailVerifyMsg('Too many requests. Please try again later.')
+                        break;
+                    default:
+                        console.log(errCode)
+                        break
+                }
             }
         })
     }
@@ -47,7 +77,7 @@ const AccountUI = props => {
         
         {isGoogleAuth || showRequestCompleteMsg ? '' : <div title={isVerified ? '' : 'Verify email to reset password'} className={`update-password-button ${isVerified ? 'enabled' : ''}`} onClick={isVerified ? onRequestPWChange : null}>Reset password</div>}
 
-        {showRequestCompleteMsg ? <p className="reset-password-msg">{`Request submitted. A password reset link will be sent to ${email}.`}</p> : ''}
+        {showRequestCompleteMsg ? <p className="reset-password-msg">{pwResetMsg}</p> : ''}
     </div>)
 }
 

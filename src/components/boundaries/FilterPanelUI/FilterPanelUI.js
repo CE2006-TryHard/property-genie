@@ -1,12 +1,15 @@
 import "./FilterPanelUI.scss"
 import { CheckBox, Slider } from "../MiscUI/MiscUI"
-
+import {useDispatch, useSelector} from 'react-redux'
+import { setFilterCheckBox, setFilterSlider, resetFilters } from "../../../features/filterSlice"
 /**
  * @namespace FilterPanelUI
  * @description boundary module
  */
 const FilterPanelUI = props => {
-    const {filterOptions, onFilterChange} = props
+    const dispatch = useDispatch()
+    const filterOptions = useSelector(state => state.filterOptions)
+    // const {filterOptions, onFilterChange} = props
 
     /**
     * @memberof FilterPanelUI
@@ -15,16 +18,7 @@ const FilterPanelUI = props => {
     * @param {Boolean} value filter option "checked" value
     */
     const onCheckboxChange = (key, value) => {
-        const newfilterOptions = JSON.parse(JSON.stringify(filterOptions))
-        newfilterOptions[key].checked = value
-        if (!value) {
-            newfilterOptions[key].threshold = filterOptionFormat.filter(fo => fo.key === key)[0].max
-        }
-
-        if (Object.keys(newfilterOptions).filter(filterKey => filterKey !== 'score' && newfilterOptions[filterKey].checked).length === 0) {
-            newfilterOptions['score'].threshold = 0
-        }
-        onFilterChange(newfilterOptions)
+        dispatch(setFilterCheckBox({key, value}))
     }
 
     /**
@@ -33,10 +27,7 @@ const FilterPanelUI = props => {
      * @param {Number} value filter option "threshold" value 
      */
     const onSubmitSliderChange = (key, value) => {
-        // console.log('after change val', value)
-        let newFilterOptions = JSON.parse(JSON.stringify(filterOptions))
-        newFilterOptions[key].threshold = value
-        onFilterChange(newFilterOptions)
+        dispatch(setFilterSlider({key, value}))
     }
 
     /**
@@ -44,21 +35,7 @@ const FilterPanelUI = props => {
     * @typedef {function} onReset called when user reset(uncheck) all filter checkbox.
     */
     const onReset = () => {
-        const newFilterOptions = JSON.parse(JSON.stringify(filterOptions))
-        Object.keys(newFilterOptions).forEach(key => {
-            newFilterOptions[key].checked = true
-            if (key === 'score') {
-                newFilterOptions[key].threshold = 0
-            } else if (key === 'enbloc') {
-                newFilterOptions[key].threshold = 1
-                // newFilterOptions[key].checked = true
-            } else if (key === 'distToMrt') {
-                newFilterOptions[key].threshold = 4
-            } else if (key === 'distToSchool') {
-                newFilterOptions[key].threshold = 4
-            }
-        })
-        onFilterChange(newFilterOptions)
+        dispatch(resetFilters())
     }
 
     const filterOptionFormat = [
@@ -107,29 +84,23 @@ const FilterPanelUI = props => {
 
     
 
-    const filterOptionCopy = Object.keys(filterOptions)
+    const checkBoxOptions = Object.keys(filterOptions)
         .filter(filterKey => filterKey !== 'score')
         .reduce((acc, filterKey) => {
             acc[filterKey] = filterOptions[filterKey]
         return acc
     }, {})
 
-    const enableSlider = key => {
-        if (key === 'score') {
-            return Object.keys(filterOptionCopy).filter(filterKey => filterOptions[filterKey].checked).length > 0
-        }
-        return filterOptionCopy[key].checked
-    }
     return (
     <div className="filter-panel-container">
         <div className="value-section">
             <h5 className="noselect">Calculates property's score by:</h5>
-            <CheckBox options={filterOptionCopy} onChange={onCheckboxChange}></CheckBox>
+            <CheckBox options={checkBoxOptions} onChange={onCheckboxChange}></CheckBox>
         </div>
         <div className="filter-section">
             <h5 className="noselect">Futher customize the properties you want to see</h5>
             {filterOptionFormat.map(({key,label, min, max, step, autoLabel, unit, preUnit, tickLabels}) => (
-                <Slider enabled={enableSlider(key)} key={key} title={label} min={min} max={max} step={step}
+                <Slider enabled={filterOptions[key].checked} key={key} title={label} min={min} max={max} step={step}
                 tickLabels={tickLabels}
                 initialVal={filterOptions[key].threshold}
                 autoLabel={autoLabel}

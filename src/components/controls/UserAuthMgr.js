@@ -61,9 +61,11 @@ class UserAuthMgr {
           }
           sendEmailVerification(this.userAuthInfo, actionCodeSettings)
             .then(() => {
-                console.log('email verification request sent')
-                onFetchEnd(true)
-            }).catch(err => onFetchEnd(false, err))
+                // console.log('email verification request sent')
+                if (onFetchEnd) onFetchEnd(true)
+            }).catch(err => {
+                if (onFetchEnd) onFetchEnd(false, err.code)
+            })
     }
 
     /**
@@ -83,7 +85,7 @@ class UserAuthMgr {
         sendPasswordResetEmail(auth, email, actionCodeSettings)
             .then(() => {
                 if (onFetchEnd) onFetchEnd(true)
-                console.log('reset password sent')
+                // console.log('reset password sent')
             })
             .catch(err => {
                 if (onFetchEnd) onFetchEnd(false, err.code)

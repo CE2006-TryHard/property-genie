@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
 import "./MapUI.scss"
+import { useEffect, useState } from 'react'
+import {useSelector} from 'react-redux'
+
 import {Loader} from "@googlemaps/js-api-loader"
-// import {MarkerClusterer} from '@googlemaps/markerclusterer'
 import { dbMgr } from '../../controls/Mgr'
 import { CONSTITUENCY_MAP_CONFIG, MAP_STYLES, MARKER_COLOR_SCHEME } from './MAP_CONFIG'
+
 
 const MAP_CENTER = {lat:1.360514, lng: 103.840300}
 const MAP_ZOOM = 11.5
@@ -31,7 +33,6 @@ export {gService}
 
 const markers = {}
 
-let InfoWindowEventRef = null
 
 /**
  * @namespace MapUI
@@ -41,7 +42,8 @@ let InfoWindowEventRef = null
  * @property {Property} curHoverP
  */
 const MapUI = props => {
-    const {filterOptions, curConstituency, curProperty, onPropertySelect, onConstituencySelect, triggerReset} = props
+  const filterOptions = useSelector(state => state.filterOptions)
+    const {curConstituency, curProperty, onPropertySelect, onConstituencySelect, triggerReset} = props
     const [overlayPos, setOverlayPos] = useState({left: 0, top: 0})
     const [curHoverC, setCurHoverC] = useState(null)
     const [curHoverP, setCurHoverP] = useState(null)

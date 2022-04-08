@@ -8,7 +8,7 @@ import './BookmarkUI.scss'
  * @property {Boolean} removeAllBookmarks a boolean value to determine if all bookmarks are to be removed
  */
 const BookmarkUI = props => {
-    const { bookmarks, filterOptions, onPropertySelect, onBookmarkRemove, onBookmarkRemoveAll } = props
+    const { bookmarks, onPropertySelect, onBookmarkRemove, onBookmarkRemoveAll } = props
     const [bookmarkToBeRemoved, setBookmarkToBeRemoved] = useState(null)
     const [removeAllBookmarks, setRemoveAllBookmarks] = useState(false)
     /**
