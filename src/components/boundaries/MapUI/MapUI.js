@@ -332,7 +332,7 @@ const MapUI = props => {
           })
   
           const {lat, lng} = curProperty
-          mapRef.setCenter({lat: lat, lng: lng})
+          mapRef.setCenter({lat, lng})
           markerInfoWindow.open(mapRef, markers[curProperty.constituency.name][curProperty.name])
           markerInfoWindow.setContent(getInfoWindowContent(curProperty))
           

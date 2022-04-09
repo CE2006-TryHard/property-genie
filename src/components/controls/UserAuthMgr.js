@@ -30,7 +30,7 @@ class UserAuthMgr {
      * Set current active user auth info when authentication status changed
      * @param {Object} newUserAuthInfo 
      */
-    setAuthUserInfo(newUserAuthInfo) {
+    setUserAuthInfo(newUserAuthInfo) {
         this.userAuthInfo = newUserAuthInfo
     }
 
@@ -45,7 +45,7 @@ class UserAuthMgr {
         createUserWithEmailAndPassword(auth, email, password)
           .then((userData) => {
               console.log('sign up successfully', userData)
-              this.setAuthUserInfo(userData.user)
+              this.setUserAuthInfo(userData.user)
               this.sendEmailVerificationRequest(onFetchEnd)
           })
           .catch(err => onFetchEnd(false, err))
@@ -103,10 +103,8 @@ class UserAuthMgr {
         signInWithPopup(auth, provider)
         .then(userCredential => {
             if (onFetchEnd) onFetchEnd(true)
-            console.log('google sign in successfully', userCredential)
         }).catch(err => {
             if (onFetchEnd) onFetchEnd(false, err.code)
-            console.log('error on sign in', err)
         })
     }
 
@@ -159,15 +157,6 @@ class UserAuthMgr {
      */
     checkIsEmptyString(str) {
         return str.trim() === ''
-    }
-
-    /**
-     * 
-     * @param {String} pw 
-     * @description update user password to database
-     */
-    updateUserPW(pw) {
-        // dbMgr
     }
 }
 

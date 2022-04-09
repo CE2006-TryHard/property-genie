@@ -26,20 +26,24 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { useState } from "react"
-import './BookmarkUI.scss'
-import InfoPanelUI from "../InfoPanelUI/InfoPanelUI"
+            <pre class="prettyprint source linenums"><code>import './BookmarkUI.scss'
+import { useState } from "react"
+import {useSelector, useDispatch} from 'react-redux'
+
+import { removeBookmark, removeAllBookmarks, setPageState, selectProperty } from "../../../features"
 
 /**
  * @namespace BookmarkUI
  * @description boundary module
- * @property {Property[]} bookmarksToBeRemoved properties to be removed from bookmark list.
- * @property {Property} viewedProperty value to toggle the email text field
+ * @property {Property[]} bookmarkToBeRemoved a property to be removed from bookmark list.
+ * @property {Boolean} removeAllBookmarks a boolean value to determine if all bookmarks are to be removed
  */
 const BookmarkUI = props => {
-    const { bookmarks, filterOptions, onBookmarkRemove, onBookmarkRemoveAll } = props
-    const [bookmarksToBeRemoved, setBookmarksToBeRemoved] = useState([])
-    const [viewedProperty, setViewProperty] = useState(null)
+    const dispatch = useDispatch()
+    const bookmarks = useSelector(state => state.bookmarks)
+    const {activeUser} = props
+    const [bookmarkToBeRemoved, setBookmarkToBeRemoved] = useState(null)
+    const [removeAll, setRemoveAll] = useState(false)
 
     /**
      * @memberof BookmarkUI
@@ -47,15 +51,8 @@ const BookmarkUI = props => {
     * @param {Property} property property to be viewed
     */
     const onViewPropertyDetail = property => {
-        setViewProperty(property)
-    }
-
-    /**
-     * @memberof BookmarkUI
-     * @typedef {function} onClosePropertyDetail called when user click on "back" button to return to bookmark panel.
-     */
-    const onClosePropertyDetail = () => {
-        setViewProperty(null)
+        dispatch(selectProperty(property))
+        dispatch(setPageState(7))
     }
 
     /**
@@ -64,7 +61,7 @@ const BookmarkUI = props => {
     * @param {Property} property property to be removed
     */
     const onVerifyRemoveBookmark = property => {
-        setBookmarksToBeRemoved([property])
+        setBookmarkToBeRemoved(property)
     }
 
     /**
@@ -73,7 +70,7 @@ const BookmarkUI = props => {
     * @param {Property} property property to be removed
     */
     const onVerifyRemoveAllBookmarks = () => {
-        setBookmarksToBeRemoved(bookmarks)
+        setRemoveAll(true)
     }
 
     /**
@@ -81,12 +78,17 @@ const BookmarkUI = props => {
     * @typedef {function} onConfirmRemoveBookmark called when user click on "Confirm" button to execute bookmark removal.
     */
     const onConfirmRemoveBookmark = () => {
-        if (bookmarksToBeRemoved.length === 1) {
-            onBookmarkRemove(bookmarksToBeRemoved[0], false)
-        } else {
-            onBookmarkRemoveAll()
-        }
-        setBookmarksToBeRemoved([])
+        dispatch(removeBookmark({activeUser, property: bookmarkToBeRemoved}))
+        setBookmarkToBeRemoved(null)
+    }
+
+    /**
+     * @memberof BookmarkUI
+    * @typedef {function} onConfirmRemoveAllBookmarks called when user click on "Confirm" button to execute all bookmarks removal.
+    */
+    const onConfirmRemoveAllBookmarks = () => {
+        dispatch(removeAllBookmarks({activeUser}))
+        setRemoveAll(false)
     }
 
     /**
@@ -94,52 +96,53 @@ const BookmarkUI = props => {
     * @typedef {function} onCancelRemoveBookmark called when user click on "Cancel" button to revoke bookmark removal.
     */
     const onCancelRemoveBookmark = () => {
-        setBookmarksToBeRemoved([])
+        setBookmarkToBeRemoved(null)
+        setRemoveAll(false)
     }
 
-    return (&lt;div className="bookmark-container">
+    return (
+    &lt;div className="bookmark-container">
+        {bookmarks.length ? &lt;div className="remove-all-bookmark-button" >
+            &lt;span className="text-button text-button-remove" onClick={onVerifyRemoveAllBookmarks}>Remove all bookmark(s)&lt;/span>&lt;/div> : ""}
         &lt;div className="bookmark-content">
-            {bookmarks.length ? &lt;button className="remove-all-bookmark-button" onClick={onVerifyRemoveAllBookmarks}>Remove all bookmark(s)&lt;/button> : ""}
             {bookmarks.length ?
                 bookmarks.map((b, i) => &lt;div className="bookmark-item" key={i}>
                     &lt;div className="profile-image-container">
-                        &lt;img />
+                        &lt;img src={b.img} />
                     &lt;/div>
                     &lt;div className="bookmark-item-info">
                         &lt;h3>{b.name}&lt;/h3>
-                        &lt;button className="view-detail-button" onClick={() => onViewPropertyDetail(b)}>View property detail&lt;/button>
-                        &lt;span className="text-button" onClick={() => onVerifyRemoveBookmark(b)}>Remove&lt;/span>
+                        &lt;div className="view-detail-button" onClick={() => onViewPropertyDetail(b)}>View detail&lt;/div>
+                        &lt;span className="text-button text-button-remove" onClick={() => onVerifyRemoveBookmark(b)}>Remove&lt;/span>
                     &lt;/div>
+                    {bookmarkToBeRemoved &amp;&amp; bookmarkToBeRemoved.name === b.name ?
+                        &lt;div className="remove-bookmark-item-overlay">
+                            &lt;p>Are you sure you want to delete bookmark "&lt;b>{b.name}&lt;/b>"?&lt;/p>
+                            &lt;div>
+                                &lt;div className="confirm-button" onClick={onConfirmRemoveBookmark}>Confirm&lt;/div>
+                                &lt;div className="cancel-button" onClick={onCancelRemoveBookmark}>Cancel&lt;/div>
+                            &lt;/div>
+                        &lt;/div>
+                    : ''}
 
                 &lt;/div>)
-                : "You have not added any bookmark."}
+                : &lt;div className="no-bookmark-msg">You have not added any bookmark.&lt;/div>}
         &lt;/div>
-        {viewedProperty ?
-            &lt;div className="property-detail-container">
-                &lt;InfoPanelUI
-                    property={viewedProperty}
-                    filterOptions={filterOptions}
-                    enableBookmark={false}>&lt;/InfoPanelUI>
-                &lt;button className="back-button" onClick={onClosePropertyDetail}>Back to bookmark panel&lt;/button>
-            &lt;/div>
-            : ""}
 
-        {bookmarksToBeRemoved.length ?
-            &lt;div className="confirm-message-container">
-                &lt;div className="confirm-message-content">
-                    {bookmarksToBeRemoved.length === 1 ?
-                        &lt;p>Are you sure you want to delete bookmark "&lt;b>{bookmarksToBeRemoved[0].name}&lt;/b>"?&lt;/p>
-                        : &lt;p>Are you sure you want to delete &lt;b>ALL bookmark(s)&lt;/b>?&lt;/p>}
-
+        {removeAll ?
+            &lt;div className="remove-bookmark-all-container">
+                &lt;div className="remove-bookmark-all-content">
+                    &lt;p>Are you sure you want to delete &lt;b>ALL bookmark(s)&lt;/b>?&lt;/p>
                     &lt;div>
-                        &lt;button onClick={onConfirmRemoveBookmark}>Confirm&lt;/button>
-                        &lt;button onClick={onCancelRemoveBookmark}>Cancel&lt;/button>
+                        &lt;div className="confirm-button" onClick={onConfirmRemoveAllBookmarks}>Confirm&lt;/div>
+                        &lt;div className="cancel-button" onClick={onCancelRemoveBookmark}>Cancel&lt;/div>
                     &lt;/div>
                 &lt;/div>
             &lt;/div>
             : ""}
 
-    &lt;/div>)
+    &lt;/div>
+    )
 }
 
 export default BookmarkUI
@@ -153,13 +156,13 @@ export default BookmarkUI
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 22:45:45 GMT+0800 (Singapore Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -26,51 +26,94 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { useState } from "react"
+            <pre class="prettyprint source linenums"><code>import './AccountUI.scss'
+import { useState } from "react"
+import { userAuthMgr } from "../../controls/Mgr"
+import {useDispatch} from 'react-redux'
+import { setLoadingState } from '../../../features'
 
 /**
  * @namespace AccountUI
  * @description boundary module
- * @property {String} emailForPWChange user email input string
- * @property {Boolean} showEmailField value to toggle the email text field
  * @property {Boolean} showRequestCompleteMsg value to toggle the display of request complete message.
  */
 const AccountUI = props => {
-    const {user: {name, email}} = props
-    const [emailForPWChange, setEmailForPWChange] = useState('')
-    const [showEmailField, setShowEmailField] = useState(false)
+    const dispatch = useDispatch()
+    const {activeUser: {name, email, isGoogleAuth, isVerified}} = props
     const [showRequestCompleteMsg, setShowRequestCompleteMsg] = useState(false)
+    const [emailVerifyMsg, setEmailVerifyMsg] = useState('Email must be verified in order to access password reset feature.')
+    const [pwResetMsg, setPWResetMsg] = useState('')
 
       /**
      * @memberof AccountUI
      * @typedef {function} onRequestPWChange called when user clicks on "Update password" button
      */
     const onRequestPWChange = () => {
-        setShowEmailField(true)
+        dispatch(setLoadingState(3))
+        userAuthMgr.requestPasswordChange(email, (success, errCode) => {
+            dispatch(setLoadingState(0))
+            if (success) {
+                setShowRequestCompleteMsg(true)
+                setPWResetMsg(`Request submitted. A password reset link will be sent to ${email}.`)
+            } else {
+                switch (errCode) {
+                    case 'auth/too-many-requests':
+                    setPWResetMsg('Too many requests. Please try again later.')
+                    break
+                    default:
+                        console.log(errCode)
+                        break
+                }
+            }
+            
+            
+        })
     }
 
     /**
- * @memberof AccountUI
- * @typedef {function} onSubmitPWChangeRequest called when user clicks on "Submit request" button
- */
-    const onSubmitPWChangeRequest = () => {
-        // TODO: invoke Firebase API for email verification
-        setShowRequestCompleteMsg(true)
+     * @memberof AccountUI
+     * @typedef {function} onVerifyEmail called when user clicks on "Verify Email" button
+     */
+    const onVerifyEmail = () => {
+        dispatch(setLoadingState(3))
+        userAuthMgr.sendEmailVerificationRequest((success, errCode) => {
+            dispatch(setLoadingState(0))
+            if (success) {
+                setEmailVerifyMsg('Email verification link sent. Please check your email.')
+            } else {
+                switch(errCode) {
+                    case 'auth/too-many-requests':
+                        setEmailVerifyMsg('Too many requests. Please try again later.')
+                        break;
+                    default:
+                        console.log(errCode)
+                        break
+                }
+            }
+        })
     }
 
     return (&lt;div className="account-ui-container">
-        &lt;p>Name: {name}&lt;/p>
-        &lt;p>Email: {email}&lt;/p>
-        &lt;button onClick={onRequestPWChange}>Update password&lt;/button>
+        &lt;h3>Account {isVerified ? &lt;span className="verified">verified&lt;/span> : &lt;span className="notVerified">not verified&lt;/span>}&lt;/h3>
+        {name ? &lt;p>&lt;b>Name:&lt;/b> {name}&lt;/p> : ''}
+        &lt;p className="email">&lt;b>Email:&lt;/b> {email}&lt;/p>
+        &lt;p className="register-via">Registered via &lt;b>{isGoogleAuth ? 'Google Account' : 'Email'}&lt;/b>&lt;/p>
+        &lt;div className="account-verify-info">
+            {isVerified ? '' :
+            &lt;div>
+                &lt;span onClick={onVerifyEmail} className="text-button verify-email-button">Verify Email&lt;/span>
+                &lt;p className="account-verify-info-warning">{emailVerifyMsg}&lt;/p>
+            &lt;/div>}
+        &lt;/div>
+        
+        {isGoogleAuth || showRequestCompleteMsg ? '' : &lt;div title={isVerified ? '' : 'Verify email to reset password'} className={`update-password-button ${isVerified ? 'enabled' : ''}`} onClick={isVerified ? onRequestPWChange : null}>Reset password&lt;/div>}
 
-        {showEmailField &amp;&amp; !showRequestCompleteMsg? &lt;div className="password-change-request-container">
-            &lt;input type='text' value={emailForPWChange} onChange={e => setEmailForPWChange(e.target.value)}>&lt;/input>
-            &lt;button onClick={onSubmitPWChangeRequest}>Submit request&lt;/button>
-        &lt;/div> : ''}
-
-        {showRequestCompleteMsg ? &lt;p>Password change request submitted. A verification link will be sent to your email if it is valid.&lt;/p> : ''}
+        {showRequestCompleteMsg ? &lt;p className="reset-password-msg">{pwResetMsg}&lt;/p> : ''}
     &lt;/div>)
-}</code></pre>
+}
+
+export default AccountUI
+</code></pre>
         </article>
     </section>
 
@@ -80,13 +123,13 @@ const AccountUI = props => {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 22:45:45 GMT+0800 (Singapore Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

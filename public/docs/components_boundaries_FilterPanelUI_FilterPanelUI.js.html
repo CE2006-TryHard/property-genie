@@ -27,25 +27,34 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import "./FilterPanelUI.scss"
-import { CheckBox } from "../MiscUI"
-
+import { CheckBox, Slider } from "../MiscUI/MiscUI"
+import {useDispatch, useSelector} from 'react-redux'
+import { setFilterCheckBox, setFilterSlider, resetFilters } from "../../../features"
 /**
  * @namespace FilterPanelUI
  * @description boundary module
  */
 const FilterPanelUI = props => {
-    const {filterOptions, onFilterChange} = props
+    const dispatch = useDispatch()
+    const filterOptions = useSelector(state => state.filterOptions)
 
     /**
     * @memberof FilterPanelUI
-    * @typedef {function} onChange called when user checks/unchecks a filter checkbox.
+    * @typedef {function} onCheckboxChange called when user checks/unchecks a filter checkbox.
     * @param {String} key Filter option ID
-    * @param {Boolean} value filter option checked value
+    * @param {Boolean} value filter option "checked" value
     */
-    const onChange = (key, value) => {
-        const newfilterOptions = JSON.parse(JSON.stringify(filterOptions))
-        newfilterOptions[key].checked = value
-        onFilterChange(newfilterOptions)
+    const onCheckboxChange = (key, value) => {
+        dispatch(setFilterCheckBox({key, value}))
+    }
+
+    /**
+     * @typedef {function} onFinishSliderChange called when user finish changing slider value.
+     * @param {String} key Filter option ID 
+     * @param {Number} value filter option "threshold" value 
+     */
+    const onFinishSliderChange = (key, value) => {
+        dispatch(setFilterSlider({key, value}))
     }
 
     /**
@@ -53,18 +62,85 @@ const FilterPanelUI = props => {
     * @typedef {function} onReset called when user reset(uncheck) all filter checkbox.
     */
     const onReset = () => {
-        const newfilterOptions = JSON.parse(JSON.stringify(filterOptions))
-        Object.keys(newfilterOptions).forEach(key => {
-            newfilterOptions[key].checked = false
-        })
-
-        onFilterChange(newfilterOptions)
+        dispatch(resetFilters())
     }
 
-    return (&lt;div className="filter-panel-container">
-        &lt;CheckBox options={filterOptions} onChange={onChange}>&lt;/CheckBox>
-        &lt;button onClick={onReset}>Reset&lt;/button>
-    &lt;/div>)
+    const filterOptionFormat = [
+        {
+            key: 'score',
+            label: 'Minimum score',
+            min: 0,
+            max: 100,
+            step: 10,
+            autoLabel: true,
+            unit: '%',
+            tickLabels: ['0%', '100%']
+        },
+        {
+            key: 'enbloc',
+            label: 'En Bloc probability',
+            min: 0,
+            max: 1,
+            step: 0.25,
+            tickLabels: ['&lt;20%', '&lt;40%', '&lt;60%', '&lt;80%', '&amp;#8804&lt;b>&lt;/b>100%']
+            // tickLabels: ['&lt;20%', '20%-39%', '40%-59%', '60%-79%', '>80%']
+        },
+        {
+            key: 'distToMrt',
+            label: 'Distance to MRT',
+            min: 0.2,
+            max: 4,
+            step: 0.1,
+            autoLabel: true,
+            unit: 'km',
+            preUnit: '&amp;#8804',
+            tickLabels: ['0.2km', `4km`]
+        },
+        {
+            key: 'distToSchool',
+            label: 'Distance to School',
+            min: 0.2,
+            max: 4,
+            step: 0.1,
+            autoLabel: true,
+            unit: 'km',
+            preUnit: '&amp;#8804',
+            tickLabels: ['0.2km', `4km`]
+        }
+    ]
+
+    
+
+    const checkBoxOptions = Object.keys(filterOptions)
+        .filter(filterKey => filterKey !== 'score')
+        .reduce((acc, filterKey) => {
+            acc[filterKey] = filterOptions[filterKey]
+        return acc
+    }, {})
+
+    return (
+    &lt;div className="filter-panel-container">
+        &lt;div className="value-section">
+            &lt;h5 className="noselect">Calculates property's score by:&lt;/h5>
+            &lt;CheckBox options={checkBoxOptions} onChange={onCheckboxChange}>&lt;/CheckBox>
+        &lt;/div>
+        &lt;div className="filter-section">
+            &lt;h5 className="noselect">Futher customize the properties you want to see&lt;/h5>
+            {filterOptionFormat.map(({key,label, min, max, step, autoLabel, unit, preUnit, tickLabels}) => (
+                &lt;Slider enabled={filterOptions[key].checked} key={key} title={label} min={min} max={max} step={step}
+                tickLabels={tickLabels}
+                initialVal={filterOptions[key].threshold}
+                autoLabel={autoLabel}
+                autoLabelPreUnit={preUnit || ''}
+                autoLabelUnit={unit || ''}
+                onAfterChange={val => onFinishSliderChange(key, val)}>&lt;/Slider>
+            ))}
+        &lt;/div>
+        &lt;div className="reset-button-container">
+            &lt;div className="reset-button noselect" title="Reset to default filter settings" onClick={onReset}>Reset&lt;/div>
+        &lt;/div>
+    &lt;/div>
+    )
     
 }
 
@@ -78,13 +154,13 @@ export default FilterPanelUI</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 22:45:45 GMT+0800 (Singapore Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

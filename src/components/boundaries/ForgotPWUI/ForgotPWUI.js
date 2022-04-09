@@ -5,7 +5,6 @@ import { setLoadingState } from '../../../features'
 import { userAuthMgr } from "../../controls/Mgr"
 
 const ForgotPasswordUI = props => {
-    console.log('render forgot password ui')
     const dispatch = useDispatch()
 
     const [email, setEmail] = useState('')

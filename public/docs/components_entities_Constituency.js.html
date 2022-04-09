@@ -26,20 +26,26 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
+            <pre class="prettyprint source linenums"><code>import { dbMgr } from "../controls/Mgr"
+
+/**
  * An entity class representing a Constituency
  */
 class Constituency {
     /**
      * @param {String} name constituency name
      */
-    constructor (name) {
+    constructor (id, name) {
+        this.id = id
         /** @public */
         this.name = name
         /** @public */
         this.properties = []
         /** @public */
-        this.avgPropertiesCount = 0
+        this.mapFeature = null
+        // this.avgPropertiesCount = 0
+        /** @public */
+        this.score = 0
     }
 
     /**
@@ -48,14 +54,55 @@ class Constituency {
      * @return {number} calculated value that evaluate a constituency as a whole
      */
     getConstituencyValue(filterOpts) {
-        return this.properties.reduce((acc, p) => {
-            return acc + p.getPropertyValue(filterOpts)
-        }, 0) * this.properties.length / this.avgPropertiesCount
-        // return 1
+        const filteredProperties = this.getFilteredProperties(filterOpts)
+        if (!dbMgr.totalNoOfFilteredProperties) return 0
+        
+        return filteredProperties.reduce((acc, p) => {
+            return acc + p.getScore()
+        }, 0) * filteredProperties.length / dbMgr.totalNoOfFilteredProperties
+    }
+
+    getScore () {
+        return this.score
+    }
+
+    updateConstituencyScore(filterOpts, avgConstituencyValue) {
+        let score = 0
+        if (avgConstituencyValue) {
+            score = this.getConstituencyValue(filterOpts) / avgConstituencyValue
+        }
+
+        this.score = score > 1 ? 1 : score
+    }
+
+
+
+    /**
+     * 
+     * @returns {Property[]} return filtered list of properties belong to this constituency
+     */
+    getFilteredProperties(filterOpts) {
+        const {score: {threshold: scoreT}, enbloc: {threshold: enblocT}, distToMrt: {threshold: mrtT}, distToSchool: {threshold: schoolT}} = filterOpts
+        return this.properties.filter(p => {
+            const {valueProps: {enbloc}, avgMrtDist, avgSchoolDist} = p
+            return p.getScore()*100 >= scoreT &amp;&amp;
+                    enbloc &lt;= enblocT &amp;&amp;
+                    avgMrtDist &lt;= mrtT &amp;&amp;
+                    avgSchoolDist &lt;= schoolT
+        })
+    }
+
+    /**
+     * 
+     * @returns {Property[]} return all properties belong to this constituency
+     */
+    getProperties () {
+        return this.properties
     }
 }
 
-export default Constituency</code></pre>
+export default Constituency
+</code></pre>
         </article>
     </section>
 
@@ -65,13 +112,13 @@ export default Constituency</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 22:45:45 GMT+0800 (Singapore Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

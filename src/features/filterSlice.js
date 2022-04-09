@@ -25,15 +25,15 @@ const filterSlice = createSlice({
             } else {
                 state['score'].checked = true
             }
-            dbMgr.updateFilterDependVals(state)
+            dbMgr.updateFilterDependVars(state)
         },
         setFilterSlider: (state, action) => {
             const {key, value} = action.payload
             state[key].threshold = value
-            dbMgr.updateFilterDependVals(state)
+            dbMgr.updateFilterDependVars(state)
         },
         resetFilters: () => {
-            dbMgr.updateFilterDependVals(INIT_FILTER_OPTIONS)
+            dbMgr.updateFilterDependVars(INIT_FILTER_OPTIONS)
             return INIT_FILTER_OPTIONS
         }
     }

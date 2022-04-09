@@ -26,30 +26,150 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>// import { dbMgr } from "./Mgr"
+            <pre class="prettyprint source linenums"><code>import { 
+        getAuth,
+        GoogleAuthProvider,
+        signInWithPopup,
+        signInWithEmailAndPassword,
+        signOut,
+        createUserWithEmailAndPassword,
+        sendEmailVerification, 
+        sendPasswordResetEmail 
+    } from "firebase/auth"
+
+const provider = new GoogleAuthProvider()
+provider.addScope('email')
+provider.setCustomParameters({
+    prompt: 'select_account'
+})
+
+const URL_PREFIX = process.env.NODE_ENV === 'production' ? 'https://tryhard-web-app.web.app/' : `http://localhost:3000`
 
 /**
  * A control class manage operation related to user account authentication
  */
 class UserAuthMgr {
-    /**
-     * @param  {Object} userInfo
-     * @param  {function} onFetchEnd callback function to be invoked once database query completed
-     * @description validate if a provided user information is not yet exist in the database
-     */
-    validateAccountAvailability(userInfo, onFetchEnd) {
-        // dbMgr
+    constructor () {
+        /** @public */
+        this.userAuthInfo = null
     }
 
     /**
-     * 
-     * @param {Object} userInfo 
-     * @param {function} onFetchEnd callback function to be invoked once database query completed
-     * @description validate if a provided user information exists in the database
+     * Set current active user auth info when authentication status changed
+     * @param {Object} newUserAuthInfo 
      */
-    validateIfAccountExist(userInfo, onFetchEnd) {
-        
+    setUserAuthInfo(newUserAuthInfo) {
+        this.userAuthInfo = newUserAuthInfo
     }
+
+    /**
+     * requset to firebase/auth to create new user account by given email and password
+     * @param {String} email 
+     * @param {String} password 
+     * @param {function} onFetchEnd 
+     */
+    sendRegisterEmail (email, password, onFetchEnd) {
+        const auth = getAuth()
+        createUserWithEmailAndPassword(auth, email, password)
+          .then((userData) => {
+              console.log('sign up successfully', userData)
+              this.setUserAuthInfo(userData.user)
+              this.sendEmailVerificationRequest(onFetchEnd)
+          })
+          .catch(err => onFetchEnd(false, err))
+    }
+
+    /**
+     * send email verification link to user
+     * @param {function} onFetchEnd 
+     */
+    sendEmailVerificationRequest(onFetchEnd) {
+        const actionCodeSettings = {
+            url: URL_PREFIX + '',
+            handleCodeInApp: true
+          }
+          sendEmailVerification(this.userAuthInfo, actionCodeSettings)
+            .then(() => {
+                // console.log('email verification request sent')
+                if (onFetchEnd) onFetchEnd(true)
+            }).catch(err => {
+                if (onFetchEnd) onFetchEnd(false, err.code)
+            })
+    }
+
+    /**
+     * send password reset link to user's email
+     * @param {String} email 
+     * @param {function} onFetchEnd 
+     */
+    requestPasswordChange (email, onFetchEnd) {
+        const actionCodeSettings = {
+            // URL you want to redirect back to. The domain (www.example.com) for this
+            // URL must be in the authorized domains list in the Firebase Console.
+            url: URL_PREFIX,
+            // url: URL_PREFIX + '/sign-in',
+            // This must be true.
+            handleCodeInApp: true
+          }
+        const auth = getAuth()
+        sendPasswordResetEmail(auth, email, actionCodeSettings)
+            .then(() => {
+                if (onFetchEnd) onFetchEnd(true)
+                // console.log('reset password sent')
+            })
+            .catch(err => {
+                if (onFetchEnd) onFetchEnd(false, err.code)
+                // console.log('error on request password change', err)
+            })
+    }
+
+    /**
+     * invoke pop up panel contain google sign in option
+     */
+    googleSignIn (onFetchEnd) {
+        const auth = getAuth()
+        signInWithPopup(auth, provider)
+        .then(userCredential => {
+            if (onFetchEnd) onFetchEnd(true)
+            // console.log('google sign in successfully', userCredential)
+        }).catch(err => {
+            if (onFetchEnd) onFetchEnd(false, err.code)
+            console.log('error on google sign in', err)
+        })
+    }
+
+    /**
+     * requset to firebase/auth to verify user credential via email and password
+     * @param {String} email 
+     * @param {String} password 
+     * @param {function} onFetchEnd 
+     */
+    emailPasswordSignIn (email, password, onFetchEnd) {
+        const auth = getAuth()
+        signInWithEmailAndPassword(auth, email, password)
+            .then(userCredential => {
+                console.log('manual sign in successfully', userCredential)
+                onFetchEnd(true)
+            }).catch(err => {
+                onFetchEnd(false, err.code)
+            })
+    }
+
+    /**
+     * invoke firebase/auth to sign out user
+     */
+    generalSignOut (callback) {
+        const auth = getAuth()
+        signOut(auth)
+            .then(() => {
+                console.log('sign out successfully')
+                callback(true)
+            }).catch(err =>{
+             console.log('error on sign out', err)
+             callback(false, err)
+            })
+    }
+
     /**
      * @param  {String} email
      * @description check if a email address format is valid
@@ -68,15 +188,6 @@ class UserAuthMgr {
     checkIsEmptyString(str) {
         return str.trim() === ''
     }
-
-    /**
-     * 
-     * @param {String} pw 
-     * @description update user password to database
-     */
-    updateUserPW(pw) {
-        // dbMgr
-    }
 }
 
 export default UserAuthMgr
@@ -90,13 +201,13 @@ export default UserAuthMgr
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 22:45:45 GMT+0800 (Singapore Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

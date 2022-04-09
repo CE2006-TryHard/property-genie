@@ -69,7 +69,7 @@ const SearchBarUI = props => {
   /**
    * @memberof SearchBarUI
    * @typedef {function} getSearchOptions called when user executes search
-   * @return {SearchItem} a list of SearchItem
+   * @return {SearchItem[]} a list of SearchItem
    */
   const getSearchOptions = () => {
     if (isMinLength) {

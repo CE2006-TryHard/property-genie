@@ -194,7 +194,7 @@ class DatabaseMgr {
             }
           })
           
-          this.updateFilterDependVals(INIT_FILTER_OPTIONS)
+          this.updateFilterDependVars(INIT_FILTER_OPTIONS)
           
           onFetchEnd(this.properties, this.constituencies)
       })
@@ -204,7 +204,7 @@ class DatabaseMgr {
    * update variable values that depends on filter options
    * @param {Object} filterOptions 
    */
-  updateFilterDependVals (filterOptions) {
+  updateFilterDependVars (filterOptions) {
     // needed by getConsituencyValue()
     this.properties.forEach(p => p.updatePropertyScore(filterOptions))
   
@@ -230,15 +230,6 @@ class DatabaseMgr {
    */
   getProperties () {
     return this.properties
-  }
-
-  /**
-   * 
-   * @param {String} name 
-   * @returns {Property}
-   */
-  getPropertyByName(name) {
-    return this.properties.filter(p => p.name === name)[0]
   }
 
   /**

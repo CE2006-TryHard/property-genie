@@ -30,9 +30,9 @@
 import { getAnalytics } from "firebase/analytics"
 import {getDatabase, ref, child, update, get} from 'firebase/database'
 import Papa from 'papaparse'
-// import Constituency from '../entities/Constituency'
-import {Constituency, Property, User} from '../entities/index'
+import {Constituency, Property, User} from '../entities'
 import {STATIONS, SCHOOLS, CONSTITUENCY_NAME} from '../CONFIG'
+import {INIT_FILTER_OPTIONS} from './../../features/filterSlice'
 
 /**
  * A control class manage the flow of data between the application and database
@@ -40,41 +40,43 @@ import {STATIONS, SCHOOLS, CONSTITUENCY_NAME} from '../CONFIG'
 class DatabaseMgr {
   constructor () {
     /** @public */
-    this.properties = []
+    this.properties = null
     /** @public */
-    this.constituencies = {}
-
-    this.fetchPropertyData()
+    this.constituencies = null
+    /** @public */
+    this.avgPropertiesCount = null
+    this.totalNoOfFilteredProperties = null
+    this.avgConstituencyValue = null
+    
     this.initFirebase()
     
   }
   /**
-   * @param  {String} name
-   * @param  {String} email
+   * @param  {String} authUserInfo
    * @param  {function} onFetchEnd
    */
-  initActiveUser(name, email, onFetchEnd) {
-    const newUser = new User(name, email)
+  initActiveUser(authUserInfo, onFetchEnd) {
+    const {name, email, emailVerified, isGoogleAuth} = authUserInfo
+    const newUser = new User(name, email, isGoogleAuth)
+    newUser.isVerified = emailVerified
     const dbRef = ref(getDatabase())
     get(child(dbRef, `account/${newUser.id}`)).then(snapshot => {
       if (snapshot.exists()) {
-        const {recentSearchStr, bookmarkStr, isVerified, registerViaGoogle} = snapshot.val()
-        newUser.isVerified = isVerified
-        newUser.registerViaGoogle = registerViaGoogle || false
-        newUser.recentSearchStr = recentSearchStr || []
-        newUser.bookmarkStr = bookmarkStr || []
-
-        onFetchEnd(newUser)
+        const {recentSearches, bookmarks, name: dbName} = snapshot.val()
+        newUser.name = name || dbName
+        newUser.recentSearches = recentSearches || []
+        newUser.bookmarks = bookmarks || []
       } else {
-        console.log('no data available')
+        console.log('no user data record')
       }
+      onFetchEnd(newUser)
     })
     // onValue(ref(db, ), snapshot => {
-    //   const {recentSearchStr, bookmarkStr, isVerified, registerViaGoogle} = snapshot.val()
+    //   const {recentSearches, bookmarks, isVerified, registerViaGoogle} = snapshot.val()
     //   newUser.isVerified = isVerified
     //   newUser.registerViaGoogle = registerViaGoogle || false
-    //   newUser.recentSearchStr = recentSearchStr || []
-    //   newUser.bookmarkStr = bookmarkStr || []
+    //   newUser.recentSearches = recentSearches || []
+    //   newUser.bookmarks = bookmarks || []
     //   onFetchEnd(newUser)
     //   console.log('magic!')
     // })
@@ -82,11 +84,10 @@ class DatabaseMgr {
 
   /**
    * 
-   * @param {String} email 
+   * @param {String} id 
    * @param {function} onFetchEnd 
    */
-  getUserDataDB(email, onFetchEnd) {
-    const id = email.split('.')[0]
+  getUserDataDB(id, onFetchEnd) {
     const dbRef = ref(getDatabase())
     get(child(dbRef, `account/${id}`)).then(snapshot => {
       if (snapshot.exists()) {
@@ -105,7 +106,7 @@ class DatabaseMgr {
    */
   fetchDataDB(key, onFetchEnd) {
     const dbRef = ref(getDatabase())
-    return get(child(dbRef, key)).then(snapshot => {
+     get(child(dbRef, key)).then(snapshot => {
       if (snapshot.exists()) {
         onFetchEnd(snapshot.val())
       } else {
@@ -113,6 +114,18 @@ class DatabaseMgr {
         console.log('data not found', key)
       }
     })
+  }
+
+  /**
+   * 
+   * @param {String} key 
+   * @param {Object} value 
+   */
+  updateDataDB(key, value) {
+    const updates = {}
+    const db = getDatabase()
+    updates[key] = value
+    update(ref(db), updates)
   }
   
   /**
@@ -135,24 +148,8 @@ class DatabaseMgr {
     // Initialize Firebase
     const app = initializeApp(firebaseConfig)
     getAnalytics(app)
-    // const analytics = getAnalytics(app)
-
-    // test fetch data
-    // this.fetchUserData(userData => {
-    //   console.log('userData', userData)
-    // })
-
-    // test update data
-    // this.updateUserDataDB('recent', 'house')
   }
-
-  // fetchAllUserData(userId, onFetchEnd) {
-  //   const db = getDatabase()
-  //   onValue(ref(db, `account/${userId}`), snapshot => {
-  //     onFetchEnd(snapshot.val())
-  //   })
-  // }
-
+  
   /**
    * 
    * @param {User} user 
@@ -162,7 +159,7 @@ class DatabaseMgr {
    */
   updateUserDataDB(user, key, value) {
     if (!user) {
-      console.log("no active user")
+      console.log("no active user to update db")
       return
     }
     const updates = {}
@@ -172,28 +169,33 @@ class DatabaseMgr {
     update(ref(db), updates)
   }
 
-  // fetchFilterData (onFetchEnd) {
-  //   const db = getDatabase()
-  //   onValue(ref(db, `filterOptions`), snapshot => {
-  //     onFetchEnd(snapshot.val())
-  //   })
-  // }
-
   /**
    * fetch all properties data from local csv
+   * @param {function} callback 
    */
-  fetchPropertyData () {
+  fetchPropertyData (onFetchEnd) {
+    if (this.properties &amp;&amp; this.constituencies) {
+      onFetchEnd(this.properties, this.constituencies)
+      return
+    }
+
+    console.log('first fetch property data')
+
     fetch('data/data-all.csv')
       .then(res => res.text())
       .then(raw => Papa.parse(raw, {header: true}))
       .then(parsedRaw => {
+        this.properties = []
+        this.constituencies = {}
         parsedRaw.data
           .forEach(d => {
             d['lat'] = parseFloat(d['lat'])
             d['lng'] = parseFloat(d['lng'])
   
             const distToMrts = d['distToMrt'].split(',').map(distStr => parseFloat(distStr))
-            d['mrts'] = d['mrtID'].split(',').map((mID, i) => ({...STATIONS[mID], dist: distToMrts[i]}) )
+            d['mrts'] = d['mrtID'].split(',').map((mID, i) => {
+              return {...STATIONS[mID], dist: distToMrts[i]}
+            })
             d['avgMrtDist'] = Math.min(...distToMrts)
             
 
@@ -206,7 +208,7 @@ class DatabaseMgr {
             const constituencyID = parseInt(d['constituencyID'])
             let constituencyName = CONSTITUENCY_NAME[constituencyID].name
             
-            if (!this.constituencies[constituencyName]) this.constituencies[constituencyName] = new Constituency(constituencyName)
+            if (!this.constituencies[constituencyName]) this.constituencies[constituencyName] = new Constituency(constituencyID, constituencyName)
             p.constituency = this.constituencies[constituencyName]
             this.constituencies[constituencyName].properties.push(p)
 
@@ -216,12 +218,38 @@ class DatabaseMgr {
           Object.keys(CONSTITUENCY_NAME).forEach(dID => {
             const dName = CONSTITUENCY_NAME[dID].name
             if (!this.constituencies[dName]) {
-              this.constituencies[dName] = new Constituency(dName)
+              this.constituencies[dName] = new Constituency(dID, dName)
             }
-            this.constituencies[dName].avgPropertiesCount = this.properties.length / 31
           })
-        // console.log(this.constituencies)
+          
+          this.updateFilterDependVars(INIT_FILTER_OPTIONS)
+          
+          onFetchEnd(this.properties, this.constituencies)
       })
+  }
+
+  /**
+   * update variable values that depends on filter options
+   * @param {Object} filterOptions 
+   */
+  updateFilterDependVars (filterOptions) {
+    // needed by getConsituencyValue()
+    this.properties.forEach(p => p.updatePropertyScore(filterOptions))
+  
+    // needed by avgConstituencyValue, must be called before avgConstituencyValue
+    this.totalNoOfFilteredProperties = Object.keys(this.constituencies).reduce((acc, cName) => {
+      return acc + this.constituencies[cName].getFilteredProperties(filterOptions).length
+    }, 0)
+
+    this.avgConstituencyValue = Object.keys(this.constituencies).reduce((valSum, cName) => valSum + this.constituencies[cName].getConstituencyValue(filterOptions), 0) / 31
+    
+    Object.keys(this.constituencies).forEach(cName => {
+      this.constituencies[cName].updateConstituencyScore(filterOptions, this.avgConstituencyValue)
+    })
+    // this.avgConstituencyValue *= 1.4
+    this.avgPropertiesCount = this.totalNoOfFilteredProperties / 31
+
+    
   }
 
   /**
@@ -230,15 +258,6 @@ class DatabaseMgr {
    */
   getProperties () {
     return this.properties
-  }
-
-  /**
-   * 
-   * @param {String} name 
-   * @returns {Property}
-   */
-  getPropertyByName(name) {
-    return this.properties.filter(p => p.name === name)[0]
   }
 
   /**
@@ -262,13 +281,13 @@ export default DatabaseMgr
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 22:45:45 GMT+0800 (Singapore Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

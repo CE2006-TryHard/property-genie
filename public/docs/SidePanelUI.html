@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Namespace: AccountUI</title>
+    <title>JSDoc: Namespace: SidePanelUI</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Namespace: AccountUI</h1>
+    <h1 class="page-title">Namespace: SidePanelUI</h1>
 
     
 
@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2>AccountUI</h2>
+        <h2>SidePanelUI</h2>
         
     
 </header>
@@ -69,13 +69,13 @@
 
         <tr>
             
-                <td class="name"><code>showRequestCompleteMsg</code></td>
+                <td class="name"><code>sidePanelIn</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">sidePanelIn</span>
 
 
             
@@ -85,7 +85,7 @@
 
             
 
-            <td class="description last">value to toggle the display of request complete message.</td>
+            <td class="description last">value to show/hide side panel</td>
         </tr>
 
     
@@ -124,7 +124,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="components_boundaries_AccountUI_AccountUI.js.html">components/boundaries/AccountUI/AccountUI.js</a>, <a href="components_boundaries_AccountUI_AccountUI.js.html#line7">line 7</a>
+        <a href="components_boundaries_SidePanelUI_SidePanelUI.js.html">components/boundaries/SidePanelUI/SidePanelUI.js</a>, <a href="components_boundaries_SidePanelUI_SidePanelUI.js.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -165,7 +165,7 @@
     
 
     
-    <h4 class="name" id=".onRequestPWChange"><span class="type-signature"></span>onRequestPWChange<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".onLogOut"><span class="type-signature"></span>onLogOut<span class="signature">()</span><span class="type-signature"></span></h4>
     
 
     
@@ -173,7 +173,7 @@
 
 
 <div class="description">
-    called when user clicks on "Update password" button
+    called when user clicks on log out button.
 </div>
 
 
@@ -217,7 +217,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="components_boundaries_AccountUI_AccountUI.js.html">components/boundaries/AccountUI/AccountUI.js</a>, <a href="components_boundaries_AccountUI_AccountUI.js.html#line19">line 19</a>
+        <a href="components_boundaries_SidePanelUI_SidePanelUI.js.html">components/boundaries/SidePanelUI/SidePanelUI.js</a>, <a href="components_boundaries_SidePanelUI_SidePanelUI.js.html#line88">line 88</a>
     </li></ul></dd>
     
 
@@ -253,7 +253,7 @@
     
 
     
-    <h4 class="name" id=".onVerifyEmail"><span class="type-signature"></span>onVerifyEmail<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".onSidePanelOptSelect"><span class="type-signature"></span>onSidePanelOptSelect<span class="signature">(newPageState)</span><span class="type-signature"></span></h4>
     
 
     
@@ -261,7 +261,7 @@
 
 
 <div class="description">
-    called when user clicks on "Verify Email" button
+    called when user click on one of the option on the side panel menu. Update page state.
 </div>
 
 
@@ -270,6 +270,55 @@
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>newPageState</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">new page state index.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -305,7 +354,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="components_boundaries_AccountUI_AccountUI.js.html">components/boundaries/AccountUI/AccountUI.js</a>, <a href="components_boundaries_AccountUI_AccountUI.js.html#line45">line 45</a>
+        <a href="components_boundaries_SidePanelUI_SidePanelUI.js.html">components/boundaries/SidePanelUI/SidePanelUI.js</a>, <a href="components_boundaries_SidePanelUI_SidePanelUI.js.html#line66">line 66</a>
     </li></ul></dd>
     
 
@@ -329,6 +378,78 @@
 
 
 
+
+
+
+
+
+
+            
+                
+<h4 class="name" id=".SubSidePanelContent">SubSidePanelContent</h4>
+
+
+
+
+<div class="description">
+    a functional component rendering lightbox content based on current page state.
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">FunctionalComponent</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="components_boundaries_SidePanelUI_SidePanelUI.js.html">components/boundaries/SidePanelUI/SidePanelUI.js</a>, <a href="components_boundaries_SidePanelUI_SidePanelUI.js.html#line107">line 107</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
 
 
 

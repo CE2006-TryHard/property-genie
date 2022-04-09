@@ -9,7 +9,6 @@ import { setFilterCheckBox, setFilterSlider, resetFilters } from "../../../featu
 const FilterPanelUI = props => {
     const dispatch = useDispatch()
     const filterOptions = useSelector(state => state.filterOptions)
-    // const {filterOptions, onFilterChange} = props
 
     /**
     * @memberof FilterPanelUI
@@ -22,11 +21,11 @@ const FilterPanelUI = props => {
     }
 
     /**
-     * @typedef {function} onSubmitSliderChange called when user finish changing slider value.
+     * @typedef {function} onFinishSliderChange called when user finish changing slider value.
      * @param {String} key Filter option ID 
      * @param {Number} value filter option "threshold" value 
      */
-    const onSubmitSliderChange = (key, value) => {
+    const onFinishSliderChange = (key, value) => {
         dispatch(setFilterSlider({key, value}))
     }
 
@@ -106,7 +105,7 @@ const FilterPanelUI = props => {
                 autoLabel={autoLabel}
                 autoLabelPreUnit={preUnit || ''}
                 autoLabelUnit={unit || ''}
-                onAfterChange={val => onSubmitSliderChange(key, val)}></Slider>
+                onAfterChange={val => onFinishSliderChange(key, val)}></Slider>
             ))}
         </div>
         <div className="reset-button-container">

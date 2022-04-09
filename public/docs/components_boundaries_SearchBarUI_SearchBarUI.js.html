@@ -26,12 +26,24 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { useState } from 'react'
+            <pre class="prettyprint source linenums"><code>import "./SearchBarUI.scss"
+import { useEffect, useState } from 'react'
+import {useDispatch} from 'react-redux'
+import { selectProperty, selectConstituency, setPageState } from '../../../features'
+
 import Select, { components } from 'react-select'
-import {SearchItem} from '../../entities/index'
+import {SearchItem} from '../../entities'
 import { dbMgr } from '../../controls/Mgr'
-import { HomeLogo, SgLogo } from '../MiscUI'
-import "./SearchBarUI.scss"
+import { HomeLogo, SgLogo } from './../MiscUI/MiscUI'
+import { CONSTITUENCY_NAME } from '../../CONFIG'
+
+
+const addRecentSearch = (recentSearch, newSearch) => {
+  recentSearch = recentSearch.filter(rs => rs.value.id !== newSearch.value.id)
+  recentSearch.unshift(newSearch)
+  if (recentSearch.length > 10) recentSearch.splice(10 - recentSearch.length)
+  return recentSearch
+}
 
 /**
  * @namespace SearchBarUI
@@ -39,8 +51,11 @@ import "./SearchBarUI.scss"
  * @property {Boolean} isMinLength value to determine if user input exceed minimum required length
  */
 const SearchBarUI = props => {
-  const { properties, selectedSearch, recentSearches, onSearchChange } = props
+  const dispatch = useDispatch()
+  const { activeUser } = props
   const [isMinLength, setIsMinLength] = useState(false)
+  const [currentSearch, setCurrentSearch] = useState(null)
+  const [recentSearches, setRecentSearches] = useState([])
 
   /**
    * @memberof SearchBarUI
@@ -48,7 +63,26 @@ const SearchBarUI = props => {
    * @param {SearchItem} newSearch new search
    */
   const onChange = newSearch => {
-    onSearchChange(newSearch)
+    const {type, value} = newSearch
+    if (type === 'c') {
+      dispatch(selectConstituency(value))
+      dispatch(setPageState(0))
+    }
+    else if (type === 'p') {
+      dispatch(selectProperty(value))
+      dispatch(setPageState(7))
+    }
+    setCurrentSearch(newSearch)
+
+    let tempSearches = [...recentSearches]
+    tempSearches = addRecentSearch(tempSearches, newSearch)
+    setRecentSearches(tempSearches)
+    
+    tempSearches = tempSearches.map(cs => {
+      return {type: cs.type, id: cs.value.id}
+    })
+
+    dbMgr.updateUserDataDB(activeUser, 'recentSearches', tempSearches)
   }
 
   /**
@@ -63,17 +97,39 @@ const SearchBarUI = props => {
   /**
    * @memberof SearchBarUI
    * @typedef {function} getSearchOptions called when user executes search
-   * @return {SearchItem} a list of SearchItem
+   * @return {SearchItem[]} a list of SearchItem
    */
   const getSearchOptions = () => {
     if (isMinLength) {
       const constituencyObjs = dbMgr.getConstituencies()
+      const properties = dbMgr.getProperties()
       const c = Object.keys(constituencyObjs).map(cName => new SearchItem('c', constituencyObjs[cName]))
       const p = properties.map(p => new SearchItem('p', p))
       return [...c, ...p]
     }
     return recentSearches
   }
+
+  useEffect(() => {
+    if (activeUser) {
+      // update recent search
+      const ccs =dbMgr.getConstituencies()
+      const pps = dbMgr.getProperties()
+      let tempSearches = activeUser.recentSearches
+        .map(({type, id}) => {
+          const searchObj = type === 'c' ? ccs[CONSTITUENCY_NAME[id].name] : pps.filter(p => p.id === id)[0]
+          return new SearchItem(type, searchObj)
+        })
+        
+      // const localRecentSearches = [...recentSearches]
+      // while (localRecentSearches.length > 0) {
+      //   tempSearches = addRecentSearch(tempSearches, localRecentSearches.pop())
+      // }
+      setRecentSearches(tempSearches)
+      // dbMgr.updateUserDataDB(activeUser, 'recentSearches', tempSearches.map(s => ({type: s.type, id: s.value.id})))
+
+    }
+  }, [activeUser])
 
   /**
    * @memberof SearchBarUI
@@ -96,7 +152,8 @@ const SearchBarUI = props => {
     &lt;div className="search-bar-container">
       &lt;div className="search-bar-content">
         &lt;Select components={{ Option: CustomOption }}
-          value={selectedSearch}
+          value={currentSearch}
+          isSearchable={true}
           onChange={onChange}
           onInputChange={onInputChange}
           options={getSearchOptions()}
@@ -125,13 +182,13 @@ export default SearchBarUI
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 22:45:45 GMT+0800 (Singapore Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

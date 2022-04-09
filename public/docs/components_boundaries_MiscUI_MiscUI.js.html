@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/boundaries/MiscUI/MiscUI.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/boundaries/MiscUI/MiscUI.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import './MiscUI.scss'
+import {ReactComponent as HomeLogo} from './../../../images/home.svg'
+import {ReactComponent as SgLogo} from './../../../images/sg.svg'
+import {useEffect, useState } from 'react'
+
+/**
+ * Functional Component displays greet user message after user logged in.
+ * @param {Object} props
+ */
+const GreetUserMsg = props => {
+  if (props.activeUser) {
+    return (
+      &lt;div className={`user-greet-msg ${props.alwaysShow ? 'show' : ''}`}>
+        Welcome, {props.activeUser.name || props.activeUser.email}
+      &lt;/div>
+    )
+  }
+  return ''
+}
+
+/**
+ * Tab Button component
+ * @param {Object} props
+ */
+const TabButton = props => {
+  const onChange = (newOpt) => {
+      props.onChange(newOpt)
+  }
+  return (&lt;div className="tab-button-container">
+      {props.options.map((opt, i) => 
+          (&lt;div key={i}
+              className={`tab-item noselect ${props.current === opt ? 'current' : ''}`}
+              onClick={() => onChange(opt)}
+              >{opt}&lt;/div>))}
+  &lt;/div>)
+}
+
+/**
+ * Checkbox component
+ * @param {Object} props
+ */
+const CheckBox = props => {
+  const {options} = props
+
+  const onChange = optKey => {
+      props.onChange(optKey, !props.options[optKey].checked)
+  }
+
+  const checkBoxItemClass = key => {
+    return `checkbox-item noselect ${options[key].checked ? 'checked' : ''}`
+  }
+
+  return (&lt;div className="checkbox-container">
+      {Object.keys(props.options).map((optKey, i) => 
+          &lt;div key={i} className={checkBoxItemClass(optKey)} onClick={() => onChange(optKey)}>{options[optKey].label}&lt;/div>
+      )}
+      &lt;/div>)
+}
+
+/**
+ * Slider Component
+ * @param {Object} props 
+ */
+const Slider = props => {
+  const {enabled, title, min, max, step, initialVal, tickLabels, autoLabel, autoLabelUnit, autoLabelPreUnit, onAfterChange} = props
+  const [val, setVal] = useState(initialVal)
+
+  useEffect(() => {
+    setVal(initialVal)
+  }, [initialVal])
+
+  return (&lt;div className={`slider ${enabled ? '' : 'disabled'}`}>
+          &lt;p className="slider-title noselect">{title}:&amp;nbsp; 
+            {autoLabel ? &lt;b>
+              &lt;span dangerouslySetInnerHTML={{__html:autoLabelPreUnit}}>&lt;/span>
+              {val}
+              &lt;span dangerouslySetInnerHTML={{__html:autoLabelUnit}}>&lt;/span>
+            &lt;/b> : &lt;b>
+            &lt;span dangerouslySetInnerHTML={{__html:tickLabels[val/step]}}>&lt;/span>
+              &lt;/b>}
+              &lt;/p>
+          &lt;div className="slider-content">
+            &lt;input type='range' min={min} max={max} step={step} value={val}
+              onChange={e => setVal(parseFloat(e.target.value))}
+              onMouseUp={e => onAfterChange(e.target.value)}
+              onTouchEnd={e => onAfterChange(e.target.value)}/>
+              &lt;div>
+              {
+                tickLabels.map((t, i) => &lt;span className="tick" key={i} style={{'left': `calc(${(1/(tickLabels.length-1) * i)*100}%)`}}>
+                  &lt;span dangerouslySetInnerHTML={{__html:t}}>&lt;/span>
+                &lt;/span>)
+              }
+              &lt;/div>
+          &lt;/div>
+      &lt;/div>)
+}
+
+const GoogleSignInButton = props => {
+  return (&lt;div className="google-btn" onClick={props.onClick}>
+  &lt;div className="google-icon-wrapper">
+    &lt;img className="google-icon" src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"/>
+  &lt;/div>
+  &lt;p className="btn-text">&lt;b>{props.label || 'Sign in with google'}&lt;/b>&lt;/p>
+&lt;/div>)
+}
+
+export {GreetUserMsg, HomeLogo, SgLogo, TabButton, CheckBox, Slider, GoogleSignInButton}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

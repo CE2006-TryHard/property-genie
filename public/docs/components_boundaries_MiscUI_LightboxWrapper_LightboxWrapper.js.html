@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: components/boundaries/MiscUI/LightboxWrapper/LightboxWrapper.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,67 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: components/boundaries/MiscUI/LightboxWrapper/LightboxWrapper.js</h1>
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import "./LightboxWrapper.scss"
+import { useState } from "react"
 
+/**
+ * @namespace LightboxWrapper
+ * @description boundary module
+ * @property {Boolean} isHoverOnClose
+ */
+const LightboxWrapper = props => {
+  const {disableClose, onClose} = props
+  const [isHoverOnClose, setIsHoverOnClose] = useState(false)
 
-    <h3> </h3>
+/**
+   * @memberof LightboxWrapper
+  * @typedef {function} onWrapperClick called when user click on wrapper area
+  * @param {Event} e
+  */
+  const onWrapperClick = e => {
+    if (disableClose) return
+    const {className} = e.target
+    if (className &amp;&amp; className.indexOf &amp;&amp; className.indexOf('lightbox-wrapper open') >= 0) {
+      onClose()
+    }
+  }
 
+  /**
+   * @memberof LightboxWrapper
+  * @typedef {function} onHoverOnCloseRegion called when user hover on wrapper area
+  * @param {Event} e
+  */
+  const onHoverOnCloseRegion = e => {
+    if (disableClose) return
+    const {className} = e.target
+    setIsHoverOnClose(className &amp;&amp; className.indexOf &amp;&amp; className.indexOf('lightbox-wrapper open') >= 0)
+    // console.log('test')
+  }
 
+  return (
+    &lt;div title={isHoverOnClose ? 'Click outside to close the panel.' : ''}
+      className={`lightbox-wrapper ${props.isOpen ? 'open' : ''} ${isHoverOnClose ? 'inclose' : ''} ` + (props.className || '')}
+      onClick={onWrapperClick} onMouseOver={onHoverOnCloseRegion}>
+      &lt;div className="lightbox-container">
+        {props.hideCloseButton ? "" : &lt;span className="close-button" onClick={onClose}>&lt;/span>}
+        {props.children}
+        &lt;/div>
+    &lt;/div>
+  )
+}
 
-
-
-
-
-
-
-
-    
-
-
-
-
-
+export default LightboxWrapper</code></pre>
+        </article>
+    </section>
 
 
 

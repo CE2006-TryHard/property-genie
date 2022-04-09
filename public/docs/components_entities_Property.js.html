@@ -27,19 +27,27 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import {ENBLOC} from './../CONFIG'
+import {gService} from './../boundaries/MapUI/MapUI'
+import {dbMgr} from './../controls/Mgr'
+
+const dummyPropertyImg = require('./../../images/dummy-property.jpg')
 
 /**
  * An entity class representing a Property
  */
 class Property {
     constructor (props) {
-        const {placeID, name, address, mrts, schools, lat, lng, enblocID, avgMrtDist, avgSchoolDist, constituency} = props
+        const {id, name, mrts, schools, lat, lng, enblocID, avgMrtDist, avgSchoolDist, constituency} = props
         /** @public */
-        this.placeID = placeID
+        this.id = id
+        /** @public */
+        this.placeID = null
         /** @public */
         this.name = name
         /** @public */
-        this.address = address
+        this.img = null
+        /** @public */
+        this.address = null
         /** @public */
         this.lat = lat
         /** @public */
@@ -60,10 +68,12 @@ class Property {
         this.reviews = null
         /** @public */
         this.valueProps = {
-            enbloc: ENBLOC[enblocID+""].val * 0.4,
-            distToMrt: this.getDistValue(avgMrtDist) * 0.35,
-            distToSchool: this.getDistValue(avgSchoolDist) * 0.25
+            enbloc: ENBLOC[enblocID+""].val,
+            distToMrt: this.getDistValue(avgMrtDist),
+            distToSchool: this.getDistValue(avgSchoolDist)
         }
+        /** @public */
+        this.score = 0
     }
     /**
      * @param {Object[]} val update review object related to a property
@@ -79,27 +89,131 @@ class Property {
     getDistValue (val) {
         // distance beyond 1km => 1
         // distance below => use it as it is
-        if (val >= 0 &amp;&amp; val &lt; 0.2) return 1
-        if (val >= 0.2 &amp;&amp; val &lt; 0.4) return 0.75
-        if (val >= 0.4 &amp;&amp; val &lt; 0.6) return 0.5
-        if (val >= 0.6 &amp;&amp; val &lt; 0.8) return 0.25
+        if (val >= 0 &amp;&amp; val &lt; 0.25) return 1
+        if (val >= 0.25 &amp;&amp; val &lt; 0.5) return 0.75
+        if (val >= 0.5 &amp;&amp; val &lt; 0.75) return 0.5
+        if (val >= 0.75 &amp;&amp; val &lt;= 1) return 0.25
         // if (val >= 0.8 &amp;&amp; val &lt;= 1) return 0
         return 0
     }
 
+    updatePropertyScore (filterOpts) {
+        this.score = this.getPropertyValue(filterOpts)
+    }
+
+    getScore () {
+        return this.score
+    }
      /**
      * @param  {Object} filterOpts
      * @returns {number}
      */
     getPropertyValue (filterOpts) {
-        let value = 0
-        Object.keys(filterOpts)
-            .filter(key => filterOpts[key].checked)
-            .forEach(key => {
-                value += this.valueProps[key]
+        const {enbloc: enblocVal, distToMrt: distToMrtVal, distToSchool: distToSchoolVal} = this.valueProps
+        const {
+                enbloc: {checked: enblocChecked},
+                distToMrt: {checked: distToMrtChecked},
+                distToSchool: {checked: distToSchoolChecked}
+            } = filterOpts
+        // all three are checked
+        if (enblocChecked &amp;&amp; distToMrtChecked &amp;&amp; distToSchoolChecked) {
+            return enblocVal * 0.4 + distToMrtVal * 0.35 + distToSchoolVal * 0.25
+        }
+        // only enbloc and distToMrt are checked
+        if (enblocChecked &amp;&amp; distToMrtChecked &amp;&amp; !distToSchoolChecked) {
+            return enblocVal * 0.55 + distToMrtVal * 0.45
+        }
+        // only enbloc and distToSchool are checked
+        if (enblocChecked &amp;&amp; !distToMrtChecked &amp;&amp; distToSchoolChecked) {
+            return enblocVal * 0.6 + distToSchoolVal * 0.4
+        }
+        // only distToMrt and distToSchool are checked
+        if (!enblocChecked &amp;&amp; distToMrtChecked &amp;&amp; distToSchoolChecked) {
+            return distToMrtVal * 0.6 + distToSchoolVal * 0.4
+        }
+
+        // only one of them are checked or all are unchecked
+        const checkedOption = Object.keys(filterOpts)
+        .filter(key => key !== 'score' &amp;&amp; filterOpts[key].checked)
+        .map(key => this.valueProps[key])[0]
+        return checkedOption || 0
+    }
+
+    /**
+     * fetch proerty's address, placeID and reviews(if exists) from database
+     * @param {function} onFetchEnd callback function
+     */
+    fetchGeneralInfo(onFetchEnd) {
+        if (this.address &amp;&amp; this.img &amp;&amp; this.placeID) {
+            if (onFetchEnd) onFetchEnd(this.address, this.img)
+        } else {
+            dbMgr.fetchDataDB(`properties/${this.id}`, propertyData => {
+                const {addr, img, pID, reviewObj} = propertyData
+                this.address = addr
+                this.img = this.getImage(img)
+                if (onFetchEnd) onFetchEnd(this.address, this.img)
+                this.placeID = pID
+                this.reviews = reviewObj &amp;&amp; reviewObj.reviews
             })
+        }
+    }
+
+    getImage (img) {
+        if (img === 'nan') return dummyPropertyImg
+        if (img.indexOf('.JPG') >= 0) {
+            return `https://www.singaporeexpats.com/singapore-property-pictures/properties/${img}`
+        }
+        return `https://www.singaporeexpats.com/singapore-property-pictures/properties/${img}.jpg`
         
-        return value
+        
+    }
+
+    /**
+     * fetch cached reviews from firebase
+     * if firebase has no review record, invokes Google Place API to fetch reviews
+     * TODO: clear cached review once cached timestamp exceed 29 days
+     * @param {function} onFetchEnd callback function
+     * 
+     */
+    fetchReview (onFetchEnd) {
+        // review found from local browser cached
+        if (this.reviews) {
+            onFetchEnd(this.reviews)
+            console.log('review fetched from browser cache')
+            return
+        }
+    
+        dbMgr.fetchDataDB(`properties/${this.id}/reviewObj`, reviewObj => {
+            // review found from database cache record
+            if (reviewObj) {
+                const {length, reviews} = reviewObj
+                this.reviews = reviews || []
+                onFetchEnd(this.reviews)
+                console.log('review fetched from database')
+                return
+            }
+            
+            // fetch review data from Google Place API
+            gService.getDetails({
+                placeId: this.placeID,
+                fields: ['review']
+            }, (place, status) => {
+                this.reviews = place.reviews || [] // cache reviews to current browser session
+                this.reviews = this.reviews.map(({author_name, profile_photo_url, rating, text}) => ({
+                    author_name, profile_photo_url, rating, text
+                }))
+                onFetchEnd(this.reviews)
+                console.log('review fetched from Google Place API')
+                const newReviewObj = {
+                    length: this.reviews.length,
+                    reviews: this.reviews
+                }
+                dbMgr.updateDataDB(`properties/${this.id}/reviewObj`, newReviewObj)
+                console.log('save reviews to firebase')
+
+            })
+            
+        })
     }
 }
 
@@ -114,13 +228,13 @@ export default Property
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 22:45:45 GMT+0800 (Singapore Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

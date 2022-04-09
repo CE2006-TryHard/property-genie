@@ -11,7 +11,7 @@ import { setLoadingState } from '../../../features'
  */
 const AccountUI = props => {
     const dispatch = useDispatch()
-    const {user: {name, email, isGoogleAuth, isVerified}} = props
+    const {activeUser: {name, email, isGoogleAuth, isVerified}} = props
     const [showRequestCompleteMsg, setShowRequestCompleteMsg] = useState(false)
     const [emailVerifyMsg, setEmailVerifyMsg] = useState('Email must be verified in order to access password reset feature.')
     const [pwResetMsg, setPWResetMsg] = useState('')
@@ -42,6 +42,10 @@ const AccountUI = props => {
         })
     }
 
+    /**
+     * @memberof AccountUI
+     * @typedef {function} onVerifyEmail called when user clicks on "Verify Email" button
+     */
     const onVerifyEmail = () => {
         dispatch(setLoadingState(3))
         userAuthMgr.sendEmailVerificationRequest((success, errCode) => {

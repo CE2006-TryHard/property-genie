@@ -8,7 +8,7 @@ const LoadingUI = props => {
     return (
         <LightboxWrapper className="signout-lightbox" isOpen={loadingState > 0} hideCloseButton={true} disableClose={true}>
           <div className="loader"></div>
-          {loadingState === 1 ? <div className="loader-text">Sign in...</div> : ''}
+          {loadingState === 1 ? <div className="loader-text"></div> : ''}
           {loadingState === 2 ? <div className="loader-text">Sign out...</div> : ''}
           {loadingState === 3 ? <div className="loader-text"></div> : ''}
         </LightboxWrapper>

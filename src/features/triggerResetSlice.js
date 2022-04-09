@@ -5,9 +5,7 @@ const triggerResetSlice = createSlice({
     initialState: false,
     reducers: {
         setTriggerReset: (state, actions) => {
-            state = !state
-
-            return state
+            return !state
         }
     }
 })

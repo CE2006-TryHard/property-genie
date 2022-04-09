@@ -4,7 +4,6 @@ import {useSelector, useDispatch} from 'react-redux'
 
 import { removeBookmark, removeAllBookmarks, setPageState, selectProperty } from "../../../features"
 
-
 /**
  * @namespace BookmarkUI
  * @description boundary module
@@ -55,7 +54,11 @@ const BookmarkUI = props => {
         setBookmarkToBeRemoved(null)
     }
 
-    const onConfirmRemoveAllBookmark = () => {
+    /**
+     * @memberof BookmarkUI
+    * @typedef {function} onConfirmRemoveAllBookmarks called when user click on "Confirm" button to execute all bookmarks removal.
+    */
+    const onConfirmRemoveAllBookmarks = () => {
         dispatch(removeAllBookmarks({activeUser}))
         setRemoveAll(false)
     }
@@ -103,7 +106,7 @@ const BookmarkUI = props => {
                 <div className="remove-bookmark-all-content">
                     <p>Are you sure you want to delete <b>ALL bookmark(s)</b>?</p>
                     <div>
-                        <div className="confirm-button" onClick={onConfirmRemoveAllBookmark}>Confirm</div>
+                        <div className="confirm-button" onClick={onConfirmRemoveAllBookmarks}>Confirm</div>
                         <div className="cancel-button" onClick={onCancelRemoveBookmark}>Cancel</div>
                     </div>
                 </div>

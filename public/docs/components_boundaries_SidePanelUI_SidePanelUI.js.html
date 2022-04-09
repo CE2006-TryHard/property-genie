@@ -1,11 +1,39 @@
-import './SidePanelUI.scss'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/boundaries/SidePanelUI/SidePanelUI.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/boundaries/SidePanelUI/SidePanelUI.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import './SidePanelUI.scss'
 import { useEffect, useState } from 'react'
 import {useSelector, useDispatch} from 'react-redux'
 import {AccountUI, BookmarkUI, FilterPanelUI, ForgotPWUI, SignUpUI, SignInUI} from './..'
 import { GreetUserMsg } from '../MiscUI/MiscUI'
 import SidePanelWrapper from './SidePanelWrapper'
 import { userAuthMgr } from '../../controls/Mgr'
-import { selectConstituency, setLoadingState, setPageState, setTriggerReset } from '../../../features'
+import { setLoadingState, setPageState } from '../../../features'
 
 const SIDE_PANEL_OPTIONS = {
     signinsignup: {  label: 'Sign In / Sign Up', hide: false, state: 2},
@@ -33,9 +61,9 @@ const SidePanelUI = props => {
 
     
     useEffect(() => {
-      if (sidePanelIn && pageState !== 8) setSidePanelIn(false)
+      if (sidePanelIn &amp;&amp; pageState !== 8) setSidePanelIn(false)
       else if (subSidePanelIn) {
-        if ([2, 3, 4, 5, 6, 10].indexOf(pageState) < 0) {
+        if ([2, 3, 4, 5, 6, 10].indexOf(pageState) &lt; 0) {
           setSubSidePanelIn(false)
         }
       }
@@ -94,10 +122,8 @@ const SidePanelUI = props => {
         userAuthMgr.generalSignOut((success, err) => {
         if (success) {
             setTimeout(() => { // add a deplay during sign out
-            // setSidePanelIn(false)
+            setSidePanelIn(false)
             dispatch(setPageState(0))
-            dispatch(setTriggerReset())
-            dispatch(selectConstituency(null))
             dispatch(setLoadingState(0))
             // localStorage.removeItem('activeUser')
             }, 1000)
@@ -114,55 +140,78 @@ const SidePanelUI = props => {
     switch (sidePanelContent) {
       case 2:
         return (
-          <SignInUI 
+          &lt;SignInUI 
             activeUser={activeUser}>
-              <div className="forgot-password-info-container">
-                Forgot password? <span className="text-button" onClick={() => setSidePanelContent(10)}>Reset password</span>
-              </div>
-              <div className="register-info-container">
-                Does not have an account? <span className="register-ui-entry-button text-button" onClick={() => setSidePanelContent(3)}>Sign up</span>
-              </div>
-            </SignInUI>
+              &lt;div className="forgot-password-info-container">
+                Forgot password? &lt;span className="text-button" onClick={() => setSidePanelContent(10)}>Reset password&lt;/span>
+              &lt;/div>
+              &lt;div className="register-info-container">
+                Does not have an account? &lt;span className="register-ui-entry-button text-button" onClick={() => setSidePanelContent(3)}>Sign up&lt;/span>
+              &lt;/div>
+            &lt;/SignInUI>
             )
         case 3:
-          return <SignUpUI onBack={() => {setSidePanelContent(2)}}></SignUpUI>
+          return &lt;SignUpUI onBack={() => {setSidePanelContent(2)}}>&lt;/SignUpUI>
       case 4:
-        return activeUser ? <AccountUI activeUser={activeUser}></AccountUI> : ''
+        return activeUser ? &lt;AccountUI activeUser={activeUser}>&lt;/AccountUI> : ''
       case 5:
-        return (<BookmarkUI activeUser={activeUser}></BookmarkUI>)
+        return (&lt;BookmarkUI activeUser={activeUser}>&lt;/BookmarkUI>)
       case 6:
-        return (<FilterPanelUI></FilterPanelUI>)
+        return (&lt;FilterPanelUI>&lt;/FilterPanelUI>)
       case 10:
-        return (<ForgotPWUI onBack={() => {
+        return (&lt;ForgotPWUI onBack={() => {
           setSidePanelContent(2)
-        }}></ForgotPWUI>)
+        }}>&lt;/ForgotPWUI>)
       }
     return ''
   }
 
     return (
-        <div className="side-panel-group">
-            <GreetUserMsg alwaysShow={sidePanelIn} activeUser={activeUser}></GreetUserMsg>
+        &lt;div className="side-panel-group">
+            &lt;GreetUserMsg alwaysShow={sidePanelIn} activeUser={activeUser}>&lt;/GreetUserMsg>
             
-            <SidePanelWrapper
+            &lt;SidePanelWrapper
                 className="sub-side-panel-content"
                 isOpen={subSidePanelIn}
                 hideCloseButton={true}
                 onClose={() => setSubSidePanelIn(false)}>
-                <SubSidePanelContent></SubSidePanelContent>
-            </SidePanelWrapper>
+                &lt;SubSidePanelContent>&lt;/SubSidePanelContent>
+            &lt;/SidePanelWrapper>
 
-            <SidePanelWrapper
+            &lt;SidePanelWrapper
                 isOpen={sidePanelIn}
                 onClose={() => {setSidePanelIn(false)}}
                 onToggle={() => setSidePanelIn(!sidePanelIn)}>
                 {getOptionItems().map((opt, i) => 
-                    <div className="side-panel-option noselect" key={i}
-                    onClick={() => onSidePanelOptSelect(opt.state)}>{opt.label}</div>)
+                    &lt;div className="side-panel-option noselect" key={i}
+                    onClick={() => onSidePanelOptSelect(opt.state)}>{opt.label}&lt;/div>)
                 }
-            </SidePanelWrapper>
-        </div>
+            &lt;/SidePanelWrapper>
+        &lt;/div>
     )
 }
 
 export default SidePanelUI
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

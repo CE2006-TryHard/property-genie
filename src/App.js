@@ -26,25 +26,14 @@ import {setTriggerReset} from './features/triggerResetSlice'
 
 /**
  * @namespace App
- * @description control module
-//  * @property {integer} pageState state of the current page.
-//  * @property {Boolean} showLightBox value to show the lightbox
-//  * @property {SearchItem} curSearch current search item
-//  * @property {Property} selectedProperty selected property
-//  * @property {Constituency} selectedConstituency selected constituency
-//  * @property {SearchItem[]} recentSearches a list of user's recent searches
-//  * @property {object} filterOptions filter options
-//  * @property {Property[]} bookmarks list of properties as user's bookmark
+ * @description boundary module
  * @property {User} activeUser current logged in user instance.
  * @property {Boolean} activeUserDataReady value to indicate if user data is ready
-//  * @property {Boolean} sidePanelIn value to show/hide side panel
-//  * @property {Boolean} subSidePanelIn value to show/hide the secondary side panel
-//  * @property {Boolean} mapTriggerReset value to trigger a map display
  * @returns {FunctionalComponent}
  */
 
  function App() {
-   console.log('render App')
+  //  console.log('render App')
   const dispatch = useDispatch()
   const [activeUser, setActiveUser] = useState(null)
   const [activeUserDataReady, setActiveUserDataReady] = useState(false)
@@ -63,7 +52,7 @@ import {setTriggerReset} from './features/triggerResetSlice'
                 const {email, displayName: name, providerId} = user.providerData[0]
                 const {emailVerified} = user
                 const isGoogleAuth = providerId === 'google.com'
-                userAuthMgr.setAuthUserInfo(user)
+                userAuthMgr.setUserAuthInfo(user)
                 console.log('auth change valid user', user)
                 dbMgr.initActiveUser({
                   name,

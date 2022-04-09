@@ -27,10 +27,18 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import "./InfoPanelUI.scss"
-import { TabButton } from "../MiscUI"
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import {useDispatch, useSelector} from 'react-redux'
+
+import LightboxWrapper from "../MiscUI/LightboxWrapper/LightboxWrapper"
+import {Scrollbars} from 'react-custom-scrollbars-2'
+import { TabButton } from "../MiscUI/MiscUI"
+import { addBookmark, removeBookmark, setPageState, selectProperty } from "../../../features"
+
 import { LINES } from "../../CONFIG"
-import {gService } from "../MapUI/MapUI"
+import { MARKER_COLOR_SCHEME } from "../MapUI/MAP_CONFIG"
+
+const dummyProfileImg = require('./../../../images/dummy-profile.png')
 
 const views = ["General", "Evaluation"]
 
@@ -41,90 +49,110 @@ const views = ["General", "Evaluation"]
  * @property {Object[]} localReviews
  */
 const InfoPanelUI = props => {
-    const {isBookmarked, enableBookmark, filterOptions, property, onBookmark} = props
-    const [currentView, setCurrentView] = useState('General')
-    const [localReview, setLocalReviews] = useState([])
+    const dispatch = useDispatch()
+    const selectedProperty = useSelector(state => state.selection.property)
+    const filterOptions = useSelector(state => state.filterOptions)
+    const bookmarks = useSelector(state => state.bookmarks)
+    const isBookmarked = bookmarks.filter(b => b === selectedProperty).length > 0
+    const {activeUser} = props
 
-  /**
-   * @memberof InfoPanelUI
-  * @typedef {function} onViewChange called when user toggle between General/Evaluation view
-  * @param {String} newView new info panel view option
-  */
-  const onViewChange = newView => {
-      setCurrentView(newView)
-  }
+    const [openPanel, setOpenPanel] = useState(true)
+    const [currentView, setCurrentView] = useState('General')
+    const [localReview, setLocalReviews] = useState(null)
+    const [localAddress, setLocalAddress] = useState(null)
+    const [localImg, setLocalImg] = useState(null)
 
   /**
    * @memberof InfoPanelUI
   * @typedef {function} onBookmarkClick called when user click on bookmark star icon
   */
   const onBookmarkClick = () => {
-    onBookmark(property, !isBookmarked)
+    if (isBookmarked) {
+      dispatch(removeBookmark({activeUser, property: selectedProperty}))
+    } else {
+      dispatch(addBookmark({activeUser, property: selectedProperty}))
+    }
   }
 
   /**
    * @memberof InfoPanelUI
-  * @typedef {function} useEffect called when InfoPanelUI first mounted
+  * @typedef {function} useEffect called when info panel's view or selected property is changed
   * @param {function} callback
-  * @param {watchlist} watchList []
+  * @param {watchlist} watchList [currentView, selectedProperty]
   */
   useEffect(() => {
-    const {reviews, placeID} = property
-    if (!reviews) {
-        gService.getDetails({
-            placeId: placeID,
-            fields: ['review']
-        }, (place, status) => {
-            property.setReviews(place.reviews || []) // cache page review
-            if (place.reviews) setLocalReviews(place.reviews)
-            else setLocalReviews([])
-            console.log('place detail called')
-        })
-    } else {
+    if (!selectedProperty) return
+    if (currentView === 'Evaluation') {
+      selectedProperty.fetchReview(reviews => {
         setLocalReviews(reviews)
+      })
     }
-}, [])
+}, [currentView, selectedProperty])
 
-  const {name, address, mrts, schools, avgMrtDist, avgSchoolDist, enblocStr} = property
+  /**
+   * @memberof InfoPanelUI
+  * @typedef {function} useEffect called when current selected property changed
+  * @param {function} callback
+  * @param {watchlist} watchList [selectedProperty]
+  */
+useEffect(() => {
+  if (selectedProperty) {
+    setOpenPanel(true)
+    dispatch(setPageState(7))
+    selectedProperty.fetchGeneralInfo((address, img) => {
+      setLocalAddress(address)
+      setLocalImg(img)
+    })
+    setCurrentView('General')
+  }
+}, [selectedProperty])
   
   /**
    * @memberof InfoPanelUI
   * @typedef {function} generalView Functional Component rendering "General" view
   */
   const generalView = () => {
+    const score = selectedProperty.getScore()
+    const {id, name, mrts, schools} = selectedProperty
       return (
+        
       &lt;div className="info-panel-detail-content general">
           &lt;div className="profile-image-container">
           &lt;h3>{name}&lt;/h3>
-          &lt;p className="address">{address}&lt;/p>
           &lt;div className="profile-image-content">
-          {enableBookmark &amp;&amp; currentView === 'General' ? 
-              &lt;div title="Bookmark the property" className="bookmark-button-wrapper" onClick={onBookmarkClick}>
-              &lt;div className={`bookmark-button ${isBookmarked ? 'checked' : ''}`}>&lt;/div>
-              &lt;/div>
+          {activeUser &amp;&amp; currentView === 'General' ? 
+            &lt;svg className="bookmark-button" width="40" height="40" viewBox="0 0 51 48" onClick={onBookmarkClick}>
+              &lt;title>{isBookmarked ? 'Unbookmark the property' : 'Bookmark the property'}&lt;/title>
+              &lt;path fill={isBookmarked ? 'gold' : '#FFFFFF'} stroke="#000" d="m25,1 6,17h18l-14,11 5,17-15-10-15,10 5-17-14-11h18z"/>
+            &lt;/svg>
               : ''}
-              &lt;img src=""/>
+              &lt;img src={localImg} alt={id}/>
+          &lt;/div>
+          &lt;p className="address">{localAddress}&lt;/p>
+          &lt;div className="view-on-map-button">
+          &lt;div onClick={() => setOpenPanel(false)}>View on map&lt;/div>
           &lt;/div>
           &lt;/div>
           &lt;div className="right">
-          
-          &lt;p className="score">&lt;b>Score:&lt;/b> {(property.getPropertyValue(filterOptions)*100).toFixed(0)}%&lt;/p>
+          &lt;p className="score">Score: &lt;b style={{color: MARKER_COLOR_SCHEME[Math.floor(score*10)]}}>{(score*100).toFixed(0)}%&lt;/b>&lt;/p>
           &lt;div className="school">
-              &lt;b>School(s) nearby:&lt;/b>
-              {schools.map((s, i) => &lt;p key={i}>{s.name}&lt;/p>)}
+              &lt;b>Nearby schools:&lt;/b>
+              &lt;ul>
+                {schools.map((s, i) => &lt;li key={i}>{s.name}&lt;/li>)}
+              &lt;/ul>
+              
           &lt;/div>
           &lt;div className="mrt">
-              &lt;b>Nearest MRTs:&lt;/b>
+              &lt;b>Nearby MRTs:&lt;/b>
               {mrts.map((m, i) => &lt;div className="mrt-item" key={i}>
               {m.code.map((c, j) => {
                   const CC = c.slice(0,2)
-                  // console.log(CC)
                   const{bgColor, textColor, name} = LINES[CC]
                   const style = {
                   backgroundColor: bgColor,
                   color: textColor
                   }
-                  return &lt;span className="mrt-line-logo" style={style} title={name} key={j}>{c}&lt;/span>
+                  return &lt;span className="mrt-line-logo" style={style} title={name + " Line"} key={j}>{c}&lt;/span>
               })}
               &lt;span>{m.name}&lt;/span>
               &lt;/div>)}
@@ -135,38 +163,76 @@ const InfoPanelUI = props => {
       )
   }
 
+  
   /**
    * @memberof InfoPanelUI
   * @typedef {function} valueView Functional Component rendering "Evaluation" view
   */
   const valueView = () => {
+    const score = selectedProperty.getScore()
+    const {avgMrtDist, avgSchoolDist, enblocStr, valueProps: {enbloc, distToMrt, distToSchool}} = selectedProperty
     return (
       &lt;div className="info-panel-detail-content value">
-        &lt;p>En Bloc: {enblocStr}&lt;/p>
-        &lt;p>Shortest distance to MRT: {avgMrtDist}km&lt;/p>
-        &lt;p>Shortest distance to School: {avgSchoolDist}km&lt;/p>
-        &lt;div className="review-container">
+        &lt;div className="score-summary-container">
+        &lt;p className="score-header">*Score &lt;b style={{color: MARKER_COLOR_SCHEME[Math.floor(score*10)]}}>{(score*100).toFixed(0)}%&lt;/b> is calculated by:&lt;/p>
+          &lt;ul>
+            &lt;li style={{opacity: filterOptions['enbloc'].checked ? 1 : 0.3}} className="score-item">
+              &lt;p>*En Bloc probability:&lt;/p>
+              &lt;span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(enbloc * 10)]}}>&lt;b>{enblocStr}&lt;/b>&lt;/span>
+            &lt;/li>
+            &lt;li style={{opacity: filterOptions['distToMrt'].checked ? 1 : 0.3}}className="score-item">
+              &lt;p>Distance to the &lt;span>nearest MRT:&lt;/span>&lt;/p>
+              &lt;span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(distToMrt * 10)]}}>&lt;b>{avgMrtDist}km&lt;/b>&lt;/span>
+            &lt;/li>
+            &lt;li style={{opacity: filterOptions['distToSchool'].checked ? 1 : 0.3}}className="score-item">
+              &lt;p>Distance to the &lt;span>nearest School:&lt;/span>&lt;/p>
+              &lt;span className="score-box" style={{backgroundColor: MARKER_COLOR_SCHEME[Math.floor(distToSchool * 10)]}}>&lt;b>{avgSchoolDist}km&lt;/b>&lt;/span>
+            &lt;/li>
+          &lt;/ul>
+          &lt;span className="score-remark">&lt;b>Score:&lt;/b> A special formula is applied to evaluate the score of the property based on the filters selected.&lt;/span>
+          &lt;span className="enbloc-remark">&lt;b>En Bloc:&lt;/b> Potential to make money by a collect sale of the whole condo at prices higher than the resale value.&lt;/span>
+        &lt;/div>
+        &lt;div className="google-review-container">
           &lt;h3>Google Reviews&lt;/h3>
-          {localReview.map((r, i) => {
-            const {author_name, text} = r
-            return &lt;div className="review-item" key={i}>
-              &lt;h5>{author_name}&lt;/h5>
-              &lt;p>{text}&lt;/p>
-            &lt;/div>
-          })}
+          {localReview ? 
+            (localReview.length ? localReview.map((r, i) => {
+              const {profile_photo_url, author_name, rating, text} = r
+              return &lt;div className="review-item" key={i}>
+                &lt;div className='profile'>
+                  &lt;img className="profile-pic" src={profile_photo_url} width="40" height="40" onError={e => e.target.src= dummyProfileImg}/>
+                  &lt;div className="rating">
+                    &lt;h5>{author_name}&lt;/h5>
+                    &lt;div className="rating-stars">
+                      {[0,0,0,0,0].map((dummy, i) => &lt;span key={i} className={i + 1 &lt;= rating ? 'checked' : ''}>&lt;/span>)}
+                    &lt;/div>
+                  &lt;/div>
+                  
+                &lt;/div>
+               
+                &lt;p>{text}&lt;/p>
+              &lt;/div>
+            }) : 'No review found.')
+          
+          : 'Loading reviews...'}
         &lt;/div>
       &lt;/div>
     )
   }
+
+  if (!selectedProperty) return ''
   
-    return (&lt;div className="info-panel-container">
-      &lt;div className="info-panel-content">
-        &lt;TabButton options={views} current={currentView} onChange={onViewChange}>&lt;/TabButton>
-        &lt;div className="info-panel-detail-container">
-          {currentView === 'General' ? generalView() : valueView()}
+    return (
+      &lt;LightboxWrapper isOpen={selectedProperty &amp;&amp; openPanel} onClose={() => dispatch(selectProperty(null))}>
+        &lt;div className="info-panel-container">
+          &lt;div className="info-panel-content">
+            &lt;TabButton options={views} current={currentView} onChange={setCurrentView}>&lt;/TabButton>
+              &lt;Scrollbars className="info-panel-detail-container">
+                {currentView === 'General' ? generalView() : valueView()}
+            &lt;/Scrollbars>
+          &lt;/div>
         &lt;/div>
-      &lt;/div>
-    &lt;/div>)
+      &lt;/LightboxWrapper>
+    )
 }
 
 export default InfoPanelUI
@@ -180,13 +246,13 @@ export default InfoPanelUI
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="LogInUI.html">LogInUI</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="RegisterUI.html">RegisterUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="SidePanelOptMgr.html">SidePanelOptMgr</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AccountUI.html">AccountUI</a></li><li><a href="App.html">App</a></li><li><a href="BookmarkUI.html">BookmarkUI</a></li><li><a href="FilterPanelUI.html">FilterPanelUI</a></li><li><a href="InfoPanelUI.html">InfoPanelUI</a></li><li><a href="LightboxWrapper.html">LightboxWrapper</a></li><li><a href="MapUI.html">MapUI</a></li><li><a href="SearchBarUI.html">SearchBarUI</a></li><li><a href="SidePanelUI.html">SidePanelUI</a></li><li><a href="SignInUI.html">SignInUI</a></li><li><a href="SignUpUI.html">SignUpUI</a></li></ul><h3>Classes</h3><ul><li><a href="Constituency.html">Constituency</a></li><li><a href="DatabaseMgr.html">DatabaseMgr</a></li><li><a href="Property.html">Property</a></li><li><a href="SearchItem.html">SearchItem</a></li><li><a href="User.html">User</a></li><li><a href="UserAuthMgr.html">UserAuthMgr</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckBox">CheckBox</a></li><li><a href="global.html#GreetUserMsg">GreetUserMsg</a></li><li><a href="global.html#SidePanelWrapper">SidePanelWrapper</a></li><li><a href="global.html#Slider">Slider</a></li><li><a href="global.html#TabButton">TabButton</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sun Mar 27 2022 22:45:45 GMT+0800 (Singapore Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.10</a> on Sat Apr 09 2022 01:59:52 GMT+0800 (Singapore Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
