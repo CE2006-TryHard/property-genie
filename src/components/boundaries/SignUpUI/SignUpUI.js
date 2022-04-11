@@ -85,7 +85,7 @@ const SignUpUI = props => {
                 if (success) {
                     dispatch(setPageState(0))
                     console.log('sign up link successfully sent')
-                    const id = email.replace('.', '-')
+                    const id = email.replaceAll('.', '-')
                     dbMgr.updateDataDB(`account/${id}/name`, firstName + ' ' + lastName)
                 } else {
                     switch (err.code) {

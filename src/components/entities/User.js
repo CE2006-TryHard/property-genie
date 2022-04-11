@@ -24,7 +24,7 @@ class User {
     }
 
     setUserIDByEmail(email, isGoogleAuth) {
-        return (isGoogleAuth ? 'google-' : '') + email.replace('.', '-')
+        return (isGoogleAuth ? 'google-' : '') + email.replaceAll('.', '-')
     }
 }
 
