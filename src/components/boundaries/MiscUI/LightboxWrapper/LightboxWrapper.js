@@ -1,20 +1,11 @@
 import "./LightboxWrapper.scss"
 import { useState } from "react"
 
-/**
- * @namespace LightboxWrapper
- * @description boundary module
- * @property {Boolean} isHoverOnClose
- */
 const LightboxWrapper = props => {
   const {disableClose, onClose} = props
   const [isHoverOnClose, setIsHoverOnClose] = useState(false)
 
-/**
-   * @memberof LightboxWrapper
-  * @typedef {function} onWrapperClick called when user click on wrapper area
-  * @param {Event} e
-  */
+
   const onWrapperClick = e => {
     if (disableClose) return
     const {className} = e.target
@@ -23,11 +14,6 @@ const LightboxWrapper = props => {
     }
   }
 
-  /**
-   * @memberof LightboxWrapper
-  * @typedef {function} onHoverOnCloseRegion called when user hover on wrapper area
-  * @param {Event} e
-  */
   const onHoverOnCloseRegion = e => {
     if (disableClose) return
     const {className} = e.target
