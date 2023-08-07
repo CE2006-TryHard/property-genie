@@ -30,7 +30,7 @@ Data scrapping:
 
 ![Selenium](https://img.shields.io/badge/-selenium-%43B02A?style=for-the-badge&logo=selenium&logoColor=white)
 
-
+repo for data scrapping: https://github.com/CE2006-TryHard/scrape-data
 
 
 
