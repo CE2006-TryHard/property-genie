@@ -5,6 +5,7 @@ import Papa from 'papaparse'
 import {Constituency, Property, User} from '../entities'
 import {STATIONS, SCHOOLS, CONSTITUENCY_NAME} from '../CONFIG'
 import {INIT_FILTER_OPTIONS} from './../../features/filterSlice'
+import { firebaseConfig } from "../../localConst"
 
 /**
  * A control class manage the flow of data between the application and database
@@ -104,22 +105,10 @@ class DatabaseMgr {
    * initialise firebase connection
    */
   initFirebase () {
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-    const firebaseConfig = {
-      apiKey: "AIzaSyAvXrCz1aaHL0MH8a6qQFW9zfwS8FP_mks",
-      authDomain: "tryhard-web-app.firebaseapp.com",
-      projectId: "tryhard-web-app",
-      databaseURL: "https://tryhard-web-app-default-rtdb.asia-southeast1.firebasedatabase.app/",
-      storageBucket: "tryhard-web-app.appspot.com",
-      messagingSenderId: "750566440817",
-      appId: "1:750566440817:web:731d0e05cc3376a18700d0",
-      measurementId: "G-S92ZF52QRN"
-    }
-
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig)
-    getAnalytics(app)
+    // const app = initializeApp(firebaseConfig)
+    initializeApp(firebaseConfig)
+    // getAnalytics(app)
   }
   
   /**

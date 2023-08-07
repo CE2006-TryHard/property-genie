@@ -158,7 +158,7 @@ class Property {
         dbMgr.fetchDataDB(`properties/${this.id}/reviewObj`, reviewObj => {
             // review found from database cache record
             if (reviewObj) {
-                const {length, reviews} = reviewObj
+                const {reviews} = reviewObj
                 this.reviews = reviews || []
                 onFetchEnd(this.reviews)
                 console.log('review fetched from database')

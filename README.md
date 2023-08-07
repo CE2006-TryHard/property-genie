@@ -1,26 +1,37 @@
-# Getting Started with Create React App
+# Property Genie
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+![property-genie-logo](public/images/home.png)
 
-## Available Scripts
+Property Genie is a web application created to visualise Singapore condominium datas. It assists users in identifying properties with high value based on specific metrics and the likelihood of en-bloc potential.
 
-If this is the first time you run the project, issue below command to install all dependent packages.
+This project is developed as part of the CE2006 Software Engineering coursework. All datas utilized in this project are strictly for academic purposes.
 
-### `npm install`
+## Demo Video
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+https://youtu.be/EmdQx5l_dpU
 
 
-### `npm run build`
+## Development tools
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Web development:
+
+![React.js](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![SASS](https://img.shields.io/badge/SASS-hotpink.svg?style=for-the-badge&logo=SASS&logoColor=white)
+![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+
+
+Data hosting:
+
+![Firebase](https://img.shields.io/badge/Firebase-039BE5?style=for-the-badge&logo=Firebase&logoColor=white)
+
+
+Data scrapping:
+
+![Selenium](https://img.shields.io/badge/-selenium-%43B02A?style=for-the-badge&logo=selenium&logoColor=white)
+
+
+
+
+
 

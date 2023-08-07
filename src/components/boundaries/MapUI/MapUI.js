@@ -6,6 +6,8 @@ import { selectProperty, selectConstituency } from "../../../features"
 import {Loader} from "@googlemaps/js-api-loader"
 import { dbMgr } from '../../controls/Mgr'
 
+import { API_KEY } from "../../../localConst"
+
 import { CONSTITUENCY_MAP_CONFIG, MAP_STYLES, MARKER_COLOR_SCHEME } from './MAP_CONFIG'
 
 
@@ -139,7 +141,7 @@ const MapUI = props => {
         markers[curProperty.constituency.name][curProperty.name].setOpacity(1)
       } else {
         c.getFilteredProperties(filterOptions).forEach(p => {
-          const val = Math.floor(p.getScore() * 10)
+          // const val = Math.floor(p.getScore() * 10)
           markers[c.name][p.name].setOpacity(MARKER_OPACITY_1)
           markers[c.name][p.name].setZIndex(1)
         })
@@ -181,7 +183,7 @@ const MapUI = props => {
 
       // intialise google map
       const loader = new Loader({
-        apiKey: 'AIzaSyAvXrCz1aaHL0MH8a6qQFW9zfwS8FP_mks',
+        apiKey: API_KEY,
         libraries: ['places']
       })
   
